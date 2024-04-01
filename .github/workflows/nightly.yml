@@ -3,11 +3,8 @@ on:
   push:
     branches:
       - development
-  pull_request:
-    branches:
-      - development
 jobs:
-  publish-image:
+  publish-nightly-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -15,7 +15,6 @@ jobs:
     permissions: write-all
     needs: build-app
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - name: Dependabot metadata
         id: dependabot-metadata
@@ -28,3 +27,12 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ github.token }}
+  publish-nightly-image:
+    needs: build-app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/publish/image
+        with:
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          publish_version: nightly
