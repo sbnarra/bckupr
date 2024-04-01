@@ -11,9 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/build/image
+  publish-nightly-image:
+    needs: build-app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/publish/image
+        with:
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          publish_version: nightly
   auto-merge:
     permissions: write-all
-    needs: build-app
+    needs: publish-nightly-image
     runs-on: ubuntu-latest
     steps:
       - name: Dependabot metadata
@@ -27,12 +37,3 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ github.token }}
-  publish-nightly-image:
-    needs: build-app
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ./.github/actions/publish/image
-        with:
-          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
-          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          publish_version: nightly
