@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - development
+  pull_request:
+    branches:
+      - development
 jobs:
   publish-image:
     runs-on: ubuntu-latest
