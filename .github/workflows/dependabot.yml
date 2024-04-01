@@ -23,17 +23,6 @@ jobs:
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           publish_version: nightly
   auto-merge:
-    permissions: write-all
-    needs: publish-nightly-image
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/publish/image
-        with:
-          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
-          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          publish_version: nightly
-  auto-merge:
     needs: publish-nightly-image
     runs-on: ubuntu-latest
     permissions: write-all
