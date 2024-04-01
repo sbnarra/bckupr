@@ -2,7 +2,6 @@ site_name: Bckupr
 site_url: https://sbnarra.github.io/bckupr
 docs_dir: markdown
 dev_addr: 0.0.0.0:8000
-
 theme: 
   name: material
   features:
