@@ -9,4 +9,4 @@ runs:
     - shell: bash
       run: pip install -r docs/requirements.txt
     - shell: bash
-      run: mkdocs gh-deploy --config-file docs/mkdocs.yml
+      run: mkdocs gh-deploy --config-file docs/mkdocs.yml --force
