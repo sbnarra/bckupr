@@ -4,17 +4,16 @@ on:
     branches-ignore:
       - main
       - development
+      - dependabot/*
   workflow_dispatch:
 jobs:
   build-docs:
     runs-on: ubuntu-latest
-    if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/build/docs
   build-app:
     runs-on: ubuntu-latest
-    if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/build/image
