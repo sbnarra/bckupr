@@ -1,5 +1,6 @@
 name: Dependabot Auto-Merge
 on:
+  push:
   pull_request:
     branches:
       - development
@@ -7,7 +8,7 @@ on:
 jobs:
   build-app:
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    # if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/build/image
@@ -26,13 +27,22 @@ jobs:
     needs: publish-nightly-image
     runs-on: ubuntu-latest
     steps:
-      - name: Dependabot metadata
-        id: dependabot-metadata
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/publish/image
+        with:
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          publish_version: nightly
+  auto-merge:
+    needs: publish-nightly-image
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - id: dependabot-metadata
         uses: dependabot/fetch-metadata@v1
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-      - name: Auto-merge Dependabot PRs
-        if: ${{ steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
+      - if: ${{ steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
         run: gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
