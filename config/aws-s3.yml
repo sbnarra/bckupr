@@ -1,0 +1,22 @@
+push:
+  image: amazon/aws-cli
+  env: 
+    - AWS_SECRET
+    - AWS_SECRET_KEY
+  cmd:
+    - aws
+    - s3
+    - cp
+    - /backup/{backup_id}/{name}.tar.gz
+    - s3://$BUCKET:{backup_id}/{name}.tar.gz
+pull:
+  image: amazon/aws-cli
+  env: 
+    - AWS_SECRET
+    - AWS_SECRET_KEY
+  cmd:
+    - aws
+    - s3
+    - cp
+    - s3://$BUCKET:{backup_id}/{name}.tar.gz
+    - /backup/{backup_id}/{name}.tar.gz

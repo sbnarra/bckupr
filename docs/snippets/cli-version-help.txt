@@ -1,0 +1,11 @@
+Print version
+
+Usage:
+  bckupr version [flags]
+
+Flags:
+  -h, --help   help for version
+
+Global Flags:
+      --debug     debug (default true)
+      --dry-run   dry-run (default true)

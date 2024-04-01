@@ -1,0 +1,9 @@
+{{template "page-start" .}}
+<h3 style="display: inline-block">Settings</h3>
+{{if ne .Error nil}}
+    <p><b><pre>Error: {{.Error}}</pre></b></p>
+{{end}}
+{{template "global" .Global}}
+{{template "cron" .Cron}}
+{{template "notifications" .Notifications}}
+{{template "page-end" .}}

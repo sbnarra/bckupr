@@ -1,0 +1,40 @@
+Cron/Web daemon
+
+Usage:
+  bckupr daemon [flags]
+
+Flags:
+      --backup-dir string           directory to store backups
+      --backup-id-override string   overrides generated backup id
+      --backup-schedule string      cron schedule for backups (default "0 0 * * *")
+      --daemon-addr string          don't use bckupr daemon, metrics won't be available using this flag (default ".bckupr.sock")
+      --daemon-net string           don't use bckupr daemon, metrics won't be available using this flag (default "unix")
+      --daemon-protocol string      don't use bckupr daemon, metrics won't be available using this flag (default "http")
+      --docker-hosts strings        docker hosts to perform actions on (default [unix:///var/run/docker.sock])
+      --exclude-names strings       names of containers to exclude
+      --exclude-volumes strings     names of volumes to exclude
+      --expose-api                  exposes /api endpoints via tcp
+  -h, --help                        help for daemon
+      --include-names strings       names of containers to include
+      --include-volumes strings     names of volumes to include
+      --label-prefix string         label prefix used to scan containers (default "bckupr")
+      --local-containers string     container config for managing local backups (default "./config/tar.yml")
+      --metrics-enabled             enables /metrics endpoint
+      --no-daemon                   don't use bckupr daemon, metrics won't be available using this flag (default true)
+      --notification-urls strings   shoutrrr notification urls
+      --notify-job-completed        enable notifications when backups or restores complete
+      --notify-job-error            enable notifications when backups or restores complete with an error
+      --notify-job-started          enable notifications when backups or restores start
+      --notify-task-completed       enable notifications when backups or restores complete on specific volumes
+      --notify-task-errors          enable notifications when backups or restores complete with an error on specific volumes
+      --notify-task-started         enable notifications when backups or restores start on specific volumes
+      --offsite-containers string   container config for managing offsite backups
+      --stop-modes strings          stop modes used to controller shutdown: all, labelled, linked, writers, attached (default [labelled,linked,writers])
+      --tcp-addr string             tcp address to bind web server (default "0.0.0.0:8000")
+      --timezone string             cron timezeon (default "UTC")
+      --ui-enabled                  exposes ui (default true)
+      --unix-socket string          unix socket to bind web server (default ".bckupr.sock")
+
+Global Flags:
+      --debug     debug (default true)
+      --dry-run   dry-run (default true)

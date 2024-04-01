@@ -1,0 +1,41 @@
+{{define "delete-model"}}
+<button onclick="openDialog('delete-{{.Id}}')" class="secondary">Delete &#128465;</button>
+<dialog id="delete-{{.Id}}">
+    <article>
+        <header>
+            <button onclick="closeDialog('delete-{{.Id}}')" aria-label="Close" rel="prev"></button>
+            <p>
+                <strong>Delete Backup &#128465;</strong>
+            </p>
+        </header>
+        <form id="delete-input-{{.Id}}" action="/ui" method="POST">
+            <p>
+                Deleting Backup <b>{{.Id}}</b>
+                <label style="float: right">
+                    <input name="dry-run" type="checkbox" role="switch" checked />
+                    Dry Run
+                </label>
+            </p>
+            <ul>
+                <li>Date: {{date .Created}}</li>
+                <li>Time: {{time .Created}}</li>
+            </ul>
+            <p>
+                Contains the following volumes:
+            </p>
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" value="{{.Id}}">
+    
+                {{range .Volumes}}
+                <input type="checkbox" id="{{.Name}}" name="volumes[]" value="{{.Name}}" checked disabled>
+                <label for="content">{{.Name}}</label>
+                </br>
+                {{end}}
+        </form>
+        <footer>
+            <button onclick="closeDialog('delete-{{.Id}}')" className="secondary">Cancel</button>
+            <button onclick="submitForm('delete-input-{{.Id}}')" type="submit">Delete</button>
+        </footer>
+    </article>
+</dialog>
+{{end}}

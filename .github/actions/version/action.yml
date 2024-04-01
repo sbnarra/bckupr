@@ -1,0 +1,16 @@
+name: 'Build Documentation'
+description: 'Builds documentation'
+runs:
+  using: "composite"
+  steps:
+    - id: version
+      uses: paulhatch/semantic-version@v5.3.0
+      with:
+        tag_prefix: "v"
+    - shell: bash
+      run: |
+        git tag v${{ steps.version.outputs.version }}
+        git push origin --tags
+outputs:
+  version:
+    value: ${{ steps.version.outputs.version }}

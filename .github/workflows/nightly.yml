@@ -1,0 +1,15 @@
+name: Publish Nightly (Image Only)
+on:
+  push:
+    branches:
+      - development
+jobs:
+  publish-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/publish/image
+        with:
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          publish_version: nightly

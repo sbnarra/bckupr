@@ -1,0 +1,43 @@
+site_name: Bckupr
+site_url: https://sbnarra.github.io/bckupr
+docs_dir: markdown
+dev_addr: 0.0.0.0:8000
+
+theme: 
+  name: material
+  features:
+    - navigation.expand
+markdown_extensions:
+    - toc:
+        permalink: True
+        separator: "_"
+    # - admonition
+    # - pymdownx.highlight
+    - pymdownx.tilde
+    - pymdownx.superfences:
+    - pymdownx.magiclink:
+        repo_url_shortener: True
+        provider: github
+        user: bckupr
+        repo: bckupr
+    # - pymdownx.saneheaders
+    - pymdownx.tabbed:
+        alternate_style: true
+plugins:
+  - search:
+  - include-markdown:
+      preserve_includer_indent: true
+      comments: false
+      # dedent: false
+      # trailing_newlines: false
+      # rewrite_relative_urls: true
+nav:
+  - index.md
+  - overview.md
+
+  - stop_modes.md
+  - container_templates.md
+  - options.md
+
+  - metrics.md
+  - roadmap.md

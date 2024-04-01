@@ -1,0 +1,56 @@
+{{define "global"}}
+<h4>Global</h4>
+<form id="cron" action="/ui/settings" method="POST">
+    <input type="hidden" name="action" value="global">
+
+    <label>
+        Backup Directory:
+        <input type="text" name="backup-dir" value="{{.BackupDir}}" disabled>
+    </label>
+
+    <label>
+        <input type="checkbox" name="dry-run" {{if .DryRun}}checked{{end}} disabled>
+        Dry Run
+    </label>
+
+    <label>
+        <input type="checkbox" name="dry-run" {{if .Debug}}checked{{end}} disabled>
+        Debug
+    </label>
+
+    <label>
+        Docker Hosts:
+        {{range .Args.DockerHosts}}
+        <input type="text" name="docker-hosts" value="{{.}}" disabled>
+        {{end}}
+    </label>
+
+    <label>
+        Label Prefix:
+        <input type="text" name="label-prefix" value="{{.Args.LabelPrefix}}" disabled>
+    </label>
+
+
+    <label>
+        Unix Socket:
+        <input type="text" name="unix-socket" value="{{.Web.UnixSocket}}" disabled>
+    </label>
+
+
+    <label>
+        TCP Bind:
+        <input type="text" name="tcp-addr" value="{{.Web.TcpAddr}}" disabled>
+    </label>
+
+
+    <label>
+        Metrics Enabled
+        <input type="checkbox" name="metrics-enabled" {{if .Web.MetricsEnabled}}checked{{end}} disabled>
+    </label>
+
+    <label>
+        API Exposed over TCP
+        <input type="checkbox" name="api-exposed" {{if .Web.ExposeApi}}checked{{end}} disabled>
+    </label>
+</form>
+{{end}}

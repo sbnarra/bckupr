@@ -1,0 +1,10 @@
+{{template "page-start" .}}
+<div class="m-3">
+    <h3 style="display: inline-block">Backups</h3>
+    {{if ne .Error nil}}
+        <p><b><pre>Error: {{.Error}}</pre></b></p>
+    {{end}}
+    {{template "backup-model" .BackupInput}}
+</div>
+{{template "backups-table" .Backups}}
+{{template "page-end" .}}

@@ -1,0 +1,28 @@
+services:
+  writer:
+    image: alpine
+    working_dir: /data
+    command: |
+      sh -c "[ ! -e counter ] && echo 0>counter
+      while [ true ]; do
+        echo $(($(cat counter) + 1))>counter
+        sleep 2
+      done"
+    volumes:
+      - my-volume:/data
+      - /tmp/mount:/data2
+    labels:
+      - bckupr.volumes=compose-test-volume
+  reader:
+    image: alpine
+    working_dir: /data
+    command: |
+      sh -c "while [ true ]; do
+        cat counter; 
+        sleep 1; 
+      done"
+    volumes:
+      - my-volume:/data:ro
+volumes:
+  my-volume:
+    name: compose-test-volume

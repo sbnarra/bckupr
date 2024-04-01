@@ -1,0 +1,12 @@
+services:
+  bckupr:
+    # image: sbnarra/bckupr
+    build:
+      context: ./
+      args:
+        VERSION: compose
+    env_file:
+      - path: ${BCKUPR_ENV_FILE:-$PWD/.env}
+        required: true
+    volumes:
+      - ${BCKUPR_DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock

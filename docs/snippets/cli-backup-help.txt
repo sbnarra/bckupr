@@ -1,0 +1,33 @@
+Create new backup
+
+Usage:
+  bckupr backup [flags]
+
+Flags:
+      --backup-dir string           directory to store backups
+      --backup-id-override string   overrides generated backup id
+      --daemon-addr string          don't use bckupr daemon, metrics won't be available using this flag (default ".bckupr.sock")
+      --daemon-net string           don't use bckupr daemon, metrics won't be available using this flag (default "unix")
+      --daemon-protocol string      don't use bckupr daemon, metrics won't be available using this flag (default "http")
+      --docker-hosts strings        docker hosts to perform actions on (default [unix:///var/run/docker.sock])
+      --exclude-names strings       names of containers to exclude
+      --exclude-volumes strings     names of volumes to exclude
+  -h, --help                        help for backup
+      --include-names strings       names of containers to include
+      --include-volumes strings     names of volumes to include
+      --label-prefix string         label prefix used to scan containers (default "bckupr")
+      --local-containers string     container config for managing local backups (default "./config/tar.yml")
+      --no-daemon                   don't use bckupr daemon, metrics won't be available using this flag (default true)
+      --notification-urls strings   shoutrrr notification urls
+      --notify-job-completed        enable notifications when backups or restores complete
+      --notify-job-error            enable notifications when backups or restores complete with an error
+      --notify-job-started          enable notifications when backups or restores start
+      --notify-task-completed       enable notifications when backups or restores complete on specific volumes
+      --notify-task-errors          enable notifications when backups or restores complete with an error on specific volumes
+      --notify-task-started         enable notifications when backups or restores start on specific volumes
+      --offsite-containers string   container config for managing offsite backups
+      --stop-modes strings          stop modes used to controller shutdown: all, labelled, linked, writers, attached (default [labelled,linked,writers])
+
+Global Flags:
+      --debug     debug (default true)
+      --dry-run   dry-run (default true)

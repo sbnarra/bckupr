@@ -1,0 +1,12 @@
+name: 'Publish Documentaiton'
+description: 'Publishes documentation'
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: 3.x
+    - shell: bash
+      run: pip install -r docs/requirements.txt
+    - shell: bash
+      run: mkdocs gh-deploy --config-file docs/mkdocs.yml

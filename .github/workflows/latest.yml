@@ -1,0 +1,35 @@
+name: Publish Latest (Image/Docs)
+on:
+  push:
+    branches:
+      - main
+jobs:
+  increment-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/version
+        id: version
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+  publish-docs:
+    runs-on: ubuntu-latest
+    needs: increment-version
+    name: Docs (${{ needs.increment-version.outputs.version }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/publish/docs
+  publish-image:
+    runs-on: ubuntu-latest
+    needs: increment-version
+    name: Image (${{ needs.increment-version.outputs.version }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/publish/image
+        with:
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          publish_version: ${{ needs.increment-version.outputs.version }}
+          buildx_args: --tag sbnarra/bckupr:latest

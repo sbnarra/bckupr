@@ -1,0 +1,12 @@
+backup:
+  image: busybox
+  cmd:
+    - sh
+    - -c
+    - mkdir -p /backup/{backup_id}; tar czvf /backup/{backup_id}/{name}.tar.gz /data
+restore:
+  image: busybox
+  cmd:
+    - sh
+    - -c
+    - tar xzvf /backup/{backup_id}/{name}.tar.gz --strip 1 -C /data

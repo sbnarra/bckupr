@@ -1,0 +1,54 @@
+{{define "model-functions"}}
+<script>
+    function openDialog(id) {
+        var dialog = document.getElementById(id);
+        dialog.setAttribute('open', true);
+    }
+    function closeDialog(id) {
+        var dialog = document.getElementById(id);
+        dialog.removeAttribute('open')
+    }
+
+    function submitForm(id, ignoreDryRun) {
+      var form = document.getElementById(id);
+      var dryRunCheckbox = form.querySelector('input[name="dry-run"]');
+      console.log(ignoreDryRun)
+      if (ignoreDryRun) {
+        //
+      } else if (ignoreDryRun || dryRunCheckbox && !dryRunCheckbox.checked) {
+        if (confirm("This is an destructive action! are you sure you want to continue?")) {
+            form.submit();
+        } else {
+            alert("Canceled.");
+        }
+        return
+      }
+      form.submit();
+    }
+
+    function removeInput(button) {
+      var container = button.parentNode
+      container.remove()
+    }
+
+    function addInput(element, id) {
+      const container = document.createElement('div');
+      container.setAttribute("role", "group");
+      element.appendChild(container);
+
+      const input = document.createElement('input');
+      container.appendChild(input);
+
+      input.type = 'text';
+      input.name = id;
+
+      const remove = document.createElement('button');
+      container.appendChild(remove);
+
+      remove.textContent = '-';
+      remove.onclick = function() {
+        removeInput(remove)
+      }
+    }
+</script>
+{{end}}
