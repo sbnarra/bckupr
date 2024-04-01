@@ -52,7 +52,7 @@ The project includes unit tests written in Go and end-to-ends tests in Bash. (_s
 
 Run Go unit tests:
 ```shell
-go test
+go test -v ./...
 ```
 
 Run End2End tests:
