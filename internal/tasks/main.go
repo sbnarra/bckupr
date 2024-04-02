@@ -14,7 +14,7 @@ import (
 
 func Run(ctx contexts.Context, backupId string, args types.TaskArgs, notificationSettings *types.NotificationSettings, exec func(ctx contexts.Context, backupId string, name string, path string, c *containers.Containers) error) error {
 	action := ctx.Name
-	docker := concurrent.CpuBound(ctx, ctx.Name)
+	docker := concurrent.Default(ctx, ctx.Name)
 	for _, dockerHost := range args.DockerHosts {
 		docker.Run(func(ctx contexts.Context) error {
 			logging.Info(ctx, "Connecting to ", dockerHost)
@@ -82,7 +82,7 @@ func run(ctx contexts.Context, backupId string, action string, c *containers.Con
 		taskCh := make(chan *task)
 		completedTaskListener := startCompletedTaskListener(ctx, taskCh, c)
 
-		actionTask := concurrent.CpuBound(ctx, action)
+		actionTask := concurrent.Default(ctx, action)
 		for name, task := range tasks {
 			actionTask.Run(func(ctx contexts.Context) error {
 
@@ -119,7 +119,7 @@ func run(ctx contexts.Context, backupId string, action string, c *containers.Con
 }
 
 func stopContainers(ctx contexts.Context, c *containers.Containers, task *task) error {
-	stopper := concurrent.CpuBound(ctx, "stopper")
+	stopper := concurrent.Default(ctx, "stopper")
 	for _, container := range task.Containers {
 		stopper.Run(func(ctx contexts.Context) error {
 			_, err := c.StopContainer(ctx, container, task.Volume)

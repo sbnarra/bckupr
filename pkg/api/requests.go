@@ -14,8 +14,8 @@ func (c *Client) Backup(request *types.CreateBackupRequest) error {
 	return c.send("POST", PATH_BACKUPS, request)
 }
 
-func (c *Client) List(request *types.ListBackupsRequest) error {
-	return c.send("GET", PATH_BACKUPS, request)
+func (c *Client) List() error {
+	return c.send("GET", PATH_BACKUPS, nil)
 }
 
 func (c *Client) Delete(request *types.DeleteBackupRequest) error {

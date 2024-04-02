@@ -11,7 +11,7 @@ import (
 func (c *Containers) StartContainer(ctx contexts.Context, container *Container) error {
 	startErr := c.start(ctx, container)
 
-	linkedStarter := concurrent.CpuBound(ctx, "linked-starter")
+	linkedStarter := concurrent.Default(ctx, "linked-starter")
 	for _, linked := range container.Linked {
 		linkedStarter.Run(func(ctx contexts.Context) error {
 			return c.StartContainer(ctx, linked)
