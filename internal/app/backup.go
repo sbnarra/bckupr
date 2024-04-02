@@ -26,7 +26,7 @@ func CreateBackup(ctx contexts.Context, input *types.CreateBackupRequest) error 
 		return err
 	} else {
 		backupDir := ctx.BackupDir + "/" + backupId
-		if err := os.Mkdir(backupDir, os.ModePerm); err != nil {
+		if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
 			return fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
 		}
 
