@@ -30,6 +30,7 @@ bckupr() {
 }
 
 # setup
+rm -rf $PWD/.test_filesystem/backups
 rm -rf /tmp/bckupr/mount
 docker rm -f $TEST_CONTAINER
 docker volume rm test_volume_backup
