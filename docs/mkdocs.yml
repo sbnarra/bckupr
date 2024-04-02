@@ -31,12 +31,19 @@ plugins:
       # trailing_newlines: false
       # rewrite_relative_urls: true
 nav:
-  - index.md
-  - overview.md
+  - 'Introduction': index.md
+  - 'Backup Options': options.md
+  - 'Labels': 'labels.md'
+  - 'Cron': 'cron.md'
+  - 'Offsite': 'offsite.md'
+  - 'Retention': 'retention.md'
+  - 'Notifications': 'notifications.md'
+  - 'Metrics': 'metrics.md'
 
-  - stop_modes.md
-  - container_templates.md
-  - options.md
 
-  - metrics.md
-  - roadmap.md
+  # - overview.md
+  # - stop_modes.md
+  # - container_templates.md
+  # - options.md
+  # - metrics.md
+  # - roadmap.md

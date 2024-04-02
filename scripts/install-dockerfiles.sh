@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!bash
 
 tools=""
 for dockerfile in $(find scripts -name "*.Dockerfile"); do
