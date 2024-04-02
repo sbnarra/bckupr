@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/service/gui/pages"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/app"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 

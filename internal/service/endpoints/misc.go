@@ -3,8 +3,8 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
-	"github.com/sbnarra/bckupr/pkg/app"
 )
 
 func debug(addr string) func(contexts.Context, http.ResponseWriter, *http.Request) error {

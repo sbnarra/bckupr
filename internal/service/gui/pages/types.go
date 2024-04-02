@@ -1,4 +1,5 @@
 package pages
+
 import (
 	"time"
 
@@ -7,7 +8,7 @@ import (
 
 type IndexPage struct {
 	Cron        Cron
-	Backups     []types.Backup
+	Backups     []*types.Backup
 	Error       error
 	BackupInput *types.CreateBackupRequest
 }

@@ -14,10 +14,6 @@ type DeleteBackupRequest struct {
 	Args     TaskArgs `json:"args"`
 }
 
-type ListBackupsRequest struct {
-	Args TaskArgs `json:"args"`
-}
-
 type RestoreBackupRequest struct {
 	DryRun               bool                  `json:"dry-run"`
 	BackupId             string                `json:"backup-id"`
@@ -71,14 +67,16 @@ type Filters struct {
 
 type Volume struct {
 	Name    string    `json:"name"`
+	Mount   string    `json:"mount"`
 	Created time.Time `json:"created"`
 	Size    int64     `json:"size(kb)"`
+	Error   string    `json:"error"`
 }
 
 type Backup struct {
 	Id      string    `json:"backup-id"`
+	Type    string    `json:"type"`
 	Created time.Time `json:"created"`
-	Size    int64     `json:"size"`
 	Volumes []Volume  `json:"volumes"`
 }
 

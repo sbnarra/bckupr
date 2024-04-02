@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
+	backups "github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	backups "github.com/sbnarra/bckupr/pkg/app"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 

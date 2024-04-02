@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"github.com/sbnarra/bckupr/internal/app"
 	cobraKeys "github.com/sbnarra/bckupr/internal/config/cobra"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/app"
 	"github.com/spf13/cobra"
 )
 

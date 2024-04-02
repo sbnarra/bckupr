@@ -94,16 +94,6 @@ func DeleteRequest(cmd *cobra.Command) (*types.DeleteBackupRequest, error) {
 	}
 }
 
-func ListRequest(cmd *cobra.Command) (*types.ListBackupsRequest, error) {
-	if backupArgs, err := createTaskArgs(keys.BackupStopModes, cmd); err != nil {
-		return nil, err
-	} else {
-		return &types.ListBackupsRequest{
-			Args: *backupArgs,
-		}, nil
-	}
-}
-
 func CreateBackupRequest(cmd *cobra.Command) (*types.CreateBackupRequest, error) {
 	var err error
 

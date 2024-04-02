@@ -17,6 +17,8 @@
                 </label>
             </p>
             <ul>
+                <li>
+                    Type: {{.Type}}</li>
                 <li>Date: {{date .Created}}</li>
                 <li>Time: {{time .Created}}</li>
             </ul>
@@ -26,11 +28,26 @@
                 <input type="hidden" name="action" value="restore">
                 <input type="hidden" name="id" value="{{.Id}}">
     
-                {{range .Volumes}}
-                <input type="checkbox" id="{{.Name}}" name="volumes" value="{{noFileExtension .Name}}">
-                <label for="{{.Name}}">{{.Name}}</label>
-                </br>
-                {{end}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Size(kb)</th>
+                            <th>Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Volumes}}
+                        <tr>
+                            <td><input type="checkbox" id="{{.Name}}" name="volumes" value="{{noFileExtension .Name}}"></td>
+                            <td>{{.Name}}</td>
+                            <td>{{.Size}}</td>
+                            <td>{{.Mount}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
         </form>
         <footer>
             <button onclick="closeDialog('restore-{{.Id}}')" className="secondary">Cancel</button>

@@ -11,7 +11,7 @@ func (c *Containers) StopContainer(ctx contexts.Context, container *Container, b
 		return false, nil
 	}
 
-	linkedStopper := concurrent.CpuBound(ctx, "linked-stopper")
+	linkedStopper := concurrent.Default(ctx, "linked-stopper")
 	for _, linked := range container.Linked {
 		linkedStopper.Run(func(ctx contexts.Context) error {
 			_, err := c.StopContainer(ctx, linked, backupPath)
