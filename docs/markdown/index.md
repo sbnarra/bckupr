@@ -11,24 +11,26 @@ This tool reads docker labels to determine which volumes/mounts require backing 
 
 ## Quick Start
 
-Using Bckupr you can automate local backups, pushing to offsite storage and data rentention with simple commands to also automate restoring your data. Bckupr will read container labels to tell which volumes should be backed up before shutting down relavent containers and taking backups to ensure all data is flushed to disk avoiding corrupt backuprs. Run Bckupr using the following docker commands to get started...
+Using Bckupr you can automate local backups, pushing to offsite storage and data rentention with simple commands to also automate restoring your data. Bckupr will read container labels to tell which volumes should be backed up before shutting down relavent containers and taking backups to ensure all data is flushed to disk avoiding corrupt backups.
+
+Simply run Bckupr using the following docker commands to get started:
 
 === "docker run"
     Use the following docker run command to start bckupr:
     ```bash
     $ docker run --name bckupr -d \
+        -p 8000:8000 \
+        -e BACKUP_DIR=/backups \
         -v /var/run/docker.sock:/var/run/docker.sock \
-        sbnarra/bckupr cron \
-        --backup-host-dir /backups \
-        --schedule "0 0 * * *"
+        sbnarra/bckupr
     ```
     Create new ad-hoc backup:
     ```bash
-    $ docker exec bckupr backup --backup-id adhoc
+    $ docker exec bckupr backup
     ```
     To then restore from the adhoc backup:
     ```bash
-    $ docker exec bckupr restore --backup-id adhoc
+    $ docker exec bckupr restore --backup-id <id-from-backup-logs>
     ```
 === "docker-compose.yml"
     Use the following YAML to run bckupr:
@@ -38,17 +40,20 @@ Using Bckupr you can automate local backups, pushing to offsite storage and data
       bckupr:
         image: sbnarra/bckupr
         environment:
-          BACKUP_HOST_DIR: /backups
-          SCHEDULE: "0 0 * * *"
+          BACKUP_DIR: /path/to/backup/dir
+        ports:
+          - 8000:8000
         volumes:
+          - /path/to/backup/dir:/backups
           - /var/run/docker.sock:/var/run/docker.sock
     ```
     Create new ad-hoc backup:
     ```bash
-    $ docker compose bckupr exec backup --backup-id adhoc
+    $ docker compose bckupr exec backup
     ```
     To then restore from the adhoc backup:
     ```bash
-    $ docker compose bckupr exec restore --backup-id adhoc
+    $ docker compose bckupr exec restore --backup-id <id-from-backup-logs>
     ```
+
 _By default bckupr runs in dry run mode, to disable use arg `--dry-run false` or env `DRY_RUN=false` once testing is complete._
