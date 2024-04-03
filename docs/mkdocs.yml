@@ -32,7 +32,7 @@ plugins:
       # rewrite_relative_urls: true
 nav:
   - 'Introduction': index.md
-  - 'Backup Options': options.md
+  - 'Usage': usage.md
   - 'Labels': 'labels.md'
   - 'Cron': 'cron.md'
   - 'Offsite': 'offsite.md'

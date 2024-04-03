@@ -3,7 +3,10 @@
 </h1>
 
 <p align="center">
-The all in one container backup and restore solution.
+Bckupr is program to automate backup creation and data restoration.
+</p>
+<p align="center">
+This tool reads docker labels to determine which volumes/mounts require backing up, cleanly shutting down containers and their dependancies to make sure all data is flushed to disk to create consistent backups.
 </p>
 
 ## Quick Start

@@ -8,7 +8,7 @@
 
 Bckupr is program to automate backup creation and data restoration.
 
-Bckupr reads docker labels to determine which volumes/mounts require backing up, whilst managing containers write access and their dependant containers, creates local backups and offers options for offsite storage.
+This tool reads docker labels to determine which volumes/mounts require backing up, whilst managing containers write access and their dependant containers, creates local backups and offers options for offsite storage.
 
 Features:
 * Simple label configuration
