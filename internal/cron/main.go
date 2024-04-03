@@ -37,11 +37,13 @@ func (c *Cron) Stop() {
 
 func (c *Cron) Start(ctx contexts.Context, schedule string, input *types.CreateBackupRequest) error {
 	c.I.Start()
-	if err := c.scheduleBackup(ctx, schedule, input); err != nil {
-		return err
+	if schedule != "" {
+		if err := c.scheduleBackup(ctx, schedule, input); err != nil {
+			return err
+		}
 	}
 	defer c.I.Stop()
-	signal.Notify(c.stop, os.Interrupt, os.Kill)
+	signal.Notify(c.stop, os.Interrupt)
 	<-c.stop
 	return nil
 }
