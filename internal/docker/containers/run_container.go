@@ -39,6 +39,16 @@ func renderTemplate(template types.ContainerTemplate, meta RunMeta) (types.Conta
 		return types.ContainerTemplate{}, &MissingTemplate{Message: "No config for " + template.Alias}
 	}
 
+	formattedCmd := make([]string, 0)
+	for _, part := range template.Cmd {
+		part = strings.ReplaceAll(part, "{backup_id}", meta.BackupId)
+		part = strings.ReplaceAll(part, "{name}", meta.VolumeName)
+
+		formattedCmd = append(formattedCmd, part)
+	}
+
+	// delete aboe if we're going with ENVs now
+
 	template.Env = append(template.Env,
 		"VOLUME_NAME="+meta.VolumeName,
 		"BACKUP_ID="+meta.BackupId,
@@ -49,7 +59,7 @@ func renderTemplate(template types.ContainerTemplate, meta RunMeta) (types.Conta
 	return types.ContainerTemplate{
 		Alias:   template.Alias,
 		Image:   template.Image,
-		Cmd:     template.Cmd,
+		Cmd:     formattedCmd,
 		Env:     template.Env,
 		Volumes: template.Volumes,
 	}, nil
