@@ -2,13 +2,15 @@
 
 Bckupr can push backups offsite to any storage option using custom docker containers and then pull those backups if deleted locally.
 
-These can be defined with YAML and mounted into the bckupr container. Bckupr also comes with predefined config for AWS, SCP, Azure, GCP.
+These can be defined with YAML and mounted into the bckupr container. Bckupr also comes with predefined config:
+<!-- * SCP -->
+* AWS - `/offsite/aws-s3.yml`
+<!-- * Azure -->
+<!-- * GCP -->
 
 Each integration will require environment variables sets in the bckupr container which will be passed into the offsite container during backup pushes or restore pulls.
 
-* ___Future Work: Add templates for SCP, Azure, GCP___
-
-# Option
+# Configure
 
 |Env|Flag|Description|Default|
 |-|-|-|-|
@@ -31,9 +33,11 @@ Requires the environment variables:
 
 Requires the environment variables:
 
-* 
+* `SECRET_KEY`
+* `REGION`
+* `BUCKET`
 
-### Azure
+<!-- ### Azure
 
 * `OFFSITE_CONFIG=/offsite/azure-.yml`
 
@@ -47,16 +51,38 @@ Requires the environment variables:
 
 Requires the environment variables:
 
-* 
+*  -->
 
 
 ## Custom
 
-___Future Work: Explain how to define custom templates___
+Configuration to push/pull from any offsite storage can be defined using the template below:
 
 ```yaml
 push:
-    image: <container-image>
-    cmd: 
-    env:
+  image: ubuntu
+  cmd:
+    - sh
+    - -c
+    - scp $BACKUP_PATH $USERNAME@$HOSTNAME:/backups/$BACKUP_ID/$VOLUME_NAME$EXT
+  env:
+    - USERNAME
+    - HOSTNAME
+pull:
+  image: ubuntu
+  cmd:
+    - sh
+    - -c
+    - scp $USERNAME@$HOSTNAME:/backups $BACKUP_PATH
+  env:
+    - USERNAME
+    - HOSTNAME
 ```
+
+`image`: image to be used.
+
+`cmd`: the command is made up of a list of arguments.
+
+`env`: this is a list of environment variable names to be passed from the bckupr container into the offsite containers.
+
+Mount the file into the bckupr container and pass the flag `--offsite-containers=/path/to/file.yml`

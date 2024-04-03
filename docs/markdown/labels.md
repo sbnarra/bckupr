@@ -20,8 +20,8 @@ By default bckupr will stop all containers, and their dependancies, with write a
 
 ## Prefix
 
-* `LABEL_PREFIX`(_env_)/`--label-prefix`(_cli_)
+The label prefix `bckupr` can be changed, this may be useful if running multiple instances. E.g. running bckupr with `--label-prefix=custom` will result it in scanning for labels like `custom.volumes=`.
 
-The label prefix `bckupr` can be changed using the above option, this may be useful if running multiple instances.
-
-Running bckupr with `--label-prefix=custom` will result it in scanning for labels like `custom.volumes=`.
+|Env|Flag|Description||
+|-|-|-|-|
+|`LABEL_PREFIX`|`--label-prefix`|Label prefix for scanning containers|_Optional: `bckupr`_

@@ -8,7 +8,7 @@ Restores also requires the backup id but will read labels similar to the backup 
 
 The backup/restore tasks use the same options but with different defaults for the backup id and stop modes, see below for more information on the different options for different tasks.
 
-_Global Options_:
+_Global_:
 
 |Env|Flag|Description|Backup|Restore|
 |-|-|-|-|-|
@@ -47,27 +47,27 @@ Stop modes control how bckupr stops containers before running backups or restore
 
 Filters can be applied to limit which containers/volumes are included with the backup/restore tasks.
 
-|Env|Flag|Backup|Restore|
-|-|-|-|-|
-|`INCLUDE_NAMES`|`--include-names`|_Optional: Defaults none_|_Optional: Defaults none_|
-|`INCLUDE_VOLUMES`|`--include-volumes`|_Optional: Defaults none_|_Optional: Defaults none_|
-|`EXCLUDE_NAMES`|`--exlclude-names`|_Optional: Defaults none_|_Optional: Defaults none_|
-|`EXCLUDE_VOLUMES`|`--exlclude-volumes`|_Optional: Defaults none_|_Optional: Defaults none_|
+|Env|Flag|Backup/Restore|
+|-|-|-|
+|`INCLUDE_NAMES`|`--include-names`|_Optional: Defaults none_|
+|`INCLUDE_VOLUMES`|`--include-volumes`|_Optional: Defaults none_|
+|`EXCLUDE_NAMES`|`--exlclude-names`|_Optional: Defaults none_|
+|`EXCLUDE_VOLUMES`|`--exlclude-volumes`|_Optional: Defaults none_|
 
 ## List
 
-List backups and metadata.
+List backups with metadata.
 
-|Env|Flag|Description|Backup|Restore|
-|-|-|-|-|-|
+|Env|Flag|Description||
+|-|-|-|-|
 |`BACKUP_DIR`|`--backup-dir`|Directory containing local backups|_Required: Must be supplied_|_Required: Must be supplied_|
 
 ## Delete
 
 Delete existing backup.
 
-|Env|Flag|Description|Backup|Restore|
-|-|-|-|-|-|
-|`BACKUP_DIR`|`--backup-dir`|Directory containing local backups|_Required: Must be supplied_|_Required: Must be supplied_|
-|`BACKUP_ID`|`--backup-id`|Id of specific backup|_Optional: Autogenerate Timestamp_|_Required: Must be supplied_|
-|`DRY_RUN`|`--dry-run`|Needs disabling once completed testing|_Optional: Defaults `true`_|_Optional: Defaults `true`_|
+|Env|Flag|Description||
+|-|-|-|-|
+|`BACKUP_DIR`|`--backup-dir`|Directory containing local backups|_Required: Must be supplied_|
+|`BACKUP_ID`|`--backup-id`|Id of specific backup|_Required: Must be supplied_|
+|`DRY_RUN`|`--dry-run`|Needs disabling once completed testing|_Optional: Defaults `true`_|
