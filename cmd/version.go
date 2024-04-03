@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/sbnarra/bckupr/pkg/app"
+	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/spf13/cobra"
 )
 

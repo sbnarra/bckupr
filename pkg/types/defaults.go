@@ -18,12 +18,6 @@ func DefaultDeleteBackupRequest() *DeleteBackupRequest {
 	}
 }
 
-func DefaultListBackupsRequest() *ListBackupsRequest {
-	return &ListBackupsRequest{
-		Args: DefaultTaskArgs(keys.BackupStopModes),
-	}
-}
-
 func DefaultRestoreBackupRequest() *RestoreBackupRequest {
 	return &RestoreBackupRequest{
 		DryRun:               keys.DryRun.EnvBool(),

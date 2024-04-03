@@ -2,10 +2,13 @@ package app
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"time"
 
 	containerConfig "github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/docker/containers"
+	"github.com/sbnarra/bckupr/internal/meta"
 	"github.com/sbnarra/bckupr/internal/metrics"
 	"github.com/sbnarra/bckupr/internal/tasks"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
@@ -22,12 +25,20 @@ func CreateBackup(ctx contexts.Context, input *types.CreateBackupRequest) error 
 	if local, offsite, err := containerConfig.ContainerTemplates(input.Args.LocalContainersConfig, input.Args.OffsiteContainersConfig); err != nil {
 		return err
 	} else {
+		backupDir := ctx.BackupDir + "/" + backupId
+		if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
+			return fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
+		}
+
+		mw := meta.NewWriter(ctx, backupId, "full")
+		defer mw.Write(ctx)
+
 		return tasks.Run(
 			backupCtx,
 			backupId,
 			input.Args,
 			input.NotificationSettings,
-			newCreateBackupTask(local, offsite))
+			newBackupVolumeTask(local, offsite, mw))
 	}
 }
 
@@ -40,24 +51,30 @@ func getBackupId(ctx contexts.Context, input *types.CreateBackupRequest) string 
 	return backupId
 }
 
-func newCreateBackupTask(local types.LocalContainerTemplates, offsite *types.OffsiteContainerTemplates) func(contexts.Context, string, string, string, *containers.Containers) error {
-	return func(ctx contexts.Context, backupId string, name string, path string, c *containers.Containers) error {
+func newBackupVolumeTask(
+	local types.LocalContainerTemplates,
+	offsite *types.OffsiteContainerTemplates,
+	mw *meta.MetaWriter,
+) func(contexts.Context, string, string, string, *containers.Containers) error {
+	return func(ctx contexts.Context, backupId string, name string, volume string, c *containers.Containers) error {
 		m := metrics.New(backupId, "backup", name)
-		err := createBackup(ctx, c, backupId, name, path, local, offsite)
+		err := backupVolume(ctx, c, backupId, name, volume, local, offsite)
+		mw.AddVolume(ctx, backupId, name, volume, err)
 		m.OnComplete(err)
 		return err
 	}
 }
 
-func createBackup(
+func backupVolume(
 	ctx contexts.Context,
 	c *containers.Containers,
 	backupId string,
 	name string,
-	path string,
+	volume string,
 	local types.LocalContainerTemplates,
-	offsite *types.OffsiteContainerTemplates) error {
-	logging.Info(ctx, "Backup starting for", path)
+	offsite *types.OffsiteContainerTemplates,
+) error {
+	logging.Info(ctx, "Backup starting for", volume)
 
 	meta := containers.RunMeta{
 		BackupId:   backupId,
@@ -65,7 +82,7 @@ func createBackup(
 	}
 
 	local.Backup.Volumes = append(local.Backup.Volumes,
-		path+":/data:ro",
+		volume+":/data:ro",
 		ctx.BackupDir+":/backup:rw")
 	if err := c.RunContainer(ctx, meta, local.Backup); err != nil {
 		return err
