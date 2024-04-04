@@ -19,7 +19,7 @@ func createBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) 
 
 func listBackups(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
 	return app.ListBackups(ctx, func(backup *types.Backup) {
-		ctx.Feedback(backup)
+		ctx.FeedbackJson(backup)
 	})
 }
 

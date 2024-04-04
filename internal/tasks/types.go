@@ -1,11 +1,11 @@
 package tasks
 
 import (
-	"github.com/sbnarra/bckupr/internal/docker/containers"
+	"github.com/sbnarra/bckupr/internal/docker/types"
 )
 
 type task struct {
 	Completed  bool
 	Volume     string
-	Containers []*containers.Container
+	Containers []*types.Container
 }

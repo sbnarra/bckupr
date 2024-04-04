@@ -60,7 +60,7 @@ write_data pre-backup
 check_data_is pre-backup
 
 # perform backup of intial data
-bckupr backup --backup-id-override=$BACKUP_ID
+bckupr backup --backup-id=$BACKUP_ID
 
 # update container data
 write_data post-backup

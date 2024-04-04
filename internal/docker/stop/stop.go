@@ -1,12 +1,14 @@
-package containers
+package stop
 
 import (
+	"github.com/sbnarra/bckupr/internal/docker/client"
+	"github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func (c *Containers) StopContainer(ctx contexts.Context, container *Container, backupPath string) (bool, error) {
+func StopContainer(ctx contexts.Context, client client.DockerClient, container *types.Container) (bool, error) {
 	if !container.Running {
 		return false, nil
 	}
@@ -14,7 +16,7 @@ func (c *Containers) StopContainer(ctx contexts.Context, container *Container, b
 	linkedStopper := concurrent.Default(ctx, "linked-stopper")
 	for _, linked := range container.Linked {
 		linkedStopper.Run(func(ctx contexts.Context) error {
-			_, err := c.StopContainer(ctx, linked, backupPath)
+			_, err := StopContainer(ctx, client, linked)
 			return err
 		})
 	}
@@ -39,7 +41,7 @@ func (c *Containers) StopContainer(ctx contexts.Context, container *Container, b
 
 	if ctx.DryRun {
 		logging.Info(ctx, "Dry-Run! Stopped", container.Name)
-	} else if err := c.client.StopContainer(ctx, container.Id); err != nil {
+	} else if err := client.StopContainer(container.Id); err != nil {
 		return true, err
 	} else {
 		logging.Info(ctx, "Stopped", container.Name)

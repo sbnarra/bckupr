@@ -30,13 +30,13 @@ func BackupActionHandler(cron *cron.Cron) func(ctx contexts.Context, w http.Resp
 			var exec func() error
 			if action == "delete" {
 				input := types.DefaultDeleteBackupRequest()
-				input.BackupId = form["id"][0]
+				input.Args.BackupId = form["id"][0]
 				exec = func() error {
 					return app.DeleteBackup(ctx, input)
 				}
 			} else if action == "restore" {
 				input := types.DefaultRestoreBackupRequest()
-				input.BackupId = form["id"][0]
+				input.Args.BackupId = form["id"][0]
 
 				if len(form["volumes"]) == 0 {
 					exec = func() error {
@@ -61,7 +61,7 @@ func BackupActionHandler(cron *cron.Cron) func(ctx contexts.Context, w http.Resp
 				input.Args.Filters.ExcludeVolumes = form["exclude-volumes"]
 
 				if form["id-override"] != nil {
-					input.BackupIdOverride = form["id-override"][0]
+					input.Args.BackupId = form["id-override"][0]
 				}
 
 				exec = func() error {

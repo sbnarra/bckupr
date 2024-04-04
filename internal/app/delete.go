@@ -9,7 +9,7 @@ import (
 )
 
 func DeleteBackup(ctx contexts.Context, input *types.DeleteBackupRequest) error {
-	path := ctx.BackupDir + "/" + input.BackupId
+	path := ctx.BackupDir + "/" + input.Args.BackupId
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return err
@@ -24,7 +24,7 @@ func DeleteBackup(ctx contexts.Context, input *types.DeleteBackupRequest) error 
 			return err
 		}
 	}
-	return ctx.Feedback(map[string]any{
+	return ctx.FeedbackJson(map[string]any{
 		"dry-run": ctx.DryRun,
 		"deleted": path,
 	})

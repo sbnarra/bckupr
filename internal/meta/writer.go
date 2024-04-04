@@ -11,12 +11,12 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-type MetaWriter struct {
+type Writer struct {
 	data types.Backup
 }
 
-func NewWriter(ctx contexts.Context, backupId string, backupType string) *MetaWriter {
-	return &MetaWriter{
+func NewWriter(ctx contexts.Context, backupId string, backupType string) *Writer {
+	return &Writer{
 		data: types.Backup{
 			Id:      backupId,
 			Created: time.Now(),
@@ -25,9 +25,9 @@ func NewWriter(ctx contexts.Context, backupId string, backupType string) *MetaWr
 	}
 }
 
-func (mw *MetaWriter) AddVolume(ctx contexts.Context, backupId string, name string, volume string, err error) {
+func (mw *Writer) AddVolume(ctx contexts.Context, backupId string, name string, ext string, volume string, err error) {
 	var size int64
-	if s, err := os.Stat(ctx.BackupDir + "/" + backupId + "/" + name + ".tar.gz"); err == nil {
+	if s, err := os.Stat(ctx.BackupDir + "/" + backupId + "/" + name + "." + ext); err == nil {
 		size = s.Size()
 	} else {
 		size = -1
@@ -41,6 +41,7 @@ func (mw *MetaWriter) AddVolume(ctx contexts.Context, backupId string, name stri
 
 	mw.data.Volumes = append(mw.data.Volumes, types.Volume{
 		Name:    name,
+		Ext:     ext,
 		Mount:   volume,
 		Size:    size,
 		Created: time.Now(),
@@ -48,7 +49,7 @@ func (mw *MetaWriter) AddVolume(ctx contexts.Context, backupId string, name stri
 	})
 }
 
-func (mw *MetaWriter) Write(ctx contexts.Context) error {
+func (mw *Writer) Write(ctx contexts.Context) error {
 	if yaml, err := encodings.ToYaml(mw.data); err != nil {
 		return err
 	} else {

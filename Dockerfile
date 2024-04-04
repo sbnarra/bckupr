@@ -38,7 +38,8 @@ WORKDIR /
 COPY --from=base /bckupr/ui /ui/
 COPY --from=base /bckupr/bckupr /
 
-ENV GIN_MODE release
+COPY configs/offsite /offsite
+ENV LOCAL_CONTAINERS /local/tar.yml
 
 ENTRYPOINT ["/bckupr"]
 CMD ["daemon"]
