@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"sync"
 
+	pkgErrors "github.com/pkg/errors"
+
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
@@ -97,12 +99,10 @@ func (c *Concurrent) Wait() error {
 		}
 		close(errCh)
 	}
-
 	close(c.limiter)
+
 	if c.ctx.Debug {
-		return err
-		// return pkgErrors.WithStack(err)
-	} else {
-		return err
+		return pkgErrors.WithStack(err)
 	}
+	return err
 }

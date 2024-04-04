@@ -11,27 +11,28 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-type Db struct {
-	data map[string]*types.Backup
+type reader interface {
+	Get(id string) *types.Backup
+	ForEach(forEach func(*types.Backup))
 }
 
-func NewDb(ctx contexts.Context) (*Db, error) {
+func Reader(ctx contexts.Context) (reader, error) {
 	if data, err := loadData(ctx); err != nil {
 		return nil, err
 	} else {
-		return &Db{
+		return storage{
 			data: data,
 		}, nil
 	}
 }
 
-func (db *Db) Get(id string) *types.Backup {
-	return db.data[id]
+func (s storage) Get(id string) *types.Backup {
+	return s.data[id]
 }
 
-func (db *Db) ForEach(perItem func(*types.Backup)) {
-	for _, backup := range db.data {
-		perItem(backup)
+func (s storage) ForEach(forEach func(*types.Backup)) {
+	for _, backup := range s.data {
+		forEach(backup)
 	}
 }
 

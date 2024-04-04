@@ -27,7 +27,7 @@ func list(cmd *cobra.Command, args []string) error {
 		return err
 	} else if noDaemon {
 		if err := app.ListBackups(ctx, func(backup *types.Backup) {
-			ctx.Feedback(backup)
+			ctx.FeedbackJson(backup)
 		}); err != nil {
 			logging.CheckError(ctx, err)
 		}

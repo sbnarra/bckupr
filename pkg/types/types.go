@@ -4,24 +4,22 @@ import "time"
 
 type CreateBackupRequest struct {
 	DryRun               bool                  `json:"dry-run"`
-	BackupIdOverride     string                `json:"backup-id-override"`
 	Args                 TaskArgs              `json:"args"`
 	NotificationSettings *NotificationSettings `json:"notification-settings"`
 }
 
 type DeleteBackupRequest struct {
-	BackupId string   `json:"backup-id"`
-	Args     TaskArgs `json:"args"`
+	Args TaskArgs `json:"args"`
 }
 
 type RestoreBackupRequest struct {
 	DryRun               bool                  `json:"dry-run"`
-	BackupId             string                `json:"backup-id"`
 	Args                 TaskArgs              `json:"args"`
 	NotificationSettings *NotificationSettings `json:"notification-settings"`
 }
 
 type TaskArgs struct {
+	BackupId                string   `json:"backup-id"`
 	DockerHosts             []string `json:"docker-hosts"`
 	LabelPrefix             string   `json:"label-prefix"`
 	Filters                 Filters  `json:"filters"`
@@ -40,6 +38,7 @@ type NotificationSettings struct {
 }
 
 type LocalContainerTemplates struct {
+	FileExt string            `json:"file-ext"`
 	Backup  ContainerTemplate `json:"backup"`
 	Restore ContainerTemplate `json:"restore"`
 }
@@ -67,6 +66,7 @@ type Filters struct {
 
 type Volume struct {
 	Name    string    `json:"name"`
+	Ext     string    `json:"ext"`
 	Mount   string    `json:"mount"`
 	Created time.Time `json:"created"`
 	Size    int64     `json:"size(kb)"`

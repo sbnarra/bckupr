@@ -1,0 +1,13 @@
+file-ext: tar.gz
+backup:
+  image: busybox
+  cmd:
+    - sh
+    - -c
+    - tar czvf $BACKUP_DIR/$BACKUP_ID/$VOLUME_NAME.$FILE_EXT $DATA_DIR
+restore:
+  image: busybox
+  cmd:
+    - sh
+    - -c
+    - tar xzvf $BACKUP_DIR/$BACKUP_ID/$VOLUME_NAME.$FILE_EXT --strip 1 -C $DATA_DIR
