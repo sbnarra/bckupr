@@ -3,6 +3,7 @@ package concurrent
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"sync"
 
 	pkgErrors "github.com/pkg/errors"
@@ -25,9 +26,13 @@ func Single(ctx contexts.Context, name string, exec func(ctx contexts.Context) e
 	return c
 }
 
-func CpuBound(ctx contexts.Context, name string) *Concurrent {
-	// return New(ctx, name, runtime.NumCPU())
+func Default(ctx contexts.Context, name string) *Concurrent {
 	return New(ctx, name, 1)
+	// return CpuBound(ctx, name)
+}
+
+func CpuBound(ctx contexts.Context, name string) *Concurrent {
+	return New(ctx, name, runtime.NumCPU())
 }
 
 func New(ctx contexts.Context, name string, limit int) *Concurrent {

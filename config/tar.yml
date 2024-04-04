@@ -3,10 +3,12 @@ backup:
   cmd:
     - sh
     - -c
-    - mkdir -p /backup/{backup_id}; tar czvf /backup/{backup_id}/{name}.tar.gz /data
+    - tar czvf /backup/{backup_id}/{name}.tar.gz /data
+    # - tar czvf $BACKUP_DIR/$BACKUP_NAME $DATA_DIR
 restore:
   image: busybox
   cmd:
     - sh
     - -c
     - tar xzvf /backup/{backup_id}/{name}.tar.gz --strip 1 -C /data
+    # - tar xzvf $BACKUP_DIR/$BACKUP_NAME --strip 1 -C $DATA_DIR

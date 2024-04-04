@@ -3,9 +3,9 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/service/dispatcher"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
-	"github.com/sbnarra/bckupr/pkg/app"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 

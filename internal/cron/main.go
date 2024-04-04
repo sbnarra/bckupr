@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
+	backups "github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	backups "github.com/sbnarra/bckupr/pkg/app"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
@@ -37,11 +37,13 @@ func (c *Cron) Stop() {
 
 func (c *Cron) Start(ctx contexts.Context, schedule string, input *types.CreateBackupRequest) error {
 	c.I.Start()
-	if err := c.scheduleBackup(ctx, schedule, input); err != nil {
-		return err
+	if schedule != "" {
+		if err := c.scheduleBackup(ctx, schedule, input); err != nil {
+			return err
+		}
 	}
 	defer c.I.Stop()
-	signal.Notify(c.stop, os.Interrupt, os.Kill)
+	signal.Notify(c.stop, os.Interrupt)
 	<-c.stop
 	return nil
 }
