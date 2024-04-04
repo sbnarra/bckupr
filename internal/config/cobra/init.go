@@ -39,15 +39,11 @@ func InitList(cmd *cobra.Command) {
 func InitDelete(cmd *cobra.Command) {
 	InitDaemonClient(cmd)
 	initTaskArgs(cmd, keys.BackupStopModes)
-
-	register(keys.BackupId, cmd.Flags())
 }
 
 func InitBackup(cmd *cobra.Command) {
 	InitDaemonClient(cmd)
 	initTaskArgs(cmd, keys.BackupStopModes)
-
-	register(keys.BackupIdOverride, cmd.Flags())
 }
 
 func InitDaemonClient(cmd *cobra.Command) {
@@ -60,10 +56,8 @@ func InitDaemonClient(cmd *cobra.Command) {
 func InitRestore(cmd *cobra.Command) {
 	InitDaemonClient(cmd)
 
-	register(keys.BackupId, cmd.Flags())
-	required(keys.BackupId, cmd)
-
 	initTaskArgs(cmd, keys.BackupStopModes)
+	required(keys.BackupId, cmd)
 }
 
 func initTaskArgs(cmd *cobra.Command, stopModes *keys.Key) {
@@ -73,6 +67,7 @@ func initTaskArgs(cmd *cobra.Command, stopModes *keys.Key) {
 	register(keys.DockerHosts, cmd.Flags())
 	register(keys.LabelPrefix, cmd.Flags())
 
+	register(keys.BackupId, cmd.Flags())
 	register(keys.BackupDir, cmd.Flags())
 	required(keys.BackupDir, cmd)
 

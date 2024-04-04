@@ -24,7 +24,7 @@ func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest
 	} else {
 		return tasks.Run(
 			restoreCtx,
-			input.BackupId,
+			input.Args.BackupId,
 			input.Args,
 			input.NotificationSettings,
 			newRestoreBackupTask(local, offsite))
@@ -32,21 +32,22 @@ func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest
 
 }
 
-func newRestoreBackupTask(local publicTypes.LocalContainerTemplates, offsite *publicTypes.OffsiteContainerTemplates) func(contexts.Context, docker.Docker, string, string, string) error {
+func newRestoreBackupTask(local publicTypes.LocalContainerTemplates, offsite *publicTypes.OffsiteContainerTemplates) tasks.Exec {
 	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string) error {
 		m := metrics.New(backupId, "restore", name)
-		err := restoreBackup(ctx, docker, backupId, name, path, local, offsite)
+		err := restoreBackup(ctx, docker, backupId, name, local.FileExt, path, local, offsite)
 		m.OnComplete(err)
 		return err
 	}
 }
 
-func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string, local publicTypes.LocalContainerTemplates, offsite *publicTypes.OffsiteContainerTemplates) error {
+func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, name string, fileExt string, path string, local publicTypes.LocalContainerTemplates, offsite *publicTypes.OffsiteContainerTemplates) error {
 	logging.Info(ctx, "Restore starting for", path)
 
-	meta := run.RunMeta{
+	meta := run.CommonEnv{
 		BackupId:   backupId,
 		VolumeName: name,
+		FileExt:    fileExt,
 	}
 
 	filename := ctx.BackupDir + "/" + backupId

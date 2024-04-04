@@ -5,7 +5,6 @@ import "github.com/sbnarra/bckupr/internal/config/keys"
 func DefaultCreateBackupRequest() *CreateBackupRequest {
 	return &CreateBackupRequest{
 		DryRun:               keys.DryRun.EnvBool(),
-		BackupIdOverride:     keys.BackupIdOverride.EnvString(),
 		Args:                 DefaultTaskArgs(keys.BackupStopModes),
 		NotificationSettings: DefaultNotificationSettings(),
 	}
@@ -13,15 +12,13 @@ func DefaultCreateBackupRequest() *CreateBackupRequest {
 
 func DefaultDeleteBackupRequest() *DeleteBackupRequest {
 	return &DeleteBackupRequest{
-		Args:     DefaultTaskArgs(keys.BackupStopModes),
-		BackupId: keys.BackupId.EnvString(),
+		Args: DefaultTaskArgs(keys.BackupStopModes),
 	}
 }
 
 func DefaultRestoreBackupRequest() *RestoreBackupRequest {
 	return &RestoreBackupRequest{
 		DryRun:               keys.DryRun.EnvBool(),
-		BackupId:             keys.BackupId.EnvString(),
 		Args:                 DefaultTaskArgs(keys.RestoreStopModes),
 		NotificationSettings: DefaultNotificationSettings(),
 	}
@@ -41,6 +38,7 @@ func DefaultNotificationSettings() *NotificationSettings {
 
 func DefaultTaskArgs(stopModes *keys.Key) TaskArgs {
 	return TaskArgs{
+		BackupId:                keys.BackupId.EnvString(),
 		DockerHosts:             keys.DockerHosts.EnvStringSlice(),
 		Filters:                 defaultFilters(stopModes),
 		LabelPrefix:             keys.LabelPrefix.EnvString(),

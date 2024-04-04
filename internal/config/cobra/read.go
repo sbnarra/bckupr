@@ -14,18 +14,12 @@ func RestoreBackupRequest(cmd *cobra.Command) (*types.RestoreBackupRequest, erro
 		return nil, err
 	}
 
-	var backupId string
-	if backupId, err = String(keys.BackupId, cmd.Flags()); err != nil {
-		return nil, err
-	}
-
 	var notificationSettings *types.NotificationSettings
 	if notificationSettings, err = createNotificationSettings(cmd); err != nil {
 		return nil, err
 	}
 
 	return &types.RestoreBackupRequest{
-		BackupId:             backupId,
 		Args:                 *taskArgs,
 		NotificationSettings: notificationSettings,
 	}, nil
@@ -84,12 +78,9 @@ func createNotificationSettings(cmd *cobra.Command) (*types.NotificationSettings
 func DeleteRequest(cmd *cobra.Command) (*types.DeleteBackupRequest, error) {
 	if backupArgs, err := createTaskArgs(keys.BackupStopModes, cmd); err != nil {
 		return nil, err
-	} else if backupId, err := String(keys.BackupId, cmd.Flags()); err != nil {
-		return nil, err
 	} else {
 		return &types.DeleteBackupRequest{
-			BackupId: backupId,
-			Args:     *backupArgs,
+			Args: *backupArgs,
 		}, nil
 	}
 }
@@ -102,47 +93,14 @@ func CreateBackupRequest(cmd *cobra.Command) (*types.CreateBackupRequest, error)
 		return nil, err
 	}
 
-	var backupIdOverride string
-	if backupIdOverride, err = String(keys.BackupIdOverride, cmd.Flags()); err != nil {
-		return nil, err
-	}
-
 	var notificationSettings *types.NotificationSettings
 	if notificationSettings, err = createNotificationSettings(cmd); err != nil {
 		return nil, err
 	}
 
 	return &types.CreateBackupRequest{
-		BackupIdOverride:     backupIdOverride,
 		Args:                 *backupArgs,
 		NotificationSettings: notificationSettings,
-	}, nil
-}
-
-func createTemplate(name string, cmd *cobra.Command) (*types.ContainerTemplate, error) {
-	var err error
-
-	var image string
-	if image, err = cmd.Flags().GetString(name + "-image"); err != nil {
-		return nil, err
-	}
-
-	var command []string
-	if command, err = cmd.Flags().GetStringSlice(name + "-cmd"); err != nil {
-		return nil, err
-	}
-
-	var env []string
-	if env, err = cmd.Flags().GetStringSlice(name + "-env"); err != nil {
-		return nil, err
-	}
-
-	return &types.ContainerTemplate{
-		Alias:   name,
-		Image:   image,
-		Cmd:     command,
-		Env:     env,
-		Volumes: []string{},
 	}, nil
 }
 
@@ -174,7 +132,13 @@ func createTaskArgs(stopModes *keys.Key, cmd *cobra.Command) (*types.TaskArgs, e
 		return nil, err
 	}
 
+	var backupId string
+	if backupId, err = String(keys.BackupId, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
 	return &types.TaskArgs{
+		BackupId:                backupId,
 		DockerHosts:             dockerHosts,
 		Filters:                 *filters,
 		LabelPrefix:             labelPrefix,

@@ -9,7 +9,7 @@ import (
 )
 
 func DeleteBackup(ctx contexts.Context, input *types.DeleteBackupRequest) error {
-	path := ctx.BackupDir + "/" + input.BackupId
+	path := ctx.BackupDir + "/" + input.Args.BackupId
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return err

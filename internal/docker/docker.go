@@ -17,7 +17,7 @@ type docker struct {
 }
 
 type Docker interface {
-	Run(contexts.Context, run.RunMeta, publicTypes.ContainerTemplate) error
+	Run(contexts.Context, run.CommonEnv, publicTypes.ContainerTemplate) error
 	Start(contexts.Context, *dockerTypes.Container) error
 	Stop(contexts.Context, *dockerTypes.Container) (bool, error)
 	List() (map[string]*dockerTypes.Container, error)
@@ -30,7 +30,7 @@ func New(client client.DockerClient, labelPrefix string) Docker {
 	}
 }
 
-func (d docker) Run(ctx contexts.Context, meta run.RunMeta, template publicTypes.ContainerTemplate) error {
+func (d docker) Run(ctx contexts.Context, meta run.CommonEnv, template publicTypes.ContainerTemplate) error {
 	return run.RunContainer(ctx, d.client, meta, template)
 }
 

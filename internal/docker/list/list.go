@@ -27,10 +27,17 @@ func ListContainers(client client.DockerClient, labelPrefix string) (map[string]
 
 		dependancies, compose := createDependancies(container, labelPrefix)
 
+		var name string
+		if len(container.Names) == 0 || len(container.Names[0]) == 0 {
+			name = "_unnamed_"
+		} else {
+			name = container.Names[0][1:]
+		}
+
 		isRunning := slices.Contains([]string{"running", "restarting"}, container.State)
 		containerData[container.ID] = &types.Container{
 			Id:           container.ID,
-			Name:         container.Names[0][1:],
+			Name:         name,
 			Compose:      compose,
 			Dependancies: dependancies,
 			Linked:       []*types.Container{},

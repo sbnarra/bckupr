@@ -6,6 +6,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/client"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
+	"github.com/sbnarra/bckupr/internal/filters"
 	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
@@ -14,9 +15,14 @@ import (
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func Run(ctx contexts.Context, backupId string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings,
-	exec func(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string) error,
-) error {
+type Exec func(
+	ctx contexts.Context,
+	docker docker.Docker,
+	backupId string,
+	name string,
+	path string) error
+
+func Run(ctx contexts.Context, backupId string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
 	action := ctx.Name
 	runner := concurrent.Default(ctx, ctx.Name)
 	for _, dockerHost := range args.DockerHosts {
@@ -42,10 +48,10 @@ func Run(ctx contexts.Context, backupId string, args publicTypes.TaskArgs, notif
 	return nil
 }
 
-func run(ctx contexts.Context, docker docker.Docker, backupId string, action string, args types.TaskArgs, notificationSettings *types.NotificationSettings, exec func(contexts.Context, docker.Docker, string, string, string) error) error {
+func run(ctx contexts.Context, docker docker.Docker, backupId string, action string, args types.TaskArgs, notificationSettings *types.NotificationSettings, exec Exec) error {
 	if allContainers, err := docker.List(); err != nil {
 		return err
-	} else if tasks, err := listFilterTasksAll(ctx, allContainers, args.Filters); err != nil {
+	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args.Filters); err != nil {
 		return err
 	} else {
 		backupVolumes := []string{}
@@ -102,19 +108,19 @@ func run(ctx contexts.Context, docker docker.Docker, backupId string, action str
 	}
 }
 
-func listFilterTasksAll(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, filters publicTypes.Filters) (map[string]*task, error) {
+func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, inputFilters publicTypes.Filters) (map[string]*task, error) {
 	if len(containerMap) == 0 {
 		return nil, fmt.Errorf("no containers")
 	}
 	logging.Debug(ctx, "Found", len(containerMap), "containers")
 
-	filtered := docker.ApplyFilters(containerMap, filters)
+	filtered := filters.Apply(containerMap, inputFilters)
 	if len(filtered) == 0 {
 		return nil, fmt.Errorf("no containers after filtering")
 	}
 	logging.Debug(ctx, len(filtered), "left after filtering")
 
-	tasks := convertToTasks(filtered, filters)
+	tasks := convertToTasks(filtered, inputFilters)
 	if len(tasks) == 0 {
 		return nil, fmt.Errorf("no tasks from filtered containers")
 	}

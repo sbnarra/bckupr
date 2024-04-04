@@ -7,7 +7,7 @@ import (
 )
 
 func ListBackups(ctx contexts.Context, callback func(*types.Backup)) error {
-	if db, err := meta.NewDb(ctx); err != nil {
+	if db, err := meta.Reader(ctx); err != nil {
 		return err
 	} else {
 		db.ForEach(callback)

@@ -1,1 +1,0 @@
-curl -X POST -d @examples/create-request.json http://localhost:8000/api/backups -v

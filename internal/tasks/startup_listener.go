@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"github.com/sbnarra/bckupr/internal/docker"
+	"github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
@@ -28,27 +29,30 @@ func runStartupListener(ctx contexts.Context, docker docker.Docker, taskCh chan 
 func startContainers(ctx contexts.Context, docker docker.Docker, task *task) int {
 	started := 0
 	for _, container := range task.Containers {
-		withoutBackupVolume := make(map[string]string)
-		for name, path := range container.Backup.Volumes {
-			if path != task.Volume {
-				withoutBackupVolume[name] = path
-			}
-		}
-
-		// this line makes this func not concurrent safe
-		container.Backup.Volumes = withoutBackupVolume
+		removeBackupVolume(container, task)
 
 		if len(container.Backup.Volumes) == 0 {
-			docker.Start(ctx, container)
-			started++
-		} else {
-			var j string
-			var err error
-			if j, err = encodings.ToJson(container.Backup.Volumes); err != nil {
-				logging.CheckError(ctx, err)
+			if err := docker.Start(ctx, container); err != nil {
+				logging.CheckError(ctx, err, "failed to start", container.Name)
+			} else {
+				started++
 			}
+		} else if j, err := encodings.ToJson(container.Backup.Volumes); err != nil {
+			logging.CheckError(ctx, err)
+		} else {
 			logging.Debug(ctx, "Unable to start", container.Name, ", has tasks in progress", j)
 		}
 	}
 	return started
+}
+
+func removeBackupVolume(container *types.Container, task *task) {
+	withoutBackupVolume := make(map[string]string)
+	for name, path := range container.Backup.Volumes {
+		if path != task.Volume {
+			withoutBackupVolume[name] = path
+		}
+	}
+	// this line makes this func not concurrent safe
+	container.Backup.Volumes = withoutBackupVolume
 }

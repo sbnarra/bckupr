@@ -1,6 +1,7 @@
 package run
 
-type RunMeta struct {
+type CommonEnv struct {
 	VolumeName string
 	BackupId   string
+	FileExt    string
 }

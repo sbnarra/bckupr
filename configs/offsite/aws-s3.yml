@@ -1,14 +1,15 @@
 push:
   image: amazon/aws-cli
   env: 
+    - BUCKET
     - AWS_SECRET
     - AWS_SECRET_KEY
   cmd:
     - aws
     - s3
     - cp
-    - /backup/{backup_id}/{name}.tar.gz
-    - s3://$BUCKET:{backup_id}/{name}.tar.gz
+    - $BACKUP_DIR/$BACKUP_ID/$VOLUME_NAME.$FILE_EXT
+    - s3://$BUCKET/$BACKUP_ID/$VOLUME_NAME.$FILE_EXT
 pull:
   image: amazon/aws-cli
   env: 
@@ -18,5 +19,5 @@ pull:
     - aws
     - s3
     - cp
-    - s3://$BUCKET:{backup_id}/{name}.tar.gz
-    - /backup/{backup_id}/{name}.tar.gz
+    - s3://$BUCKET/$BACKUP_ID/$VOLUME_NAME.$FILE_EXT
+    - $BACKUP_DIR/$BACKUP_ID/$VOLUME_NAME.$FILE_EXT

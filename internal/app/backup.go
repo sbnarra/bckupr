@@ -45,8 +45,8 @@ func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) 
 
 func getBackupId(ctx contexts.Context, input *publicTypes.CreateBackupRequest) string {
 	backupId := time.Now().Format("20060102_1504")
-	if input.BackupIdOverride != "" {
-		backupId = input.BackupIdOverride
+	if input.Args.BackupId != "" {
+		backupId = input.Args.BackupId
 	}
 	logging.Info(ctx, "Using backup id", backupId)
 	return backupId
@@ -55,12 +55,12 @@ func getBackupId(ctx contexts.Context, input *publicTypes.CreateBackupRequest) s
 func newBackupVolumeTask(
 	local publicTypes.LocalContainerTemplates,
 	offsite *publicTypes.OffsiteContainerTemplates,
-	mw *meta.MetaWriter,
-) func(contexts.Context, docker.Docker, string, string, string) error {
+	mw *meta.Writer,
+) tasks.Exec {
 	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, volume string) error {
 		m := metrics.New(backupId, "backup", name)
-		err := backupVolume(ctx, docker, backupId, name, volume, local, offsite)
-		mw.AddVolume(ctx, backupId, name, volume, err)
+		err := backupVolume(ctx, docker, backupId, name, local.FileExt, volume, local, offsite)
+		mw.AddVolume(ctx, backupId, name, local.FileExt, volume, err)
 		m.OnComplete(err)
 		return err
 	}
@@ -71,15 +71,17 @@ func backupVolume(
 	docker docker.Docker,
 	backupId string,
 	name string,
+	fileExt string,
 	volume string,
 	local publicTypes.LocalContainerTemplates,
 	offsite *publicTypes.OffsiteContainerTemplates,
 ) error {
 	logging.Info(ctx, "Backup starting for", volume)
 
-	meta := run.RunMeta{
+	meta := run.CommonEnv{
 		BackupId:   backupId,
 		VolumeName: name,
+		FileExt:    fileExt,
 	}
 
 	local.Backup.Volumes = append(local.Backup.Volumes,
