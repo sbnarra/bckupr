@@ -7,16 +7,17 @@ import (
 	"time"
 
 	containerConfig "github.com/sbnarra/bckupr/internal/config/containers"
-	"github.com/sbnarra/bckupr/internal/docker/containers"
+	"github.com/sbnarra/bckupr/internal/docker"
+	"github.com/sbnarra/bckupr/internal/docker/run"
 	"github.com/sbnarra/bckupr/internal/meta"
 	"github.com/sbnarra/bckupr/internal/metrics"
 	"github.com/sbnarra/bckupr/internal/tasks"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
+	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func CreateBackup(ctx contexts.Context, input *types.CreateBackupRequest) error {
+func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) error {
 
 	backupCtx := ctx
 	backupCtx.Name = "backup"
@@ -42,7 +43,7 @@ func CreateBackup(ctx contexts.Context, input *types.CreateBackupRequest) error 
 	}
 }
 
-func getBackupId(ctx contexts.Context, input *types.CreateBackupRequest) string {
+func getBackupId(ctx contexts.Context, input *publicTypes.CreateBackupRequest) string {
 	backupId := time.Now().Format("20060102_1504")
 	if input.BackupIdOverride != "" {
 		backupId = input.BackupIdOverride
@@ -52,13 +53,13 @@ func getBackupId(ctx contexts.Context, input *types.CreateBackupRequest) string 
 }
 
 func newBackupVolumeTask(
-	local types.LocalContainerTemplates,
-	offsite *types.OffsiteContainerTemplates,
+	local publicTypes.LocalContainerTemplates,
+	offsite *publicTypes.OffsiteContainerTemplates,
 	mw *meta.MetaWriter,
-) func(contexts.Context, string, string, string, *containers.Containers) error {
-	return func(ctx contexts.Context, backupId string, name string, volume string, c *containers.Containers) error {
+) func(contexts.Context, docker.Docker, string, string, string) error {
+	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, volume string) error {
 		m := metrics.New(backupId, "backup", name)
-		err := backupVolume(ctx, c, backupId, name, volume, local, offsite)
+		err := backupVolume(ctx, docker, backupId, name, volume, local, offsite)
 		mw.AddVolume(ctx, backupId, name, volume, err)
 		m.OnComplete(err)
 		return err
@@ -67,16 +68,16 @@ func newBackupVolumeTask(
 
 func backupVolume(
 	ctx contexts.Context,
-	c *containers.Containers,
+	docker docker.Docker,
 	backupId string,
 	name string,
 	volume string,
-	local types.LocalContainerTemplates,
-	offsite *types.OffsiteContainerTemplates,
+	local publicTypes.LocalContainerTemplates,
+	offsite *publicTypes.OffsiteContainerTemplates,
 ) error {
 	logging.Info(ctx, "Backup starting for", volume)
 
-	meta := containers.RunMeta{
+	meta := run.RunMeta{
 		BackupId:   backupId,
 		VolumeName: name,
 	}
@@ -84,7 +85,7 @@ func backupVolume(
 	local.Backup.Volumes = append(local.Backup.Volumes,
 		volume+":/data:ro",
 		ctx.BackupDir+":/backup:rw")
-	if err := c.RunContainer(ctx, meta, local.Backup); err != nil {
+	if err := docker.Run(ctx, meta, local.Backup); err != nil {
 		return err
 	}
 
@@ -92,8 +93,8 @@ func backupVolume(
 		offsite := *offsite
 		offsite.OffsitePush.Volumes = append(offsite.OffsitePush.Volumes,
 			ctx.BackupDir+":/backup:ro")
-		if err := c.RunContainer(ctx, meta, offsite.OffsitePush); err != nil {
-			if errors.Is(err, &containers.MissingTemplate{}) {
+		if err := docker.Run(ctx, meta, offsite.OffsitePush); err != nil {
+			if errors.Is(err, &run.MissingTemplate{}) {
 				logging.CheckError(ctx, err)
 			} else {
 				return err

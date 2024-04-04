@@ -1,4 +1,4 @@
-package containers
+package types
 
 import (
 	"sync"
@@ -7,7 +7,7 @@ import (
 )
 
 type Containers struct {
-	client      client.Docker
+	client      client.DockerClient
 	labelPrefix string
 }
 
@@ -46,9 +46,4 @@ type BackupConfig struct {
 type Dependancies struct {
 	Services   []string
 	Containers []string
-}
-
-type RunMeta struct {
-	VolumeName string
-	BackupId   string
 }

@@ -1,14 +1,14 @@
 package tasks
 
 import (
-	"github.com/sbnarra/bckupr/internal/docker/containers"
+	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func startCompletedTaskListener(ctx contexts.Context, taskCh chan *task, c *containers.Containers) *concurrent.Concurrent {
+func runStartupListener(ctx contexts.Context, docker docker.Docker, taskCh chan *task) *concurrent.Concurrent {
 	return concurrent.Single(ctx, "startup", func(ctx contexts.Context) error {
 		for {
 			task := <-taskCh
@@ -18,14 +18,14 @@ func startCompletedTaskListener(ctx contexts.Context, taskCh chan *task, c *cont
 				break
 			}
 
-			started := startContainers(ctx, task, c)
+			started := startContainers(ctx, docker, task)
 			logging.Debug(ctx, "started", started, "containers")
 		}
 		return nil
 	})
 }
 
-func startContainers(ctx contexts.Context, task *task, c *containers.Containers) int {
+func startContainers(ctx contexts.Context, docker docker.Docker, task *task) int {
 	started := 0
 	for _, container := range task.Containers {
 		withoutBackupVolume := make(map[string]string)
@@ -39,7 +39,7 @@ func startContainers(ctx contexts.Context, task *task, c *containers.Containers)
 		container.Backup.Volumes = withoutBackupVolume
 
 		if len(container.Backup.Volumes) == 0 {
-			c.StartContainer(ctx, container)
+			docker.Start(ctx, container)
 			started++
 		} else {
 			var j string

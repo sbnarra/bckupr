@@ -3,28 +3,32 @@ package tasks
 import (
 	"fmt"
 
+	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/client"
-	"github.com/sbnarra/bckupr/internal/docker/containers"
+	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/types"
+	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func Run(ctx contexts.Context, backupId string, args types.TaskArgs, notificationSettings *types.NotificationSettings, exec func(ctx contexts.Context, backupId string, name string, path string, c *containers.Containers) error) error {
+func Run(ctx contexts.Context, backupId string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings,
+	exec func(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string) error,
+) error {
 	action := ctx.Name
-	docker := concurrent.Default(ctx, ctx.Name)
+	runner := concurrent.Default(ctx, ctx.Name)
 	for _, dockerHost := range args.DockerHosts {
-		docker.Run(func(ctx contexts.Context) error {
+		runner.Run(func(ctx contexts.Context) error {
 			logging.Info(ctx, "Connecting to ", dockerHost)
-			if docker, err := client.Client(dockerHost); err != nil {
-				docker.Client.Close()
+			if client, err := client.Client(dockerHost); err != nil {
+				client.Close()
 				return err
 			} else {
-				defer docker.Client.Close()
-				c := containers.New(docker, args.LabelPrefix)
-				if err := run(ctx, backupId, action, &c, args, notificationSettings, exec); err != nil {
+				defer client.Close()
+				docker := docker.New(client, args.LabelPrefix)
+				if err := run(ctx, docker, backupId, action, args, notificationSettings, exec); err != nil {
 					return err
 				}
 				return nil
@@ -32,34 +36,14 @@ func Run(ctx contexts.Context, backupId string, args types.TaskArgs, notificatio
 		})
 	}
 
-	if err := docker.Wait(); err != nil {
+	if err := runner.Wait(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func listFilterTasksAll(ctx contexts.Context, containerMap map[string]*containers.Container, filters types.Filters) (map[string]*task, error) {
-	if len(containerMap) == 0 {
-		return nil, fmt.Errorf("no containers")
-	}
-	logging.Debug(ctx, "Found", len(containerMap), "containers")
-
-	filtered := containers.ApplyFilters(containerMap, filters)
-	if len(filtered) == 0 {
-		return nil, fmt.Errorf("no containers after filtering")
-	}
-	logging.Debug(ctx, len(filtered), "left after filtering")
-
-	tasks := convertToTasks(filtered, filters)
-	if len(tasks) == 0 {
-		return nil, fmt.Errorf("no tasks from filtered containers")
-	}
-	logging.Debug(ctx, len(tasks), "task(s) to execute")
-	return tasks, nil
-}
-
-func run(ctx contexts.Context, backupId string, action string, c *containers.Containers, args types.TaskArgs, notificationSettings *types.NotificationSettings, exec func(contexts.Context, string, string, string, *containers.Containers) error) error {
-	if allContainers, err := c.ListContainers(ctx); err != nil {
+func run(ctx contexts.Context, docker docker.Docker, backupId string, action string, args types.TaskArgs, notificationSettings *types.NotificationSettings, exec func(contexts.Context, docker.Docker, string, string, string) error) error {
+	if allContainers, err := docker.List(); err != nil {
 		return err
 	} else if tasks, err := listFilterTasksAll(ctx, allContainers, args.Filters); err != nil {
 		return err
@@ -80,20 +64,20 @@ func run(ctx contexts.Context, backupId string, action string, c *containers.Con
 		}
 
 		taskCh := make(chan *task)
-		completedTaskListener := startCompletedTaskListener(ctx, taskCh, c)
+		completedTaskListener := runStartupListener(ctx, docker, taskCh)
 
 		actionTask := concurrent.Default(ctx, action)
 		for name, task := range tasks {
 			actionTask.Run(func(ctx contexts.Context) error {
 
 				var runErr error
-				if runErr = stopContainers(ctx, c, task); runErr == nil {
+				if runErr = stopContainers(ctx, docker, task); runErr == nil {
 
 					if err := notify.TaskStarted(ctx, backupId, task.Volume); err != nil {
 						logging.CheckError(ctx, err, "failed to send task comstartedpleted notification")
 					}
 
-					runErr = exec(ctx, backupId, name, task.Volume, c)
+					runErr = exec(ctx, docker, backupId, name, task.Volume)
 
 					feedbackOnComplete(ctx, action, backupId, task.Volume, runErr)
 					if err := notify.TaskCompleted(ctx, backupId, task.Volume, runErr); err != nil {
@@ -118,11 +102,31 @@ func run(ctx contexts.Context, backupId string, action string, c *containers.Con
 	}
 }
 
-func stopContainers(ctx contexts.Context, c *containers.Containers, task *task) error {
+func listFilterTasksAll(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, filters publicTypes.Filters) (map[string]*task, error) {
+	if len(containerMap) == 0 {
+		return nil, fmt.Errorf("no containers")
+	}
+	logging.Debug(ctx, "Found", len(containerMap), "containers")
+
+	filtered := docker.ApplyFilters(containerMap, filters)
+	if len(filtered) == 0 {
+		return nil, fmt.Errorf("no containers after filtering")
+	}
+	logging.Debug(ctx, len(filtered), "left after filtering")
+
+	tasks := convertToTasks(filtered, filters)
+	if len(tasks) == 0 {
+		return nil, fmt.Errorf("no tasks from filtered containers")
+	}
+	logging.Debug(ctx, len(tasks), "task(s) to execute")
+	return tasks, nil
+}
+
+func stopContainers(ctx contexts.Context, docker docker.Docker, task *task) error {
 	stopper := concurrent.Default(ctx, "stopper")
 	for _, container := range task.Containers {
 		stopper.Run(func(ctx contexts.Context) error {
-			_, err := c.StopContainer(ctx, container, task.Volume)
+			_, err := docker.Stop(ctx, container)
 			return err
 		})
 	}

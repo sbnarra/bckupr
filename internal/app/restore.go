@@ -6,15 +6,16 @@ import (
 	"os"
 
 	containerConfig "github.com/sbnarra/bckupr/internal/config/containers"
-	"github.com/sbnarra/bckupr/internal/docker/containers"
+	"github.com/sbnarra/bckupr/internal/docker"
+	"github.com/sbnarra/bckupr/internal/docker/run"
 	"github.com/sbnarra/bckupr/internal/metrics"
 	"github.com/sbnarra/bckupr/internal/tasks"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
+	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func RestoreBackup(ctx contexts.Context, input *types.RestoreBackupRequest) error {
+func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest) error {
 	restoreCtx := ctx
 	restoreCtx.Name = "restore"
 
@@ -31,19 +32,19 @@ func RestoreBackup(ctx contexts.Context, input *types.RestoreBackupRequest) erro
 
 }
 
-func newRestoreBackupTask(local types.LocalContainerTemplates, offsite *types.OffsiteContainerTemplates) func(contexts.Context, string, string, string, *containers.Containers) error {
-	return func(ctx contexts.Context, backupId string, name string, path string, c *containers.Containers) error {
+func newRestoreBackupTask(local publicTypes.LocalContainerTemplates, offsite *publicTypes.OffsiteContainerTemplates) func(contexts.Context, docker.Docker, string, string, string) error {
+	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string) error {
 		m := metrics.New(backupId, "restore", name)
-		err := restoreBackup(ctx, c, backupId, name, path, local, offsite)
+		err := restoreBackup(ctx, docker, backupId, name, path, local, offsite)
 		m.OnComplete(err)
 		return err
 	}
 }
 
-func restoreBackup(ctx contexts.Context, c *containers.Containers, backupId string, name string, path string, local types.LocalContainerTemplates, offsite *types.OffsiteContainerTemplates) error {
+func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string, local publicTypes.LocalContainerTemplates, offsite *publicTypes.OffsiteContainerTemplates) error {
 	logging.Info(ctx, "Restore starting for", path)
 
-	meta := containers.RunMeta{
+	meta := run.RunMeta{
 		BackupId:   backupId,
 		VolumeName: name,
 	}
@@ -55,8 +56,8 @@ func restoreBackup(ctx contexts.Context, c *containers.Containers, backupId stri
 			offsite := *offsite
 			offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, ctx.BackupDir+":/backup:rw")
 
-			if err := c.RunContainer(ctx, meta, offsite.OffsitePull); err != nil {
-				if errors.Is(err, &containers.MissingTemplate{}) {
+			if err := docker.Run(ctx, meta, offsite.OffsitePull); err != nil {
+				if errors.Is(err, &run.MissingTemplate{}) {
 					return fmt.Errorf("backup doesn't exist(no offsite pull template available): %v", filename)
 				}
 				return err
@@ -67,7 +68,7 @@ func restoreBackup(ctx contexts.Context, c *containers.Containers, backupId stri
 	local.Restore.Volumes = append(local.Restore.Volumes,
 		ctx.BackupDir+":/backup:ro",
 		path+":/data:rw")
-	if err := c.RunContainer(ctx, meta, local.Restore); err != nil {
+	if err := docker.Run(ctx, meta, local.Restore); err != nil {
 		return err
 	}
 	return nil

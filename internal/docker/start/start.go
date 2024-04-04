@@ -1,26 +1,28 @@
-package containers
+package start
 
 import (
 	"errors"
 
+	"github.com/sbnarra/bckupr/internal/docker/client"
+	"github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func (c *Containers) StartContainer(ctx contexts.Context, container *Container) error {
-	startErr := c.start(ctx, container)
+func StartContainer(ctx contexts.Context, client client.DockerClient, container *types.Container) error {
+	startErr := start(ctx, client, container)
 
 	linkedStarter := concurrent.Default(ctx, "linked-starter")
 	for _, linked := range container.Linked {
 		linkedStarter.Run(func(ctx contexts.Context) error {
-			return c.StartContainer(ctx, linked)
+			return StartContainer(ctx, client, linked)
 		})
 	}
 	return errors.Join(startErr, linkedStarter.Wait())
 }
 
-func (c *Containers) start(ctx contexts.Context, container *Container) error {
+func start(ctx contexts.Context, client client.DockerClient, container *types.Container) error {
 	if container.Running {
 		return nil
 	}
@@ -36,7 +38,7 @@ func (c *Containers) start(ctx contexts.Context, container *Container) error {
 
 	if ctx.DryRun {
 		logging.Info(ctx, "Dry-Run! Started", container.Name)
-	} else if err := c.client.StartContainer(ctx, container.Id); err != nil {
+	} else if err := client.StartContainer(container.Id); err != nil {
 		return err
 	} else {
 		logging.Info(ctx, "Started", container.Name)

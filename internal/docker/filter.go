@@ -1,24 +1,25 @@
-package containers
+package docker
 
 import (
 	"slices"
 
-	"github.com/sbnarra/bckupr/pkg/types"
+	"github.com/sbnarra/bckupr/internal/docker/types"
+	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func ApplyFilters(unfiltered map[string]*Container, filters types.Filters) map[string]*Container {
+func ApplyFilters(unfiltered map[string]*types.Container, filters publicTypes.Filters) map[string]*types.Container {
 	filtered := applyIncludeFilters(unfiltered, filters)
 	filtered = applyExcludeFilters(filtered, filters)
 	filtered = applyStopModes(filtered, filters.StopModes)
 	return filtered
 }
 
-func applyIncludeFilters(unfiltered map[string]*Container, filters types.Filters) map[string]*Container {
+func applyIncludeFilters(unfiltered map[string]*types.Container, filters publicTypes.Filters) map[string]*types.Container {
 	if len(filters.IncludeNames) == 0 && len(filters.IncludeVolumes) == 0 {
 		return unfiltered
 	}
 
-	filtered := make(map[string]*Container)
+	filtered := make(map[string]*types.Container)
 	for id, container := range unfiltered {
 		if len(filters.IncludeNames) != 0 {
 			if slices.Contains(filters.IncludeNames, container.Name) {
@@ -39,7 +40,7 @@ func applyIncludeFilters(unfiltered map[string]*Container, filters types.Filters
 	return filtered
 }
 
-func backupsContain(volumes []string, container *Container) bool {
+func backupsContain(volumes []string, container *types.Container) bool {
 	for name := range container.Backup.Volumes {
 		if slices.Contains(volumes, name) {
 			return true
@@ -48,12 +49,12 @@ func backupsContain(volumes []string, container *Container) bool {
 	return false
 }
 
-func applyExcludeFilters(unfiltered map[string]*Container, filters types.Filters) map[string]*Container {
+func applyExcludeFilters(unfiltered map[string]*types.Container, filters publicTypes.Filters) map[string]*types.Container {
 	if len(filters.ExcludeNames) == 0 && len(filters.ExcludeVolumes) == 0 {
 		return unfiltered
 	}
 
-	filtered := make(map[string]*Container)
+	filtered := make(map[string]*types.Container)
 	for id, container := range filtered {
 
 		if slices.Contains(filters.ExcludeNames, container.Name) {
@@ -71,7 +72,7 @@ func applyExcludeFilters(unfiltered map[string]*Container, filters types.Filters
 	return filtered
 }
 
-func applyStopModes(unfiltered map[string]*Container, stopModes []string) map[string]*Container {
+func applyStopModes(unfiltered map[string]*types.Container, stopModes []string) map[string]*types.Container {
 	if slices.Contains(stopModes, "all") {
 		return unfiltered
 	}
@@ -83,7 +84,7 @@ func applyStopModes(unfiltered map[string]*Container, stopModes []string) map[st
 		}
 	}
 
-	filtered := make(map[string]*Container)
+	filtered := make(map[string]*types.Container)
 	for id, container := range unfiltered {
 
 		if slices.Contains(stopModes, "labelled") && container.Backup.Stop {

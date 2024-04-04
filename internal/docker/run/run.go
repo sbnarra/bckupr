@@ -1,36 +1,37 @@
-package containers
+package run
 
 import (
 	"errors"
 	"strings"
 
+	"github.com/sbnarra/bckupr/internal/docker/client"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func (c *Containers) RunContainer(ctx contexts.Context, meta RunMeta, template types.ContainerTemplate) error {
+func RunContainer(ctx contexts.Context, client client.DockerClient, meta RunMeta, template types.ContainerTemplate) error {
 	logging.Debug(ctx, "Template:", templateString(template))
 	if rendered, err := renderTemplate(template, meta); err != nil {
 		return err
 	} else {
-		return c.runContainer(ctx, rendered)
+		return runContainer(ctx, client, rendered)
 	}
 }
 
-func (c *Containers) runContainer(ctx contexts.Context, rendered types.ContainerTemplate) error {
+func runContainer(ctx contexts.Context, client client.DockerClient, rendered types.ContainerTemplate) error {
 	if ctx.DryRun {
 		logging.Info(ctx, "Dry Run!", templateString(rendered))
 		return nil
 	}
 	logging.Info(ctx, "Executing:", templateString(rendered))
 
-	id, err := c.client.RunContainer(ctx, rendered.Image, rendered.Cmd, rendered.Env, rendered.Volumes)
+	id, err := client.RunContainer(rendered.Image, rendered.Cmd, rendered.Env, rendered.Volumes)
 	if err == nil {
-		err = c.waitAndLog(ctx, rendered.Alias, id)
+		err = waitAndLog(ctx, client, rendered.Alias, id)
 	}
 
-	removalErr := c.client.RemoveContainer(ctx, id)
+	removalErr := client.RemoveContainer(id)
 	return errors.Join(err, removalErr)
 }
 
@@ -47,7 +48,7 @@ func renderTemplate(template types.ContainerTemplate, meta RunMeta) (types.Conta
 		formattedCmd = append(formattedCmd, part)
 	}
 
-	// delete aboe if we're going with ENVs now
+	// delete above if we're going with ENVs now
 
 	template.Env = append(template.Env,
 		"VOLUME_NAME="+meta.VolumeName,
@@ -65,9 +66,9 @@ func renderTemplate(template types.ContainerTemplate, meta RunMeta) (types.Conta
 	}, nil
 }
 
-func (c *Containers) waitAndLog(ctx contexts.Context, name string, id string) error {
-	waitErr := c.client.WaitForContainer(ctx, name, id)
-	logErr := c.client.ContainerLogs(ctx, id)
+func waitAndLog(ctx contexts.Context, client client.DockerClient, name string, id string) error {
+	waitErr := client.WaitForContainer(name, id)
+	logErr := client.ContainerLogs(id)
 	return errors.Join(waitErr, logErr)
 }
 
