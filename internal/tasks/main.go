@@ -69,8 +69,8 @@ func run(ctx contexts.Context, backupId string, action string, c *containers.Con
 			backupVolumes = append(backupVolumes, task.Volume)
 		}
 
-		ctx.Feedback(eventBase(ctx, action, backupId, "starting", backupVolumes))
-		defer ctx.Feedback(eventBase(ctx, action, backupId, "completed", backupVolumes))
+		ctx.FeedbackJson(eventBase(ctx, action, backupId, "starting", backupVolumes))
+		defer ctx.FeedbackJson(eventBase(ctx, action, backupId, "completed", backupVolumes))
 
 		var notify *notifications.Notifier
 		if notify, err = notifications.New(action, notificationSettings); err != nil {
@@ -145,5 +145,5 @@ func feedbackOnComplete(ctx contexts.Context, action string, backupId string, vo
 		data["status"] = "error"
 		data["error"] = execErr.Error()
 	}
-	ctx.Feedback(data)
+	ctx.FeedbackJson(data)
 }

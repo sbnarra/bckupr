@@ -28,8 +28,8 @@ func list(cmd *cobra.Command, args []string) error {
 	} else if noDaemon, err := cobraKeys.Bool(keys.NoDaemon, cmd.Flags()); err != nil {
 		return err
 	} else if noDaemon {
-		if err := app.ListBackups(ctx, input, func(backup types.Backup) {
-			ctx.Feedback(backup)
+		if err := app.ListBackups(ctx, func(backup *types.Backup) {
+			ctx.FeedbackJson(backup)
 		}); err != nil {
 			logging.CheckError(ctx, err)
 		}

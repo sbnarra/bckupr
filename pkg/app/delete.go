@@ -24,7 +24,7 @@ func DeleteBackup(ctx contexts.Context, input *types.DeleteBackupRequest) error 
 			return err
 		}
 	}
-	return ctx.Feedback(map[string]any{
+	return ctx.FeedbackJson(map[string]any{
 		"dry-run": ctx.DryRun,
 		"deleted": path,
 	})
