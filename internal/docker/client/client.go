@@ -21,7 +21,7 @@ type Docker struct {
 }
 
 type DockerClient interface {
-	Close()
+	Close() error
 	StopContainer(id string) error
 	AllContainers() ([]types.Container, error)
 	StartContainer(id string) error
@@ -41,10 +41,11 @@ func Client(socket string) (DockerClient, error) {
 	}, nil
 }
 
-func (d Docker) Close() {
+func (d Docker) Close() error {
 	if d.client != nil {
-		d.client.Close()
+		return d.client.Close()
 	}
+	return nil
 }
 
 func (d Docker) AllContainers() ([]types.Container, error) {

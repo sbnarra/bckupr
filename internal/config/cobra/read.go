@@ -183,3 +183,22 @@ func createFilters(stopModesKey *keys.Key, cmd *cobra.Command) (*types.Filters, 
 		ExcludeVolumes: excludeVolumes,
 	}, nil
 }
+
+func RotateBackupsRequest(cmd *cobra.Command) (*types.RotateBackupsRequest, error) {
+	var err error
+
+	var destroyBackups bool
+	if destroyBackups, err = Bool(keys.DestroyBackups, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var policyPath string
+	if policyPath, err = String(keys.PolicyPath, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	return &types.RotateBackupsRequest{
+		Destroy:      destroyBackups,
+		PoliciesPath: policyPath,
+	}, nil
+}

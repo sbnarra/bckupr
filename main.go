@@ -23,7 +23,9 @@ func init() {
 		cmd.Backup,
 		cmd.Restore,
 		cmd.List,
-		cmd.Delete)
+		cmd.Delete,
+		cmd.Rotate,
+	)
 	addGroup("daemons", "Daemons Commands:", bckupr,
 		cmd.Daemon,
 		cmd.Cron)
