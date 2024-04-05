@@ -36,14 +36,6 @@ nav:
   - 'Labels': 'labels.md'
   - 'Cron': 'cron.md'
   - 'Offsite': 'offsite.md'
-  - 'Retention': 'retention.md'
+  - 'Backup Rotation': 'rotation.md'
   - 'Notifications': 'notifications.md'
   - 'Metrics': 'metrics.md'
-
-
-  # - overview.md
-  # - stop_modes.md
-  # - container_templates.md
-  # - options.md
-  # - metrics.md
-  # - roadmap.md

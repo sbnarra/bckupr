@@ -1,12 +1,11 @@
 package pages
 
 import (
-	"errors"
 	"html/template"
 	"net/http"
 
-	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/cron"
+	"github.com/sbnarra/bckupr/internal/meta"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
@@ -25,15 +24,12 @@ func RenderIndex(cron *cron.Cron, err error) func(ctx contexts.Context, w http.R
 		w.Header().Set("Content-Type", "text/html")
 
 		var backups []*types.Backup
-		if listErr := app.ListBackups(ctx, func(backup *types.Backup) {
-			backups = append(backups, backup)
-		}); listErr != nil {
-			if err == nil {
-				err = listErr
-			} else {
-				err = errors.Join(err, listErr)
-			}
-		}
+
+		meta, err := meta.NewReader(ctx)
+		meta.ForEach(func(b *types.Backup) error {
+			backups = append(backups, b)
+			return nil
+		})
 
 		return indexTemplate(ctx.Debug).Execute(w, IndexPage{
 			Cron:        cronData(cron),

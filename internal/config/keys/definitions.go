@@ -38,6 +38,7 @@ var ExcludeVolumes = newKey("exclude-volumes", "names of volumes to exclude", []
 // cron
 var TimeZone = newKey("timezone", "cron timezeon", "UTC")
 var BackupSchedule = newKey("backup-schedule", "cron schedule for backups", "0 0 * * *")
+var RotateSchedule = newKey("rotate-schedule", "cron schedule for backup rotations", "")
 
 // web
 var UnixSocket = newKey("unix-socket", "unix socket to bind web server", ".bckupr.sock")
@@ -45,6 +46,10 @@ var TcpAddr = newKey("tcp-addr", "tcp address to bind web server", "0.0.0.0:8000
 var ExposeApi = newKey("expose-api", "exposes /api endpoints via tcp", false)
 var UiEnabled = newKey("ui-enabled", "exposes ui", true)
 var MetricsEnabled = newKey("metrics-enabled", "enables /metrics endpoint", false)
+
+// rotate
+var DestroyBackups = newKey("destroy-backups", "destroy backups instead of moving to bin directory", false)
+var PolicyPath = newKey("policy-path", "path to rotation policies yaml", "./configs/rotate/policies.yaml")
 
 // END OF DEFINITIONS
 func stopModes(stopModes []string) *Key {

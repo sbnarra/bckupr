@@ -35,10 +35,18 @@ func (c *Cron) Stop() {
 	c.stop <- os.Kill
 }
 
-func (c *Cron) Start(ctx contexts.Context, schedule string, input *types.CreateBackupRequest) error {
+func (c *Cron) Start(ctx contexts.Context,
+	backupSchedule string, backupInput *types.CreateBackupRequest,
+	rotateSchedule string, rotateInput *types.RotateBackupsRequest,
+) error {
 	c.I.Start()
-	if schedule != "" {
-		if err := c.scheduleBackup(ctx, schedule, input); err != nil {
+	if backupSchedule != "" {
+		if err := c.scheduleBackup(ctx, backupSchedule, backupInput); err != nil {
+			return err
+		}
+	}
+	if rotateSchedule != "" {
+		if err := c.scheduleRotation(ctx, rotateSchedule, rotateInput); err != nil {
 			return err
 		}
 	}
@@ -73,6 +81,27 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *type
 			}
 		}
 		triggerNotifyNextBackup()
+	}
+	return nil
+}
+
+func (c *Cron) scheduleRotation(ctx contexts.Context, schedule string, input *types.RotateBackupsRequest) error {
+	notifyNextRotate := func() {}
+	logging.Info(ctx, schedule)
+	if id, err := c.I.AddFunc(schedule, func() {
+		if err := backups.Rotate(ctx, input); err != nil {
+			logging.CheckError(ctx, err, "Rotate Failure")
+		}
+		notifyNextRotate()
+	}); err != nil {
+		return err
+	} else {
+		c.Id = id
+		c.Schedule = schedule
+		notifyNextRotate = func() {
+			logging.Info(ctx, "Next Rotation", c.I.Entry(c.Id).Next)
+		}
+		notifyNextRotate()
 	}
 	return nil
 }

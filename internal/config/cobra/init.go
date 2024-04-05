@@ -31,6 +31,16 @@ func InitDebug(cmd *cobra.Command) {
 	InitDaemonClient(cmd)
 }
 
+func InitRotate(cmd *cobra.Command) {
+	InitDaemonClient(cmd)
+
+	register(keys.DestroyBackups, cmd.Flags())
+	register(keys.PolicyPath, cmd.Flags())
+
+	register(keys.BackupDir, cmd.Flags())
+	required(keys.BackupDir, cmd)
+}
+
 func InitList(cmd *cobra.Command) {
 	InitDaemonClient(cmd)
 	initTaskArgs(cmd, keys.BackupStopModes)
@@ -58,6 +68,9 @@ func InitRestore(cmd *cobra.Command) {
 
 	initTaskArgs(cmd, keys.BackupStopModes)
 	required(keys.BackupId, cmd)
+
+	register(keys.DestroyBackups, cmd.Flags())
+	register(keys.PolicyPath, cmd.Flags())
 }
 
 func initTaskArgs(cmd *cobra.Command, stopModes *keys.Key) {

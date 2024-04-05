@@ -8,29 +8,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var List = &cobra.Command{
-	Use:   "list",
-	Short: "List backups",
-	Long:  `List backups`,
-	RunE:  list,
+var Rotate = &cobra.Command{
+	Use:   "rotate",
+	Short: "Rotate backups",
+	Long:  `Rotate backups`,
+	RunE:  rotate,
 }
 
 func init() {
-	cobraKeys.InitList(List)
+	cobraKeys.InitRotate(Rotate)
 }
 
-func list(cmd *cobra.Command, args []string) error {
+func rotate(cmd *cobra.Command, args []string) error {
 	if ctx, err := cliContext(cmd); err != nil {
+		return err
+	} else if input, err := cobraKeys.RotateBackupsRequest(cmd); err != nil {
 		return err
 	} else if noDaemon, err := cobraKeys.Bool(keys.NoDaemon, cmd.Flags()); err != nil {
 		return err
 	} else if noDaemon {
-		if err := app.ListBackups(ctx); err != nil {
+		if err := app.Rotate(ctx, input); err != nil {
 			logging.CheckError(ctx, err)
 		}
 	} else if client, err := createClient(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if err := client.List(); err != nil {
+	} else if err := client.Rotate(); err != nil {
 		logging.CheckError(ctx, err)
 	}
 	return nil

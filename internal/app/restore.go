@@ -22,7 +22,7 @@ func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest
 	if local, offsite, err := containerConfig.ContainerTemplates(input.Args.LocalContainersConfig, input.Args.OffsiteContainersConfig); err != nil {
 		return err
 	} else {
-		return tasks.Run(
+		return tasks.RunOnEachDockerHost(
 			restoreCtx,
 			input.Args.BackupId,
 			input.Args,
@@ -34,7 +34,7 @@ func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest
 
 func newRestoreBackupTask(local publicTypes.LocalContainerTemplates, offsite *publicTypes.OffsiteContainerTemplates) tasks.Exec {
 	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string) error {
-		m := metrics.New(backupId, "restore", name)
+		m := metrics.Restore(backupId, name)
 		err := restoreBackup(ctx, docker, backupId, name, local.FileExt, path, local, offsite)
 		m.OnComplete(err)
 		return err

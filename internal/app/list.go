@@ -6,11 +6,12 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func ListBackups(ctx contexts.Context, callback func(*types.Backup)) error {
-	if db, err := meta.Reader(ctx); err != nil {
+func ListBackups(ctx contexts.Context) error {
+	if db, err := meta.NewReader(ctx); err != nil {
 		return err
 	} else {
-		db.ForEach(callback)
+		return db.ForEach(func(b *types.Backup) error {
+			return ctx.FeedbackJson(b)
+		})
 	}
-	return nil
 }
