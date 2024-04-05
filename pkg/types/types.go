@@ -12,6 +12,11 @@ type DeleteBackupRequest struct {
 	Args TaskArgs `json:"args"`
 }
 
+type RotateBackupsRequest struct {
+	Destroy      bool   `json:"destroy"`
+	PoliciesPath string `json:"policies-path"`
+}
+
 type RestoreBackupRequest struct {
 	DryRun               bool                  `json:"dry-run"`
 	Args                 TaskArgs              `json:"args"`

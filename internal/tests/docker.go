@@ -22,8 +22,9 @@ func DockerE(containers []types.Container, err error) client.DockerClient {
 	}
 }
 
-func (d docker) Close() {
+func (d docker) Close() error {
 	logging.Warn(Context, "Docker: Closing")
+	return d.err
 }
 
 func (d docker) AllContainers() ([]types.Container, error) {

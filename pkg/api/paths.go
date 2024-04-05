@@ -6,6 +6,7 @@ const (
 	PATH_BACKUPS = "/api/backups"
 	// PATH_RESTORE_TRIGGER = "/api/backup/{id}/restore"
 	PATH_RESTORE_TRIGGER = "/api/restore"
+	PATH_ROTATE          = "/api/rotate"
 
 	PATH_CRON_BACKUP_SCHEDULE = "/api/cron/schedule"
 )

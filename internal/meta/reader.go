@@ -2,6 +2,7 @@ package meta
 
 import (
 	"bufio"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -11,12 +12,12 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-type reader interface {
+type Reader interface {
 	Get(id string) *types.Backup
-	ForEach(forEach func(*types.Backup))
+	ForEach(forEach func(*types.Backup) error) error
 }
 
-func Reader(ctx contexts.Context) (reader, error) {
+func NewReader(ctx contexts.Context) (Reader, error) {
 	if data, err := loadData(ctx); err != nil {
 		return nil, err
 	} else {
@@ -30,10 +31,12 @@ func (s storage) Get(id string) *types.Backup {
 	return s.data[id]
 }
 
-func (s storage) ForEach(forEach func(*types.Backup)) {
+func (s storage) ForEach(forEach func(*types.Backup) error) error {
+	var err error
 	for _, backup := range s.data {
-		forEach(backup)
+		errors.Join(err, forEach(backup))
 	}
+	return err
 }
 
 func loadData(ctx contexts.Context) (map[string]*types.Backup, error) {

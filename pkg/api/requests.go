@@ -14,6 +14,10 @@ func (c *Client) Backup(request *types.CreateBackupRequest) error {
 	return c.send("POST", PATH_BACKUPS, request)
 }
 
+func (c *Client) Rotate() error {
+	return c.send("POST", PATH_ROTATE, nil)
+}
+
 func (c *Client) List() error {
 	return c.send("GET", PATH_BACKUPS, nil)
 }

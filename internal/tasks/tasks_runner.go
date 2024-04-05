@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/sbnarra/bckupr/internal/docker"
-	"github.com/sbnarra/bckupr/internal/docker/client"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/filters"
 	"github.com/sbnarra/bckupr/internal/notifications"
@@ -22,34 +21,15 @@ type Exec func(
 	name string,
 	path string) error
 
-func Run(ctx contexts.Context, backupId string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
+func RunOnEachDockerHost(ctx contexts.Context, backupId string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
 	action := ctx.Name
-	runner := concurrent.Default(ctx, ctx.Name)
-	for _, dockerHost := range args.DockerHosts {
-		runner.Run(func(ctx contexts.Context) error {
-			logging.Info(ctx, "Connecting to ", dockerHost)
-			if client, err := client.Client(dockerHost); err != nil {
-				client.Close()
-				return err
-			} else {
-				defer client.Close()
-				docker := docker.New(client, args.LabelPrefix)
-				if err := run(ctx, docker, backupId, action, args, notificationSettings, exec); err != nil {
-					return err
-				}
-				return nil
-			}
-		})
-	}
-
-	if err := runner.Wait(); err != nil {
-		return err
-	}
-	return nil
+	return docker.ExecPerHost(ctx, args.DockerHosts, func(d docker.Docker) error {
+		return run(ctx, d, backupId, action, args, notificationSettings, exec)
+	})
 }
 
 func run(ctx contexts.Context, docker docker.Docker, backupId string, action string, args types.TaskArgs, notificationSettings *types.NotificationSettings, exec Exec) error {
-	if allContainers, err := docker.List(); err != nil {
+	if allContainers, err := docker.List(args.LabelPrefix); err != nil {
 		return err
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args.Filters); err != nil {
 		return err

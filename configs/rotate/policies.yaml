@@ -1,0 +1,25 @@
+policies:
+  - period:
+      from: -1d
+      to: 0s
+    keep: 1
+  - period:
+      from: -1w
+      to: -1d
+    keep: 1
+  - period:
+      from: -2w
+      to: -1w
+    keep: 1
+  - period:
+      from: -3w
+      to: -2w
+    keep: 1
+  - period:
+      from: -4w
+      to: -3w
+    keep: 1
+  - period:
+      from: -999w
+      to: -4w
+    keep: 1
