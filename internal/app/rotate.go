@@ -107,8 +107,9 @@ func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy,
 		})
 
 		if len(backups) == 0 {
-			msg := fmt.Sprintf("no backups in period: (%v) %v  <->  (%v) %v", policy.Period.From, policyStart.Format("2006-01-02 15:04:05"), policy.Period.To, policyEnd.Format("2006-01-02 15:04:05"))
-			logging.Info(ctx, msg)
+			logging.Info(ctx, fmt.Sprintf("no backups in period: (%v) %v  <->  (%v) %v",
+				policy.Period.From, policyStart.Format("2006-01-02 15:04:05"),
+				policy.Period.To, policyEnd.Format("2006-01-02 15:04:05")))
 			return nil
 		}
 
@@ -136,10 +137,10 @@ func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy,
 }
 
 func rotateBackups(ctx contexts.Context, destroyBackups bool, backups []*types.Backup) {
-	binPath := filepath.Join(ctx.BackupDir, "bin", ".")
+	binPath := filepath.Join(ctx.BackupDir, "bin")
 	for _, backup := range backups {
 		backupPath := filepath.Join(ctx.BackupDir, backup.Id)
-		if err := rotateBackup(ctx, destroyBackups, backupPath, binPath); err != nil {
+		if err := rotateBackup(ctx, destroyBackups, backupPath, filepath.Join(binPath, backup.Id)); err != nil {
 			logging.CheckError(ctx, err)
 		}
 	}
