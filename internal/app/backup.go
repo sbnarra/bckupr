@@ -34,7 +34,7 @@ func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) 
 		mw := meta.NewWriter(ctx, backupId, "full")
 		defer mw.Write(ctx)
 
-		return tasks.Run(
+		return tasks.RunOnEachDockerHost(
 			backupCtx,
 			backupId,
 			input.Args,
@@ -58,7 +58,7 @@ func newBackupVolumeTask(
 	mw *meta.Writer,
 ) tasks.Exec {
 	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, volume string) error {
-		m := metrics.New(backupId, "backup", name)
+		m := metrics.Backup(backupId, name)
 		err := backupVolume(ctx, docker, backupId, name, local.FileExt, volume, local, offsite)
 		mw.AddVolume(ctx, backupId, name, local.FileExt, volume, err)
 		m.OnComplete(err)

@@ -12,21 +12,19 @@ import (
 )
 
 type docker struct {
-	client      client.DockerClient
-	labelPrefix string
+	client client.DockerClient
 }
 
 type Docker interface {
 	Run(contexts.Context, run.CommonEnv, publicTypes.ContainerTemplate) error
 	Start(contexts.Context, *dockerTypes.Container) error
 	Stop(contexts.Context, *dockerTypes.Container) (bool, error)
-	List() (map[string]*dockerTypes.Container, error)
+	List(labelPrefix string) (map[string]*dockerTypes.Container, error)
 }
 
-func New(client client.DockerClient, labelPrefix string) Docker {
+func New(client client.DockerClient) Docker {
 	return docker{
-		client:      client,
-		labelPrefix: labelPrefix,
+		client: client,
 	}
 }
 
@@ -42,6 +40,6 @@ func (d docker) Stop(ctx contexts.Context, container *dockerTypes.Container) (bo
 	return stop.StopContainer(ctx, d.client, container)
 }
 
-func (d docker) List() (map[string]*dockerTypes.Container, error) {
-	return list.ListContainers(d.client, d.labelPrefix)
+func (d docker) List(labelPrefix string) (map[string]*dockerTypes.Container, error) {
+	return list.ListContainers(d.client, labelPrefix)
 }

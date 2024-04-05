@@ -8,19 +8,34 @@ import (
 )
 
 var (
-	actionDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "action_duration_seconds",
-		Help: "Action duration in seconds",
+	backupDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "backup_duration_seconds",
+		Help: "Backup duration in seconds",
 	}, []string{"id", "action"})
 
-	actionSuccessTotal = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "action_success_total",
-		Help: "Number of successful X",
+	backupSuccessTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "backup_success_total",
+		Help: "Number of successful backups",
 	}, []string{"id", "action"})
 
-	actionErrorTotal = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "action_error_total",
-		Help: "Number of failed X",
+	backupErrorTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "backup_error_total",
+		Help: "Number of failed backups",
+	}, []string{"id", "action"})
+
+	restoreDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "restore_duration_seconds",
+		Help: "Restores duration in seconds",
+	}, []string{"id", "action"})
+
+	restoreSuccessTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "restore_success_total",
+		Help: "Number of successful restores",
+	}, []string{"id", "action"})
+
+	restoreErrorTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "restore_error_total",
+		Help: "Number of failed restores",
 	}, []string{"id", "action"})
 )
 
@@ -30,17 +45,38 @@ type Metrics struct {
 	volume    string
 	jobLabels []string
 	timer     *prometheus.Timer
+
+	successTotal *prometheus.CounterVec
+	errorTotal   *prometheus.CounterVec
 }
 
-func New(id string, action string, volume string) Metrics {
-	jobLabels := []string{id, action}
-	timer := prometheus.NewTimer(actionDuration.WithLabelValues(jobLabels...))
+func Backup(id string, volume string) Metrics {
+	jobLabels := []string{id, "backup"}
+	timer := prometheus.NewTimer(backupDuration.WithLabelValues(jobLabels...))
 	return Metrics{
 		id:        id,
-		action:    action,
+		action:    "backup",
 		jobLabels: jobLabels,
 		volume:    volume,
 		timer:     timer,
+
+		successTotal: backupSuccessTotal,
+		errorTotal:   backupErrorTotal,
+	}
+}
+
+func Restore(id string, volume string) Metrics {
+	jobLabels := []string{id, "restore"}
+	timer := prometheus.NewTimer(restoreDuration.WithLabelValues(jobLabels...))
+	return Metrics{
+		id:        id,
+		action:    "restore",
+		jobLabels: jobLabels,
+		volume:    volume,
+		timer:     timer,
+
+		successTotal: restoreSuccessTotal,
+		errorTotal:   restoreErrorTotal,
 	}
 }
 
@@ -48,10 +84,10 @@ func (m Metrics) OnComplete(err error) {
 	m.timer.ObserveDuration()
 
 	if err != nil {
-		actionErrorTotal.WithLabelValues(m.jobLabels...).Inc()
+		m.errorTotal.WithLabelValues(m.jobLabels...).Inc()
 		fmt.Printf("Error: %s (id=%s, volume=%s, err=%s)", m.action, m.id, m.volume, err)
 	} else {
-		actionSuccessTotal.WithLabelValues(m.jobLabels...).Inc()
+		m.successTotal.WithLabelValues(m.jobLabels...).Inc()
 		fmt.Printf("Success: %s (id=%s, volume=%s)", m.action, m.id, m.volume)
 	}
 }
