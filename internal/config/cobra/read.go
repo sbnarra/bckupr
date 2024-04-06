@@ -193,7 +193,7 @@ func RotateBackupsRequest(cmd *cobra.Command) (*types.RotateBackupsRequest, erro
 	}
 
 	var policyPath string
-	if policyPath, err = String(keys.PolicyPath, cmd.Flags()); err != nil {
+	if policyPath, err = String(keys.PoliciesPath, cmd.Flags()); err != nil {
 		return nil, err
 	}
 

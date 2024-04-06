@@ -44,7 +44,7 @@ func InitRotate(cmd *cobra.Command) {
 
 func initRotate(cmd *cobra.Command) {
 	register(keys.DestroyBackups, cmd.Flags())
-	register(keys.PolicyPath, cmd.Flags())
+	register(keys.PoliciesPath, cmd.Flags())
 }
 
 func InitList(cmd *cobra.Command) {
@@ -76,7 +76,7 @@ func InitRestore(cmd *cobra.Command) {
 	required(keys.BackupId, cmd)
 
 	register(keys.DestroyBackups, cmd.Flags())
-	register(keys.PolicyPath, cmd.Flags())
+	register(keys.PoliciesPath, cmd.Flags())
 }
 
 func initTaskArgs(cmd *cobra.Command, stopModes *keys.Key) {

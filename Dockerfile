@@ -39,9 +39,12 @@ WORKDIR /
 COPY --from=base /bckupr/ui /ui/
 COPY --from=base /bckupr/bckupr /
 
-COPY configs/offsite /offsite
-COPY configs/local /local
-ENV LOCAL_CONTAINERS=/local/tar.yml
+COPY configs/local/ /local
+COPY configs/offsite/ /offsite
+COPY configs/rotation /rotation
+
+ENV ROTATION_POLICIES_CONFIG=/rotation/policies.yaml
+ENV LOCAL_CONTAINERS_CONFIG=/local/tar.yml
 
 ENTRYPOINT ["/bckupr"]
 CMD ["daemon"]

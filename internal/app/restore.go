@@ -11,7 +11,6 @@ import (
 	"github.com/sbnarra/bckupr/internal/metrics"
 	"github.com/sbnarra/bckupr/internal/tasks"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
-	"github.com/sbnarra/bckupr/internal/utils/logging"
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
@@ -42,8 +41,6 @@ func newRestoreBackupTask(local publicTypes.LocalContainerTemplates, offsite *pu
 }
 
 func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, name string, fileExt string, path string, local publicTypes.LocalContainerTemplates, offsite *publicTypes.OffsiteContainerTemplates) error {
-	logging.Info(ctx, "Restore starting for", path)
-
 	meta := run.CommonEnv{
 		BackupId:   backupId,
 		VolumeName: name,

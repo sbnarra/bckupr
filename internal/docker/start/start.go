@@ -41,7 +41,7 @@ func start(ctx contexts.Context, client client.DockerClient, container *types.Co
 	} else if err := client.StartContainer(container.Id); err != nil {
 		return err
 	} else {
-		logging.Info(ctx, "Started", container.Name)
+		logging.Debug(ctx, "Started", container.Name)
 	}
 
 	container.Running = true

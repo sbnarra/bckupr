@@ -44,7 +44,7 @@ func StopContainer(ctx contexts.Context, client client.DockerClient, container *
 	} else if err := client.StopContainer(container.Id); err != nil {
 		return true, err
 	} else {
-		logging.Info(ctx, "Stopped", container.Name)
+		logging.Debug(ctx, "Stopped", container.Name)
 	}
 
 	container.Running = false

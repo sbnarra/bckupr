@@ -73,7 +73,7 @@ func (d Docker) ContainerLogs(id string) error {
 
 		scanner := bufio.NewScanner(out)
 		for scanner.Scan() {
-			logging.Info(contexts.Context{
+			logging.Debug(contexts.Context{
 				Name: id,
 			}, scanner.Text())
 		}

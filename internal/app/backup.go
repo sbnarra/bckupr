@@ -76,8 +76,6 @@ func backupVolume(
 	local publicTypes.LocalContainerTemplates,
 	offsite *publicTypes.OffsiteContainerTemplates,
 ) error {
-	logging.Info(ctx, "Backup starting for", volume)
-
 	meta := run.CommonEnv{
 		BackupId:   backupId,
 		VolumeName: name,
