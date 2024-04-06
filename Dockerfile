@@ -3,9 +3,6 @@ FROM ${BUILDER_IMAGE:-golang:1.22-alpine} AS base
 
 ENV GO111MODULE=on \
     CGO_ENABLED=0
-    # CGO_ENABLED=0 \
-    # GOOS=linux \
-    # GOARCH=amd64
 
 WORKDIR /bckupr
 
