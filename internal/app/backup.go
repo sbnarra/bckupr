@@ -27,12 +27,16 @@ func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) 
 		return err
 	} else {
 		backupDir := ctx.BackupDir + "/" + backupId
-		if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
-			return fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
+		if !ctx.DryRun {
+			if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
+				return fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
+			}
 		}
 
 		mw := meta.NewWriter(ctx, backupId, "full")
-		defer mw.Write(ctx)
+		if !ctx.DryRun {
+			defer mw.Write(ctx)
+		}
 
 		return tasks.RunOnEachDockerHost(
 			backupCtx,

@@ -27,7 +27,9 @@ func NewWriter(ctx contexts.Context, backupId string, backupType string) *Writer
 
 func (mw *Writer) AddVolume(ctx contexts.Context, backupId string, name string, ext string, volume string, err error) {
 	var size int64
-	if s, err := os.Stat(ctx.BackupDir + "/" + backupId + "/" + name + "." + ext); err == nil {
+	if ctx.DryRun {
+		size = 0
+	} else if s, err := os.Stat(ctx.BackupDir + "/" + backupId + "/" + name + "." + ext); err == nil {
 		size = s.Size()
 	} else {
 		size = -1
