@@ -40,7 +40,8 @@ COPY --from=base /bckupr/ui /ui/
 COPY --from=base /bckupr/bckupr /
 
 COPY configs/offsite /offsite
-ENV LOCAL_CONTAINERS /local/tar.yml
+COPY configs/local /local
+ENV LOCAL_CONTAINERS=/local/tar.yml
 
 ENTRYPOINT ["/bckupr"]
 CMD ["daemon"]
