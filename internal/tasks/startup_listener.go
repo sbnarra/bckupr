@@ -9,13 +9,13 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func runStartupListener(ctx contexts.Context, docker docker.Docker, taskCh chan *task) *concurrent.Concurrent {
+func startupListener(ctx contexts.Context, docker docker.Docker, taskCh chan *task) *concurrent.Concurrent {
 	return concurrent.Single(ctx, "startup", func(ctx contexts.Context) error {
 		for {
 			task := <-taskCh
 
 			if task == nil {
-				logging.Info(ctx, "Stopping completed task listener")
+				logging.Debug(ctx, "Stopping completed task listener")
 				break
 			}
 

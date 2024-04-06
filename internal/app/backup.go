@@ -27,12 +27,16 @@ func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) 
 		return err
 	} else {
 		backupDir := ctx.BackupDir + "/" + backupId
-		if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
-			return fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
+		if !ctx.DryRun {
+			if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
+				return fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
+			}
 		}
 
 		mw := meta.NewWriter(ctx, backupId, "full")
-		defer mw.Write(ctx)
+		if !ctx.DryRun {
+			defer mw.Write(ctx)
+		}
 
 		return tasks.RunOnEachDockerHost(
 			backupCtx,
@@ -76,8 +80,6 @@ func backupVolume(
 	local publicTypes.LocalContainerTemplates,
 	offsite *publicTypes.OffsiteContainerTemplates,
 ) error {
-	logging.Info(ctx, "Backup starting for", volume)
-
 	meta := run.CommonEnv{
 		BackupId:   backupId,
 		VolumeName: name,
@@ -96,7 +98,7 @@ func backupVolume(
 		offsite.OffsitePush.Volumes = append(offsite.OffsitePush.Volumes,
 			ctx.BackupDir+":/backup:ro")
 		if err := docker.Run(ctx, meta, offsite.OffsitePush); err != nil {
-			if errors.Is(err, &run.MissingTemplate{}) {
+			if errors.Is(err, &run.MisconfiguredTemplate{}) {
 				logging.CheckError(ctx, err)
 			} else {
 				return err

@@ -3,6 +3,7 @@ package tests
 import (
 	"github.com/docker/docker/api/types"
 	"github.com/sbnarra/bckupr/internal/docker/client"
+	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
@@ -51,7 +52,7 @@ func (d docker) ContainerLogs(id string) error {
 	return d.err
 }
 
-func (d docker) WaitForContainer(name string, id string) error {
+func (d docker) WaitForContainer(ctx contexts.Context, id string) error {
 	logging.Warn(Context, "Docker: Wait For Container")
 	return d.err
 }

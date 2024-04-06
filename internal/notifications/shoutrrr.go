@@ -51,7 +51,6 @@ func (n *Notifier) NextBackupSchedule(ctx contexts.Context, next time.Time) erro
 }
 
 func (n *Notifier) JobStarted(ctx contexts.Context, id string, volumes []string) error {
-	logging.Info(ctx, "action", n.action)
 	msg := fmt.Sprintf("Started Job '%v': id=%v, volumes=%v", n.action, id, volumes)
 	logging.Info(ctx, msg)
 	if n.settings.NotifyJobStarted {

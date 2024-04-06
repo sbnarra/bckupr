@@ -14,13 +14,29 @@ import (
 func register(key *keys.Key, flagSet *pflag.FlagSet) {
 	typ := fmt.Sprintf("%T", key.Default)
 	if typ == "string" {
-		flagSet.String(key.CliId, key.Default.(string), key.Desc)
+		defaultV := key.Default.(string)
+		if key.EnvExists() {
+			defaultV = key.EnvString()
+		}
+		flagSet.String(key.CliId, defaultV, key.Desc)
 	} else if typ == "int" {
-		flagSet.Int(key.CliId, key.Default.(int), key.Desc)
+		defaultV := key.Default.(int)
+		if key.EnvExists() {
+			defaultV = key.EnvInt()
+		}
+		flagSet.Int(key.CliId, defaultV, key.Desc)
 	} else if typ == "bool" {
-		flagSet.Bool(key.CliId, key.Default.(bool), key.Desc)
+		defaultV := key.Default.(bool)
+		if key.EnvExists() {
+			defaultV = key.EnvBool()
+		}
+		flagSet.Bool(key.CliId, defaultV, key.Desc)
 	} else if typ == "[]string" {
-		flagSet.StringSlice(key.CliId, key.Default.([]string), key.Desc)
+		defaultV := key.Default.([]string)
+		if key.EnvExists() {
+			defaultV = key.EnvStringSlice()
+		}
+		flagSet.StringSlice(key.CliId, defaultV, key.Desc)
 	} else {
 		panic("unknown key type: " + typ + ": " + key.Id)
 	}
@@ -34,7 +50,7 @@ func required(key *keys.Key, cmd *cobra.Command) {
 
 func String(key *keys.Key, flags *pflag.FlagSet) (string, error) {
 	val, err := flags.GetString(key.CliId)
-	if err == nil {
+	if err == nil && len(val) != 0 {
 		os.Setenv(key.EnvId(), val)
 	}
 	return val, err
@@ -50,7 +66,7 @@ func Int(key *keys.Key, flags *pflag.FlagSet) (int, error) {
 
 func StringSlice(key *keys.Key, flags *pflag.FlagSet) ([]string, error) {
 	val, err := flags.GetStringSlice(key.CliId)
-	if err == nil {
+	if err == nil && len(val) != 0 {
 		os.Setenv(key.EnvId(), strings.Join(val, ","))
 	}
 	return val, err
