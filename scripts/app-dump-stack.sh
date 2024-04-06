@@ -1,1 +1,0 @@
-curl http://localhost:8000/debug/pprof/goroutine\?debug\=2
