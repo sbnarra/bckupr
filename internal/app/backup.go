@@ -98,7 +98,7 @@ func backupVolume(
 		offsite.OffsitePush.Volumes = append(offsite.OffsitePush.Volumes,
 			ctx.BackupDir+":/backup:ro")
 		if err := docker.Run(ctx, meta, offsite.OffsitePush); err != nil {
-			if errors.Is(err, &run.MissingTemplate{}) {
+			if errors.Is(err, &run.MisconfiguredTemplate{}) {
 				logging.CheckError(ctx, err)
 			} else {
 				return err

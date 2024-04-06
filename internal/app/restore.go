@@ -55,7 +55,7 @@ func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, 
 			offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, ctx.BackupDir+":/backup:rw")
 
 			if err := docker.Run(ctx, meta, offsite.OffsitePull); err != nil {
-				if errors.Is(err, &run.MissingTemplate{}) {
+				if errors.Is(err, &run.MisconfiguredTemplate{}) {
 					return fmt.Errorf("backup doesn't exist(no offsite pull template available): %v", filename)
 				}
 				return err

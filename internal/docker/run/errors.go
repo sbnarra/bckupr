@@ -4,14 +4,14 @@ import (
 	"fmt"
 )
 
-type MissingTemplate struct {
+type MisconfiguredTemplate struct {
 	Message string
 }
 
-func (mt *MissingTemplate) Error() string {
+func (mt *MisconfiguredTemplate) Error() string {
 	return mt.Message
 }
 
-func (mt *MissingTemplate) Is(target error) bool {
+func (mt *MisconfiguredTemplate) Is(target error) bool {
 	return fmt.Sprintf("%T", target) == fmt.Sprintf("%T", mt)
 }
