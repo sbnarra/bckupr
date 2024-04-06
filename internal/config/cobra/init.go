@@ -22,7 +22,9 @@ func InitDaemon(cmd *cobra.Command) {
 
 func InitCron(cmd *cobra.Command) {
 	InitBackup(cmd)
+	initRotate(cmd)
 
+	register(keys.RotateSchedule, cmd.Flags())
 	register(keys.BackupSchedule, cmd.Flags())
 	register(keys.TimeZone, cmd.Flags())
 }
@@ -34,11 +36,15 @@ func InitDebug(cmd *cobra.Command) {
 func InitRotate(cmd *cobra.Command) {
 	InitDaemonClient(cmd)
 
-	register(keys.DestroyBackups, cmd.Flags())
-	register(keys.PolicyPath, cmd.Flags())
+	initRotate(cmd)
 
 	register(keys.BackupDir, cmd.Flags())
 	required(keys.BackupDir, cmd)
+}
+
+func initRotate(cmd *cobra.Command) {
+	register(keys.DestroyBackups, cmd.Flags())
+	register(keys.PoliciesPath, cmd.Flags())
 }
 
 func InitList(cmd *cobra.Command) {
@@ -70,7 +76,7 @@ func InitRestore(cmd *cobra.Command) {
 	required(keys.BackupId, cmd)
 
 	register(keys.DestroyBackups, cmd.Flags())
-	register(keys.PolicyPath, cmd.Flags())
+	register(keys.PoliciesPath, cmd.Flags())
 }
 
 func initTaskArgs(cmd *cobra.Command, stopModes *keys.Key) {

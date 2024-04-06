@@ -28,7 +28,7 @@ type DockerClient interface {
 	RemoveContainer(id string) error
 	ContainerLogs(id string) error
 	RunContainer(image string, cmd []string, env []string, volumes []string) (string, error)
-	WaitForContainer(name string, id string) error
+	WaitForContainer(ctx contexts.Context, id string) error
 }
 
 func Client(socket string) (DockerClient, error) {
@@ -73,7 +73,7 @@ func (d Docker) ContainerLogs(id string) error {
 
 		scanner := bufio.NewScanner(out)
 		for scanner.Scan() {
-			logging.Info(contexts.Context{
+			logging.Debug(contexts.Context{
 				Name: id,
 			}, scanner.Text())
 		}
@@ -85,16 +85,16 @@ func (d Docker) ContainerLogs(id string) error {
 	return nil
 }
 
-func (d Docker) WaitForContainer(name string, id string) error {
+func (d Docker) WaitForContainer(ctx contexts.Context, id string) error {
 	statusCh, errCh := d.client.ContainerWait(context.Background(), id, containerTypes.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
-			return errors.Wrap(err, name+"; failure waiting for container")
+			return errors.Wrap(err, ctx.Name+"; failure waiting for container")
 		}
 	case status := <-statusCh:
 		if status.StatusCode != 0 {
-			return errors.WithStack(errors.New(name + "; container failure: " + fmt.Sprintf("%v", status.StatusCode)))
+			return errors.WithStack(errors.New(ctx.Name + "; container failure: " + fmt.Sprintf("%v", status.StatusCode)))
 		}
 	}
 	return nil

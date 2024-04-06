@@ -54,7 +54,6 @@ type OffsiteContainerTemplates struct {
 }
 
 type ContainerTemplate struct {
-	Alias   string   `json:"alias"`
 	Image   string   `json:"image"`
 	Cmd     []string `json:"cmd"`
 	Env     []string `json:"env"`

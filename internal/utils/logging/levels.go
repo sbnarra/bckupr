@@ -28,7 +28,7 @@ func Info(ctx contexts.Context, msgs ...any) {
 }
 
 func Debug(ctx contexts.Context, msgs ...any) {
-	if false {
+	if ctx.Debug {
 		handleLogMsgs(ctx, "DEBUG", msgs...)
 	}
 }

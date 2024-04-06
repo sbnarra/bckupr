@@ -50,7 +50,7 @@ func run(ctx contexts.Context, docker docker.Docker, backupId string, action str
 		}
 
 		taskCh := make(chan *task)
-		completedTaskListener := runStartupListener(ctx, docker, taskCh)
+		completedTaskListener := startupListener(ctx, docker, taskCh)
 
 		actionTask := concurrent.Default(ctx, action)
 		for name, task := range tasks {

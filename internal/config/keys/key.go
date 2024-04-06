@@ -37,6 +37,16 @@ func (key *Key) EnvBool() bool {
 	}
 }
 
+func (key *Key) EnvInt() int {
+	if str, found := os.LookupEnv(key.EnvId()); !found {
+		return key.Default.(int)
+	} else if b, err := strconv.Atoi(str); err != nil {
+		return key.Default.(int)
+	} else {
+		return b
+	}
+}
+
 func (key *Key) EnvString() string {
 	if str, found := os.LookupEnv(key.EnvId()); !found {
 		return key.Default.(string)
