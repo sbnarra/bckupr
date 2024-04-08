@@ -24,31 +24,6 @@ _Global_:
 |-|-|-|-|-|
 |`DEBUG`|`--debug`|Enables debug logging|_Optional: Defaults `false`_|_Optional: Defaults `false`_|
 
-## Daemon
-
-
-
-|Env|Flag|Description|||
-|-|-|-|-|-|
-|`UNIX_SOCKET`|`--unix-socket`|Enables debug logging|_Optional: Defaults `false`_|
-|`TCP_ADDR`|`--tcp-addr`|Enables debug logging|_Optional: Defaults `false`_|
-|`EXPOSE_API`|`--expose-api`|Enables debug logging|_Optional: Defaults `false`_|
-|`UI_ENABLED`|`--ui-enabled`|Enables debug logging|_Optional: Defaults `false`_|
-|`METRICS_ENABLED`|`--metrics-enabled`|Enables debug logging|_Optional: Defaults `false`_|
-
-_`backup`, `restore` and `rotate` options are supported to set default values._
-
-## Cron
-
-
-|Env|Flag|Description|||
-|-|-|-|-|-|
-|`TIMEZONE`|`--unix-socket`|Enables debug logging|_Optional: Defaults `false`_|
-|`BACKUP_SCHEDULE`|`--unix-socket`|Enables debug logging|_Optional: Defaults `false`_|
-|`ROTATE_SCHEDULE`|`--unix-socket`|Enables debug logging|_Optional: Defaults `false`_|
-
-See the [Cron docs](cron.md) for more information.
-
 ## Backup/Restore
 
 These are the main options for backup/restore tasks.
@@ -77,32 +52,3 @@ Stop modes control how bckupr stops containers before running backups or restore
 |-|-|-|-|
 |`STOP_MODES`|`--stop-modes`|_Optional: Defaults `labelled,writers,linked`_|_Optional: Defaults `labelled,attached,linked`_|
 
-
-### Filters
-
-Filters can be applied to limit which containers/volumes are included with the backup/restore tasks.
-
-|Env|Flag|Backup/Restore|
-|-|-|-|
-|`INCLUDE_NAMES`|`--include-names`|_Optional: Defaults none_|
-|`INCLUDE_VOLUMES`|`--include-volumes`|_Optional: Defaults none_|
-|`EXCLUDE_NAMES`|`--exlclude-names`|_Optional: Defaults none_|
-|`EXCLUDE_VOLUMES`|`--exlclude-volumes`|_Optional: Defaults none_|
-
-## List
-
-List backups with metadata.
-
-|Env|Flag|Description||
-|-|-|-|-|
-|`BACKUP_DIR`|`--backup-dir`|Directory containing local backups|_Required: Must be supplied_|_Required: Must be supplied_|
-
-## Delete
-
-Delete existing backup.
-
-|Env|Flag|Description||
-|-|-|-|-|
-|`BACKUP_DIR`|`--backup-dir`|Directory containing local backups|_Required: Must be supplied_|
-|`BACKUP_ID`|`--backup-id`|Id of specific backup|_Required: Must be supplied_|
-|`DRY_RUN`|`--dry-run`|Needs disabling once completed testing|_Optional: Defaults `true`_|

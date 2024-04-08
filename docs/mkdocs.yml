@@ -2,7 +2,7 @@ site_name: Bckupr
 site_url: https://sbnarra.github.io/bckupr
 repo_name: sbnarra/bckupr
 repo_url: https://github.com/sbnarra/bckupr
-docs_dir: .
+docs_dir: markdown
 dev_addr: 0.0.0.0:8000
 theme: 
   icon:
@@ -56,13 +56,13 @@ nav:
   - 'Introduction': index.md
   - 'Usage': usage.md
   - 'Commands':
-      'Daemon': command/daemon.md
-      'Cron': command/cron.md
-      'Backup': command/backup.md
-      'Restore': command/restore.md
-      'Rotate': command/rotation.md
-      'List': command/list.md
-      'Delete': command/delete.md
+      - 'Daemon': command/daemon.md
+      - 'Cron': command/cron.md
+      - 'Backup': command/backup.md
+      - 'Restore': command/restore.md
+      - 'Rotate': command/rotate.md
+      - 'List': command/list.md
+      - 'Delete': command/delete.md
   - 'Labels': 'labels.md'
   - 'Offsite': 'offsite.md'
   - 'Notifications': 'notifications.md'
