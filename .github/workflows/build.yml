@@ -4,16 +4,16 @@ on:
     branches-ignore:
       - main
       - development
-      - dependabot/*
+      - "dependabot/*"
   workflow_dispatch:
 jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/build/docs
+      - uses: ./.github/actions/docs/build
   build-app:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/build/image
+      - uses: ./.github/actions/image/build
