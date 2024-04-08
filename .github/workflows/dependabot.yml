@@ -2,7 +2,7 @@ name: Dependabot Auto-Merge
 on:
   push:
     branches:
-      - dependabot/*
+      - "dependabot/*"
   pull_request:
     branches:
       - development
