@@ -1,9 +1,31 @@
 site_name: Bckupr
 site_url: https://sbnarra.github.io/bckupr
+repo_name: sbnarra/bckupr
+repo_url: https://github.com/sbnarra/bckupr
 docs_dir: markdown
 dev_addr: 0.0.0.0:8000
 theme: 
+  icon:
+    repo: fontawesome/brands/github
   name: material
+  palette:
+    - media: "(prefers-color-scheme)"
+      primary: black
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default 
+      primary: black
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
   features:
     - navigation.expand
 markdown_extensions:
@@ -33,9 +55,15 @@ plugins:
 nav:
   - 'Introduction': index.md
   - 'Usage': usage.md
+  - 'Commands':
+      - 'Daemon': command/daemon.md
+      - 'Cron': command/cron.md
+      - 'Backup': command/backup.md
+      - 'Restore': command/restore.md
+      - 'Rotate': command/rotate.md
+      - 'List': command/list.md
+      - 'Delete': command/delete.md
   - 'Labels': 'labels.md'
-  - 'Cron': 'cron.md'
   - 'Offsite': 'offsite.md'
-  - 'Backup Rotation': 'rotation.md'
   - 'Notifications': 'notifications.md'
   - 'Metrics': 'metrics.md'
