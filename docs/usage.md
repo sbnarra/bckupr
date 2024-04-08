@@ -1,5 +1,15 @@
 # Usage
 
+Bckupr comes as a single binary.
+
+To run bckupr as a long running process there's the `daemon` command which runs the bckupr service/cron/gui, and `cron` which only runs scheduled backups with no gui.
+
+Once running the bckupr `daemon` process you can then use the `backup`, `restore`, `list`, `rotate` and `delete` commands.
+
+_The commands can be run without first running the daemon process by using the `--no-daemon` flag_ 
+
+---
+
 Bckupr requires at least the backup directory option to run. 
 
 Backups will read [docker labels](labels.md) and can be configured further using the options below.
@@ -13,6 +23,31 @@ _Global_:
 |Env|Flag|Description|Backup|Restore|
 |-|-|-|-|-|
 |`DEBUG`|`--debug`|Enables debug logging|_Optional: Defaults `false`_|_Optional: Defaults `false`_|
+
+## Daemon
+
+
+
+|Env|Flag|Description|||
+|-|-|-|-|-|
+|`UNIX_SOCKET`|`--unix-socket`|Enables debug logging|_Optional: Defaults `false`_|
+|`TCP_ADDR`|`--tcp-addr`|Enables debug logging|_Optional: Defaults `false`_|
+|`EXPOSE_API`|`--expose-api`|Enables debug logging|_Optional: Defaults `false`_|
+|`UI_ENABLED`|`--ui-enabled`|Enables debug logging|_Optional: Defaults `false`_|
+|`METRICS_ENABLED`|`--metrics-enabled`|Enables debug logging|_Optional: Defaults `false`_|
+
+_`backup`, `restore` and `rotate` options are supported to set default values._
+
+## Cron
+
+
+|Env|Flag|Description|||
+|-|-|-|-|-|
+|`TIMEZONE`|`--unix-socket`|Enables debug logging|_Optional: Defaults `false`_|
+|`BACKUP_SCHEDULE`|`--unix-socket`|Enables debug logging|_Optional: Defaults `false`_|
+|`ROTATE_SCHEDULE`|`--unix-socket`|Enables debug logging|_Optional: Defaults `false`_|
+
+See the [Cron docs](cron.md) for more information.
 
 ## Backup/Restore
 
