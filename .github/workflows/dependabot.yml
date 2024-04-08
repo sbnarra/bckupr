@@ -1,9 +1,12 @@
 name: Dependabot Auto-Merge
 on:
+  push:
+    branches:
+      - dependabot/*
   pull_request:
     branches:
       - development
-    types: [opened, synchronize, reopened]
+    # types: [opened, synchronize, reopened]
 jobs:
   build-app:
     runs-on: ubuntu-latest
