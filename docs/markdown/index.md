@@ -6,12 +6,16 @@
 Bckupr is program to automate backup creation and data restoration.
 </p>
 <p align="center">
-This tool reads docker labels to determine which volumes/mounts require backing up, cleanly shutting down containers and their dependancies to make sure all data is flushed to disk to create consistent backups.
+This tool reads docker labels to determine which volumes/mounts require backing up, cleanly stopping containers and their dependancies to make sure all data is flushed to disk to create consistent backups.
 </p>
 
 ## Quick Start
 
-Using Bckupr you can automate local backups, pushing to offsite storage and data rentention with simple commands to also automate restoring your data. Bckupr will read container labels to tell which volumes should be backed up before shutting down relavent containers and taking backups to ensure all data is flushed to disk avoiding corrupt backups.
+Using Bckupr you can automate local backups, pushing to offsite storage and data rentention with simple commands to also automate restoring your data. 
+
+Bckupr will read container labels to tell which volumes should be backed up before shutting down relavent containers and performing backups to ensure all data is flushed to disk avoiding corrupt backups.
+
+<!-- https://docs.docker.com/storage/volumes/#back-up-restore-or-migrate-data-volumes -->
 
 To get started simple tag your containers with the volume to backup using `bckupr.volumes=<volume-name>`.
 

@@ -1,54 +1,7 @@
 # Usage
 
-Bckupr comes as a single binary.
+Bckupr is designed to run as a daemon process using the [`daemon`](command/daemon.md) command.
 
-To run bckupr as a long running process there's the `daemon` command which runs the bckupr service/cron/gui, and `cron` which only runs scheduled backups with no gui.
+Once started you can then run the [`backup`](command/backup.md), [`restore`](command/restore.md), [`list`](command/list.md), [`delete`](command/delete.md) and [`rotate`](command/rotate.md) cli commands or use the UI to execute the same functionality.
 
-Once running the bckupr `daemon` process you can then use the `backup`, `restore`, `list`, `rotate` and `delete` commands.
-
-_The commands can be run without first running the daemon process by using the `--no-daemon` flag_ 
-
----
-
-Bckupr requires at least the backup directory option to run. 
-
-Backups will read [docker labels](labels.md) and can be configured further using the options below.
-
-Restores also requires the backup id but will read labels similar to the backup task and can also be configured further using the options below.
-
-The backup/restore tasks use the same options but with different defaults for the backup id and stop modes, see below for more information on the different options for different tasks.
-
-_Global_:
-
-|Env|Flag|Description|Backup|Restore|
-|-|-|-|-|-|
-|`DEBUG`|`--debug`|Enables debug logging|_Optional: Defaults `false`_|_Optional: Defaults `false`_|
-
-## Backup/Restore
-
-These are the main options for backup/restore tasks.
-
-|Env|Flag|Description|Backup|Restore|
-|-|-|-|-|-|
-|`BACKUP_DIR`|`--backup-dir`|Directory containing local backups|_Required: Must be supplied_|_Required: Must be supplied_|
-|`BACKUP_ID`|`--backup-id`|Id of specific backup|_Optional: Autogenerate Timestamp_|_Required: Must be supplied_|
-|`DRY_RUN`|`--dry-run`|Needs disabling once completed testing|_Optional: Defaults `true`_|_Optional: Defaults `true`_|
-
-### Stop Modes
-
-Stop modes control how bckupr stops containers before running backups or restores (_backup and restore uses different defaults_).
-
-`all` - Will stop all running containers on the docker host
-
-`labelled` - Will stop containers labelled with `bckupr.stop`, see [Labels](labels.md) for info on labels.
-
-`writers` - Will stop all containers with RW access to the volume being backed up or restored.
-
-`attached` - Will stop all containers with the volume being backed up or restored attached.
-
-`linked` - Will stop dependant containers (_this option alone has no effect_).
-
-|Env|Flag|Backup|Restore|
-|-|-|-|-|
-|`STOP_MODES`|`--stop-modes`|_Optional: Defaults `labelled,writers,linked`_|_Optional: Defaults `labelled,attached,linked`_|
-
+* _The daemon isn't required, the client commands can be run without the daemon using the `--no-daemon` flag._
