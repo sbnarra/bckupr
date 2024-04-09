@@ -14,7 +14,7 @@ jobs:
         id: version
     outputs:
       version: ${{ steps.version.outputs.version }}
-  publish-docs:
+  publish-latest-docs:
     runs-on: ubuntu-latest
     needs: increment-version
     name: Docs (${{ needs.increment-version.outputs.version }})
@@ -27,7 +27,7 @@ jobs:
     name: Image (${{ needs.increment-version.outputs.version }})
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/image/publish
+      - uses: ./.github/actions/app/publish
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

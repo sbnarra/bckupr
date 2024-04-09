@@ -5,18 +5,18 @@ on:
       - development
     # types: [opened, synchronize, reopened]
 jobs:
-  build-app:
+  test-app:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.head_ref, 'dependabot/') }}
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/image/build
+      - uses: ./.github/actions/app/test
   publish-nightly-image:
-    needs: build-app
+    needs: test-app
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/image/publish
+      - uses: ./.github/actions/app/publish
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
