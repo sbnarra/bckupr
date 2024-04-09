@@ -8,8 +8,8 @@ jobs:
   debug:
     runs-on: ubuntu-latest
     steps:
-      - run: echo ${{ github.base_ref }}
-      - run: echo ${{ startsWith(github.base_ref, 'refs/heads/dependabot/') }}
+      - run: echo ${{ github.ref }}
+      - run: echo ${{ startsWith(github.ref, 'dependabot/') }}
   build-app:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.base_ref, 'refs/heads/dependabot/') }}
