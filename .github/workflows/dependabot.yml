@@ -7,7 +7,7 @@ on:
 jobs:
   build-app:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/dependabot/') }}
+    if: ${{ startsWith(github.base_ref, 'refs/heads/dependabot/') }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/image/build
