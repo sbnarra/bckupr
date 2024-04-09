@@ -8,7 +8,7 @@ jobs:
   debug:
     runs-on: ubuntu-latest
     steps:
-      - run: echo ${{ github }}
+      - run: echo ${{ toJson(github) }}
       - run: echo ${{ startsWith(github.ref, 'dependabot/') }}
   build-app:
     runs-on: ubuntu-latest
