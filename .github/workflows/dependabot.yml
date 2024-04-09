@@ -1,8 +1,5 @@
 name: Dependabot Auto-Merge
 on:
-  push:
-    branches:
-      - "dependabot/*"
   pull_request:
     branches:
       - development
@@ -10,7 +7,7 @@ on:
 jobs:
   build-app:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/dependabot/') }}
+    if: ${{ startsWith(github.head_ref, 'dependabot/') }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/image/build
@@ -30,11 +27,12 @@ jobs:
     permissions: write-all
     steps:
       - id: dependabot-metadata
+        if: github.actor == 'dependabot[bot]'
         uses: dependabot/fetch-metadata@v1
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-      - if: ${{ steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
-        run: gh pr merge --auto --merge "$PR_URL"
+      - run: gh pr merge --auto --merge "$PR_URL"
+        if: ${{ steps.dependabot-metadata.result == 'skipped' || steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ github.token }}
