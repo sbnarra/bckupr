@@ -5,14 +5,9 @@ on:
       - development
     # types: [opened, synchronize, reopened]
 jobs:
-  debug:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo ${{ github.head_ref }}
-      - run: echo ${{ startsWith(github.ref, 'dependabot/') }}
   build-app:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.base_ref, 'refs/heads/dependabot/') }}
+    if: ${{ startsWith(github.head_ref, 'dependabot/') }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/image/build
@@ -37,7 +32,7 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
       - run: gh pr merge --auto --merge "$PR_URL"
-        if: ${{ github.actor != 'dependabot[bot]' || steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
+        if: ${{ steps.dependabot-metadata.result == 'skipped' || steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ github.token }}
