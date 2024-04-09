@@ -5,6 +5,11 @@ on:
       - development
     # types: [opened, synchronize, reopened]
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ github.base_ref }}
+      - run: echo ${{ startsWith(github.base_ref, 'refs/heads/dependabot/') }}
   build-app:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.base_ref, 'refs/heads/dependabot/') }}
