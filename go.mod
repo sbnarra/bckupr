@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	github.com/containrrr/shoutrrr v0.8.0
-	github.com/docker/docker v26.0.0+incompatible
+	github.com/docker/docker v26.0.1+incompatible
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.0
