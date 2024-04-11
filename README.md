@@ -1,10 +1,13 @@
 # Bckupr
 
-![GitHub Build Action](https://github.com/sbnarra/bckupr/actions/workflows/build.yml/badge.svg)
-![GitHub Dependabot Action](https://github.com/sbnarra/bckupr/actions/workflows/dependabot.yml/badge.svg)
-![GitHub Nightly Action](https://github.com/sbnarra/bckupr/actions/workflows/nightly.yml/badge.svg)
-![GitHub Latest Action](https://github.com/sbnarra/bckupr/actions/workflows/latest.yml/badge.svg)
+![GitHub Build Workflow](https://github.com/sbnarra/bckupr/actions/workflows/build.yml/badge.svg)
+![GitHub Dependabot Workflow](https://github.com/sbnarra/bckupr/actions/workflows/dependabot.yml/badge.svg?event=pull_request)
+![GitHub Nightly Workflow](https://github.com/sbnarra/bckupr/actions/workflows/nightly.yml/badge.svg?branch=development)
+![GitHub Latest Workflow](https://github.com/sbnarra/bckupr/actions/workflows/latest.yml/badge.svg?branch=main)
 [![Pulls from DockerHub](https://img.shields.io/docker/pulls/sbnarra/bckupr.svg)](https://hub.docker.com/r/sbnarra/bckupr)
+
+[![Dependabot Auto-Merge](https://github.com/sbnarra/bckupr/actions/workflows/dependabot.yml/badge.svg?branch=development&event=pull_request)](https://github.com/sbnarra/bckupr/actions/workflows/dependabot.yml)
+
 
 Bckupr is program to automate backup creation and data restoration.
 
