@@ -6,11 +6,11 @@ ENV GO111MODULE=on \
 
 WORKDIR /bckupr
 
-COPY go.mod .
-COPY go.sum .
+COPY app/go.mod .
+COPY app/go.sum .
 RUN go mod download
 
-COPY . .
+COPY app/ .
 RUN go build -o bckupr .
 
 FROM ${BASE_IMAGE:-scratch}
@@ -36,12 +36,16 @@ WORKDIR /
 COPY --from=base /bckupr/ui /ui/
 COPY --from=base /bckupr/bckupr /
 
-COPY configs/local/ /local
-COPY configs/offsite/ /offsite
-COPY configs/rotation /rotation
+COPY app/configs/offsite/ /offsite
 
+COPY app/configs/rotation /rotation
 ENV ROTATION_POLICIES_CONFIG=/rotation/policies.yaml
+
+COPY app/configs/local/ /local
 ENV LOCAL_CONTAINERS_CONFIG=/local/tar.yml
+
+COPY app/ui /ui
+ENV UI_BASE_PATH /
 
 ENTRYPOINT ["/bckupr"]
 CMD ["daemon"]

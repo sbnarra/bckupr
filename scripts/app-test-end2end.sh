@@ -26,7 +26,7 @@ write_data() {
 }
 
 bckupr() {
-    go run . $@ --backup-dir $PWD/.test_filesystem/backups --dry-run=false --no-daemon=true
+    go run ./app $@ --backup-dir $PWD/.test_filesystem/backups --dry-run=false --no-daemon=true
 }
 
 # setup
