@@ -5,13 +5,8 @@ ENV GO111MODULE=on \
     CGO_ENABLED=0
 
 WORKDIR /bckupr
-
-COPY app/go.mod .
-COPY app/go.sum .
-RUN go mod download
-
-COPY app/ .
-RUN go build -o bckupr .
+COPY ./ /bckupr/.
+RUN go build -o bckupr /bckupr/app
 
 FROM ${BASE_IMAGE:-scratch}
 
@@ -33,7 +28,6 @@ LABEL org.opencontainers.image.base.name ${BASE_IMAGE:-alpine}
 
 WORKDIR /
 
-COPY --from=base /bckupr/ui /ui/
 COPY --from=base /bckupr/bckupr /
 
 COPY app/configs/offsite/ /offsite

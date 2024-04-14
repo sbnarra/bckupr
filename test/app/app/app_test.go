@@ -9,7 +9,7 @@ import (
 	testContexts "github.com/sbnarra/bckupr/utils/test/contexts"
 )
 
-func TestE2E(t *testing.T) {
+func TestAppE2E(t *testing.T) {
 	ctx := testContexts.Create(t)
 
 	createBackup := types.DefaultCreateBackupRequest()
@@ -19,7 +19,10 @@ func TestE2E(t *testing.T) {
 	e2e.Run(t,
 		func() error {
 			id, err := app.CreateBackup(ctx, createBackup)
+
 			restoreBackup.Args.BackupId = id
+			deleteBackup.Args.BackupId = id
+
 			return err
 		},
 		func() error {

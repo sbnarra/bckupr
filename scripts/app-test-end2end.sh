@@ -26,13 +26,13 @@ write_data() {
 }
 
 bckupr() {
-    go run ./app $@ --backup-dir $PWD/.test_filesystem/backups --dry-run=false --no-daemon=true
+    docker exec bckupr-test /bckupr $@ --backup-dir $PWD/.test_filesystem/backups --dry-run=false
 }
 
 # setup
-# rm -rf $PWD/.test_filesystem
 mkdir -p $PWD/.test_filesystem/backups
 rm -rf /tmp/bckupr/mount
+docker rm -f bckupr-test
 docker rm -f $TEST_CONTAINER
 docker volume rm test_volume_backup
 
@@ -40,6 +40,12 @@ set -e # start test
 
 mkdir -p /tmp/bckupr/mount
 docker volume create test_volume_backup
+
+VERSION=test ./scripts/app-build-image.sh
+docker run --name bckupr-test -d \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $PWD/.test_filesystem/backups:$PWD/.test_filesystem/backups \
+    sbnarra/bckupr:test daemon --backup-dir $PWD/.test_filesystem/backups --dry-run=false
 
 TEST_FS="$PWD/.test_filesystem"
 docker run --name $TEST_CONTAINER -d \
@@ -71,6 +77,7 @@ bckupr restore --include-names $TEST_CONTAINER --backup-id $BACKUP_ID
 check_data_is pre-backup
 
 echo "test completed successfully, running clean up"
+docker rm -f bckupr-test
 docker rm -f $TEST_CONTAINER
 docker volume rm test_volume_backup
 rm -rf /tmp/bckupr/mount
