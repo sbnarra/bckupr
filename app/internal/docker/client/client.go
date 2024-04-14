@@ -83,7 +83,7 @@ func (d Docker) ContainerLogs(id string) (string, error) {
 			return "", err
 		}
 
-		return stdout.String(), nil
+		return stdout.String() + stderr.String(), nil
 	}
 }
 
