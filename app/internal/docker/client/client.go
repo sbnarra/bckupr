@@ -76,9 +76,6 @@ func (d Docker) ContainerLogs(id string) (string, error) {
 
 		stdout := new(strings.Builder)
 		stderr := new(strings.Builder)
-		// if _, err = io.Copy(buf, out); err != nil {
-		// 	return "", err
-		// }
 		if _, err = stdcopy.StdCopy(stdout, stderr, out); err != nil {
 			return "", err
 		}

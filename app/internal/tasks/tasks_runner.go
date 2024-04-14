@@ -60,7 +60,7 @@ func run(ctx contexts.Context, docker docker.Docker, backupId string, action str
 				if runErr = stopContainers(ctx, docker, task); runErr == nil {
 
 					if err := notify.TaskStarted(ctx, backupId, task.Volume); err != nil {
-						logging.CheckError(ctx, err, "failed to send task comstartedpleted notification")
+						logging.CheckError(ctx, err, "failed to send task started notification")
 					}
 
 					runErr = exec(ctx, docker, backupId, name, task.Volume)
