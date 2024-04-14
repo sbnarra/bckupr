@@ -78,6 +78,9 @@ func readData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, f
 		Cmd:     []string{"cat", file},
 		Volumes: volumes(),
 	}, false)
+	defer dClient.RemoveContainer(id)
+
+	dClient.WaitForContainer(ctx, id)
 
 	if logs, err := dClient.ContainerLogs(id); err != nil {
 		t.Fatalf("failed to get logs for %v: %v", id, err)
