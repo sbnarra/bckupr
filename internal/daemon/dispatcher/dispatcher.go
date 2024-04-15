@@ -37,6 +37,10 @@ func New(ctx contexts.Context, name string) *Dispatcher {
 	return d
 }
 
+func (d *Dispatcher) Close() error {
+	return d.server.Close()
+}
+
 func accept(d *Dispatcher, method string, path string) {
 	logging.Info(d.ctx, fmt.Sprintf("method=%v,path=%v", method, path))
 }
@@ -50,7 +54,7 @@ func (d *Dispatcher) dispatch(ctx contexts.Context) func(w http.ResponseWriter, 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Transfer-Encoding", "chunked")
 
-		ctx := contexts.Web(ctx, r, func(ctx contexts.Context, data any) {
+		ctx := contexts.Request(ctx, r, func(ctx contexts.Context, data any) {
 			if err := feedbackToClient(w, data); err != nil {
 				logging.CheckError(ctx, err)
 			}

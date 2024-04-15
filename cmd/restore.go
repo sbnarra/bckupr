@@ -32,7 +32,7 @@ func restore(cmd *cobra.Command, args []string) error {
 		}
 	} else if client, err := createClient(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if err := client.Restore(input); err != nil {
+	} else if err := client.RestoreBackup(input); err != nil {
 		logging.CheckError(ctx, err)
 	}
 	return nil

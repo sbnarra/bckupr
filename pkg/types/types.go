@@ -54,10 +54,11 @@ type OffsiteContainerTemplates struct {
 }
 
 type ContainerTemplate struct {
-	Image   string   `json:"image"`
-	Cmd     []string `json:"cmd"`
-	Env     []string `json:"env"`
-	Volumes []string `json:"volumes"`
+	Image   string            `json:"image"`
+	Cmd     []string          `json:"cmd"`
+	Env     []string          `json:"env"`
+	Volumes []string          `json:"volumes"`
+	Labels  map[string]string `json:"labels"`
 }
 
 type Filters struct {
@@ -84,7 +85,7 @@ type Backup struct {
 	Volumes []Volume  `json:"volumes"`
 }
 
-type WebInput struct {
+type DaemonInput struct {
 	UnixSocket     string
 	TcpAddr        string
 	ExposeApi      bool

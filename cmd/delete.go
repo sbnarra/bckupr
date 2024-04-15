@@ -32,7 +32,7 @@ func delete(cmd *cobra.Command, args []string) error {
 		}
 	} else if client, err := createClient(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if err := client.Delete(input); err != nil {
+	} else if err := client.DeleteBackup(input); err != nil {
 		logging.CheckError(ctx, err)
 	}
 	return nil

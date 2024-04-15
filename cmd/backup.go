@@ -27,12 +27,12 @@ func backup(cmd *cobra.Command, args []string) error {
 	} else if noDaemon, err := cobraKeys.Bool(keys.NoDaemon, cmd.Flags()); err != nil {
 		return err
 	} else if noDaemon {
-		if err := app.CreateBackup(ctx, input); err != nil {
+		if _, err := app.CreateBackup(ctx, input); err != nil {
 			logging.CheckError(ctx, err)
 		}
 	} else if client, err := createClient(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if err := client.Backup(input); err != nil {
+	} else if err := client.CreateBackup(input); err != nil {
 		logging.CheckError(ctx, err)
 	}
 	return nil

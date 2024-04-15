@@ -7,7 +7,7 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/service/gui/pages"
+	"github.com/sbnarra/bckupr/internal/daemon/gui/pages"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -65,7 +65,8 @@ func BackupActionHandler(cron *cron.Cron) func(ctx contexts.Context, w http.Resp
 				}
 
 				exec = func() error {
-					return app.CreateBackup(ctx, input)
+					_, err := app.CreateBackup(ctx, input)
+					return err
 				}
 
 			} else {

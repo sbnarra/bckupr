@@ -10,7 +10,7 @@ func (c *Client) Debug() error {
 	return c.send("GET", PATH_DEBUG, nil)
 }
 
-func (c *Client) Backup(request *types.CreateBackupRequest) error {
+func (c *Client) CreateBackup(request *types.CreateBackupRequest) error {
 	return c.send("POST", PATH_BACKUPS, request)
 }
 
@@ -22,11 +22,11 @@ func (c *Client) List() error {
 	return c.send("GET", PATH_BACKUPS, nil)
 }
 
-func (c *Client) Delete(request *types.DeleteBackupRequest) error {
+func (c *Client) DeleteBackup(request *types.DeleteBackupRequest) error {
 	return c.send("DELETE", PATH_BACKUPS, request)
 }
 
-func (c *Client) Restore(request *types.RestoreBackupRequest) error {
+func (c *Client) RestoreBackup(request *types.RestoreBackupRequest) error {
 	return c.send("POST", PATH_RESTORE_TRIGGER, request)
 }
 

@@ -62,8 +62,8 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *type
 	}
 	logging.Info(ctx, schedule)
 	if id, err := c.I.AddFunc(schedule, func() {
-		if err := backups.CreateBackup(ctx, input); err != nil {
-			logging.CheckError(ctx, err, "Backup Failure")
+		if id, err := backups.CreateBackup(ctx, input); err != nil {
+			logging.CheckError(ctx, err, "Backup Failure", id)
 		}
 		if err := triggerNotifyNextBackup(); err != nil {
 			logging.CheckError(ctx, err, "Notify Failure")

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/service/gui/pages"
+	"github.com/sbnarra/bckupr/internal/daemon/gui/pages"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 )
 

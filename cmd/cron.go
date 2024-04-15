@@ -54,7 +54,7 @@ func buildStartCron(cmd *cobra.Command, args []string) error {
 	if ctx, err := cliContext(cmd); err != nil {
 		return err
 	} else {
-		if err := buildCron(ctx, cmd); err != nil {
+		if err := buildCron(cmd); err != nil {
 			logging.CheckError(ctx, err)
 		} else if err := startCron(ctx, cmd); err != nil {
 			logging.CheckError(ctx, err)
@@ -63,7 +63,7 @@ func buildStartCron(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func buildCron(ctx contexts.Context, cmd *cobra.Command) error {
+func buildCron(cmd *cobra.Command) error {
 	if timezone, err := cobraKeys.String(keys.TimeZone, cmd.Flags()); err != nil {
 		return err
 	} else if instance, err = cron.New(timezone); err != nil {

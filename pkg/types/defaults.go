@@ -57,8 +57,8 @@ func defaultFilters(stopModes *keys.Key) Filters {
 	}
 }
 
-func DefaultWebInput() WebInput {
-	return WebInput{
+func DefaultDaemonInput() DaemonInput {
+	return DaemonInput{
 		UnixSocket:     keys.UnixSocket.EnvString(),
 		TcpAddr:        keys.TcpAddr.EnvString(),
 		ExposeApi:      keys.ExposeApi.EnvBool(),

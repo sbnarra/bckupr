@@ -30,7 +30,7 @@ type GlobalSettings struct {
 	Debug     bool
 	BackupDir string
 	Args      types.TaskArgs
-	Web       types.WebInput
+	Web       types.DaemonInput
 }
 
 type FeedbackPage struct {

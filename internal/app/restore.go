@@ -15,6 +15,10 @@ import (
 )
 
 func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest) error {
+	if input.Args.BackupId == "" {
+		return errors.New("missing backup id")
+	}
+
 	restoreCtx := ctx
 	restoreCtx.Name = "restore"
 

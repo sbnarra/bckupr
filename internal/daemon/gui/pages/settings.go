@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"html/template"
 	"net/http"
 
 	"github.com/sbnarra/bckupr/internal/cron"
@@ -9,26 +8,17 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-var settings = load("settings")
-
-func settingsTemplate(refresh bool) *template.Template {
-	if refresh {
-		settings = load("settings")
-	}
-	return settings
-}
-
 func RenderSettings(cron *cron.Cron, err error) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
 	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
 		w.Header().Set("Content-Type", "text/html")
 
-		web := types.DefaultWebInput()
+		web := types.DefaultDaemonInput()
 		taskArgs := types.DefaultCreateBackupRequest().Args
 		notifications := types.DefaultNotificationSettings()
 		if len(notifications.NotificationUrls) == 0 {
 			notifications.NotificationUrls = append(notifications.NotificationUrls, "not configured")
 		}
-		return settingsTemplate(ctx.Debug).Execute(w, SettingsPage{
+		return load("settings").Execute(w, SettingsPage{
 			Cron: cronData(cron),
 			Global: GlobalSettings{
 				DryRun:    ctx.DryRun,

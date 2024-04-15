@@ -17,19 +17,19 @@ import (
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) error {
+func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) (string, error) {
 
 	backupCtx := ctx
 	backupCtx.Name = "backup"
 	backupId := getBackupId(ctx, input)
 
 	if local, offsite, err := containerConfig.ContainerTemplates(input.Args.LocalContainersConfig, input.Args.OffsiteContainersConfig); err != nil {
-		return err
+		return backupId, err
 	} else {
 		backupDir := ctx.BackupDir + "/" + backupId
 		if !ctx.DryRun {
 			if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
-				return fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
+				return backupId, fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
 			}
 		}
 
@@ -38,7 +38,7 @@ func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) 
 			defer mw.Write(ctx)
 		}
 
-		return tasks.RunOnEachDockerHost(
+		return backupId, tasks.RunOnEachDockerHost(
 			backupCtx,
 			backupId,
 			input.Args,

@@ -20,8 +20,15 @@ func cronData(cron *cron.Cron) Cron {
 }
 
 func load(name string) *template.Template {
-	t := template.Must(template.ParseFiles(fmt.Sprintf("ui/%v.html", name)))
-	t = template.Must(t.ParseGlob("ui/common/*"))
+	wd, _ := os.Getwd()
+
+	base := wd + "/app/"
+	if val, exists := os.LookupEnv("UI_BASE_PATH"); exists {
+		base = val
+	}
+
+	t := template.Must(template.ParseFiles(fmt.Sprintf(base+"ui/%v.html", name)))
+	t = template.Must(t.ParseGlob(base + "ui/common/*"))
 	t = t.Funcs(template.FuncMap{
 		"date": func(t time.Time) string {
 			return t.Format("2006-01-02")

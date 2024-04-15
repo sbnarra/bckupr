@@ -1,6 +1,8 @@
 package encodings
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestToJson(t *testing.T) {
 	if json, err := ToJson("hello"); err != nil {
