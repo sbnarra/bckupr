@@ -85,7 +85,7 @@ type Backup struct {
 	Volumes []Volume  `json:"volumes"`
 }
 
-type WebInput struct {
+type DaemonInput struct {
 	UnixSocket     string
 	TcpAddr        string
 	ExposeApi      bool

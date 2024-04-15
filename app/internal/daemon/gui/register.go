@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/service/dispatcher"
-	"github.com/sbnarra/bckupr/internal/service/gui/actions"
-	"github.com/sbnarra/bckupr/internal/service/gui/pages"
+	"github.com/sbnarra/bckupr/internal/daemon/dispatcher"
+	"github.com/sbnarra/bckupr/internal/daemon/gui/actions"
+	"github.com/sbnarra/bckupr/internal/daemon/gui/pages"
 	"github.com/sbnarra/bckupr/utils/pkg/contexts"
 )
 

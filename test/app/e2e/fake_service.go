@@ -1,7 +1,8 @@
-package dummy
+package e2e
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -14,28 +15,28 @@ import (
 )
 
 func volumes() []string {
-	// wd, _ := os.Getwd()
+	wd, _ := os.Getwd()
 	return []string{
-		// fmt.Sprintf("%v/%v:%v", wd, ".test_filesystem/simple_mount", "/mnt/mount"),
+		fmt.Sprintf("%v/%v:%v", wd, ".test_filesystem/simple_mount", "/mnt/mount"),
 		"bckupr_test_simple:/mnt/volume",
 	}
 }
 
 func StartService(t *testing.T, ctx contexts.Context, dClient client.DockerClient) string {
-	// wd, _ := os.Getwd()
+	wd, _ := os.Getwd()
 	return startService(t, ctx, dClient, types.ContainerTemplate{
 		Image:   "busybox",
 		Cmd:     []string{"sleep", "120"},
 		Volumes: volumes(),
 		Labels: map[string]string{
-			"bckupr.volumes": "bckupr_test_simple",
-			// "bckupr.volumes.simple_mount": fmt.Sprintf("%v/%v", wd, ".test_filesystem/simple_mount"),
+			"bckupr.volumes":              "bckupr_test_simple",
+			"bckupr.volumes.simple_mount": fmt.Sprintf("%v/%v", wd, ".test_filesystem/simple_mount"),
 		},
 	}, false)
 }
 
 func WriteData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, data string) {
-	// writeData(t, ctx, dClient, "/mnt/mount/data", data)
+	writeData(t, ctx, dClient, "/mnt/mount/data", data)
 	writeData(t, ctx, dClient, "/mnt/volume/data", data)
 }
 
@@ -53,14 +54,14 @@ func AssertData(t *testing.T, ctx contexts.Context, dClient client.DockerClient,
 
 	var file, output string
 
-	// file = "/mnt/mount/data"
-	// output = readData(t, ctx, dClient, file)
-	// if output != data {
-	// 	t.Fatalf("%v: expected [%v], actual [%v]", file, data, output)
-	// 	fmt.Printf("%v: expected [%v], actual [%v]\n", file, data, output)
-	// } else {
-	// 	fmt.Println(file, "matches", data)
-	// }
+	file = "/mnt/mount/data"
+	output = readData(t, ctx, dClient, file)
+	if output != data {
+		t.Fatalf("%v: expected [%v], actual [%v]", file, data, output)
+		fmt.Printf("%v: expected [%v], actual [%v]\n", file, data, output)
+	} else {
+		fmt.Println(file, "matches", data)
+	}
 
 	file = "/mnt/volume/data"
 	output = readData(t, ctx, dClient, file)

@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"html/template"
 	"net/http"
 
 	"github.com/sbnarra/bckupr/internal/cron"
@@ -9,15 +8,6 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 	"github.com/sbnarra/bckupr/utils/pkg/contexts"
 )
-
-var index = load("index")
-
-func indexTemplate(refresh bool) *template.Template {
-	if refresh {
-		index = load("index")
-	}
-	return index
-}
 
 func RenderIndex(cron *cron.Cron, err error) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
 	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
@@ -31,7 +21,7 @@ func RenderIndex(cron *cron.Cron, err error) func(ctx contexts.Context, w http.R
 			return nil
 		})
 
-		return indexTemplate(ctx.Debug).Execute(w, IndexPage{
+		return load("index").Execute(w, IndexPage{
 			Cron:        cronData(cron),
 			Backups:     backups,
 			BackupInput: types.DefaultCreateBackupRequest(),

@@ -20,7 +20,9 @@ func cronData(cron *cron.Cron) Cron {
 }
 
 func load(name string) *template.Template {
-	base := "app/"
+	wd, _ := os.Getwd()
+
+	base := wd + "/app/"
 	if val, exists := os.LookupEnv("UI_BASE_PATH"); exists {
 		base = val
 	}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/service/gui/pages"
+	"github.com/sbnarra/bckupr/internal/daemon/gui/pages"
 	"github.com/sbnarra/bckupr/pkg/types"
 	"github.com/sbnarra/bckupr/utils/pkg/contexts"
 	"github.com/sbnarra/bckupr/utils/pkg/encodings"

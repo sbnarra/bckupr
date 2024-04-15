@@ -34,7 +34,7 @@ func Cobra(cmd *cobra.Command, feedback func(Context, any)) (Context, error) {
 	}
 }
 
-func Web(ctx Context, r *http.Request, feedback func(Context, any)) Context {
+func Request(ctx Context, r *http.Request, feedback func(Context, any)) Context {
 	return Create(r.URL.Path, ctx.BackupDir, ctx.Debug, ctx.DryRun, feedback)
 }
 
