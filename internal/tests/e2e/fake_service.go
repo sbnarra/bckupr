@@ -15,22 +15,20 @@ import (
 )
 
 func volumes() []string {
-	wd, _ := os.Getwd()
 	return []string{
-		fmt.Sprintf("%v/%v:%v", wd, ".test_filesystem/simple_mount", "/mnt/mount"),
+		fmt.Sprintf("%v/%v", "/tmp/example-mount", "/mnt/mount"),
 		"bckupr_test_simple:/mnt/volume",
 	}
 }
 
 func startDummyService(t *testing.T, ctx contexts.Context, dClient client.DockerClient) string {
-	wd, _ := os.Getwd()
 	return startService(t, ctx, dClient, types.ContainerTemplate{
 		Image:   "busybox",
 		Cmd:     []string{"sleep", "120"},
 		Volumes: volumes(),
 		Labels: map[string]string{
 			"bckupr.volumes":              "bckupr_test_simple",
-			"bckupr.volumes.simple_mount": fmt.Sprintf("%v/%v", wd, ".test_filesystem/simple_mount"),
+			"bckupr.volumes.simple_mount": "/tmp/example-mount",
 		},
 	}, false)
 }

@@ -15,7 +15,7 @@ func createContext(t *testing.T) contexts.Context {
 	debug := true
 	dryRun := false
 
-	path, _ := filepath.Abs(".test_filesystem/backups")
+	path, _ := filepath.Abs("/tmp/backups")
 	backupDir := path
 
 	os.Setenv(keys.Debug.EnvId(), strconv.FormatBool(debug))
