@@ -6,7 +6,7 @@ ENV GO111MODULE=on \
 
 WORKDIR /bckupr
 COPY ./ /bckupr/.
-RUN go build -o bckupr /bckupr/app
+RUN go build -o bckupr .
 
 FROM ${BASE_IMAGE:-scratch}
 
@@ -30,15 +30,15 @@ WORKDIR /
 
 COPY --from=base /bckupr/bckupr /
 
-COPY app/configs/offsite/ /offsite
+COPY configs/offsite/ /offsite
 
-COPY app/configs/rotation /rotation
+COPY configs/rotation /rotation
 ENV ROTATION_POLICIES_CONFIG=/rotation/policies.yaml
 
-COPY app/configs/local/ /local
+COPY configs/local/ /local
 ENV LOCAL_CONTAINERS_CONFIG=/local/tar.yml
 
-COPY app/ui /ui
+COPY ui/ /ui
 ENV UI_BASE_PATH /
 
 ENTRYPOINT ["/bckupr"]
