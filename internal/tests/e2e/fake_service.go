@@ -15,7 +15,7 @@ import (
 
 func volumes() []string {
 	return []string{
-		fmt.Sprintf("%v/%v", "/tmp/example-mount", "/mnt/mount"),
+		fmt.Sprintf("%v:%v", "/tmp/example-mount", "/mnt/mount"),
 		"bckupr_test_simple:/mnt/volume",
 	}
 }
