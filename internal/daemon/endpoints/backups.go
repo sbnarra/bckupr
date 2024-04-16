@@ -15,7 +15,6 @@ func createBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 	_, err := app.CreateBackup(ctx, input)
-	// TODO: on error response
 	return err
 }
 

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -72,7 +71,7 @@ func (c *Client) sendRequest(method string, path string, payload []byte, conn ne
 		} else {
 			err := c.logResponse(resp)
 			if (resp.StatusCode / 100) != 2 {
-				return errors.Join(fmt.Errorf("non-200 status: %v", resp.StatusCode), err)
+				return fmt.Errorf("error %v", resp.StatusCode)
 			}
 			return err
 		}

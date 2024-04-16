@@ -63,22 +63,33 @@ func (d *Dispatcher) dispatch(ctx contexts.Context) func(w http.ResponseWriter, 
 		for path, handler := range paths {
 			if regex, err := regexp.Compile("^" + string(path) + "$"); err != nil {
 				logging.CheckError(ctx, err)
+				continue
 			} else if !regex.MatchString(r.URL.Path) {
 				continue
 			} else if err := handler(ctx, w, r); err != nil {
-				logging.CheckError(ctx, err)
-				return
-			} else if f, o := w.(http.Flusher); o {
-				f.Flush()
-				return
-			} else {
-				return
+				onError(ctx, err, w)
 			}
+
+			if f, o := w.(http.Flusher); o {
+				f.Flush()
+			}
+			return
 		}
 
 		logging.Error(d.ctx, fmt.Sprintf("no route found: method=%v,path=%v", r.Method, r.URL.Path))
 		w.WriteHeader(http.StatusNotFound)
 	}
+}
+
+func onError(ctx contexts.Context, err error, w http.ResponseWriter) {
+	logging.CheckError(ctx, err)
+
+	w.WriteHeader(http.StatusInternalServerError)
+	data := map[string]string{
+		"error": err.Error(),
+	}
+	encoded := encodings.ToJsonIE(data)
+	w.Write([]byte(encoded))
 }
 
 func feedbackToClient(w http.ResponseWriter, data any) error {
@@ -107,10 +118,6 @@ func (d *Dispatcher) Start(network string, addr string) error {
 			<-sig
 			d.server.Shutdown(d.ctx)
 		}()
-		// required for remote restart others we'll have a build up of goroutines
-		// d.server.RegisterOnShutdown(func() {
-		// 	sig <- nil
-		// })
 		return d.server.Serve(ln)
 	}
 }
