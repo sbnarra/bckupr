@@ -9,7 +9,6 @@ var BackupDir = newKey("backup-dir", "backups archieve directory", "")
 var DockerHosts = newKey("docker-hosts", "docker host uri's to manage backups on", []string{"unix:///var/run/docker.sock"})
 var LabelPrefix = newKey("label-prefix", "label prefix used to scan containers for configuration", "bckupr")
 
-var NoDaemon = newKey("no-daemon", "don't use bckupr daemon, some features won't be available using this flag", true)
 var DaemonNet = newKey("daemon-net", "network connection type for bckupr daemon, unix or tcp", "unix")
 var DaemonProtocol = newKey("daemon-protocol", "protocol for bckupr daemon (don't recommend changing)", "http")
 var DaemonAddr = newKey("daemon-addr", "bind address for bckupr daemon, should use unix:///path/to/socket or tcp binding like 0.0.0.0:8000", UnixSocket.Default)

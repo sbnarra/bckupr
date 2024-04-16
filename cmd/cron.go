@@ -34,14 +34,6 @@ func init() {
 func nextCronBackup(cmd *cobra.Command, args []string) error {
 	if ctx, err := contexts.Cobra(cmd, feedbackViaLogs); err != nil {
 		return err
-	} else if noDaemon, err := cobraKeys.Bool(keys.NoDaemon, cmd.Flags()); err != nil {
-		return err
-	} else if noDaemon {
-		if instance != nil {
-			logging.Info(ctx, "Next Backup:", instance.I.Entry(instance.Id).Next)
-		} else {
-			logging.Info(ctx, "No Cron Instance Running")
-		}
 	} else if client, err := createClient(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
 	} else if err := client.BackupSchedule(); err != nil {

@@ -63,7 +63,6 @@ func InitBackup(cmd *cobra.Command) {
 }
 
 func InitDaemonClient(cmd *cobra.Command) {
-	register(keys.NoDaemon, cmd.Flags())
 	register(keys.DaemonAddr, cmd.Flags())
 	register(keys.DaemonProtocol, cmd.Flags())
 	register(keys.DaemonNet, cmd.Flags())
