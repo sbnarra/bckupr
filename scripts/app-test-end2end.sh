@@ -10,22 +10,17 @@ check_data_is() {
     if [ "$MSG" != "$*" ]; then
         echo "invalid mount data: on-disk='$MSG' != expected='$*'"; exit 1
     fi
-    # MSG=$(docker exec test_service cat /msg)
-    # if [ "$MSG" != "$*" ]; then
-    #     echo "invalid mount data: on-disk='$MSG' != expected='$*'"; exit 1
-    # fi
     echo "data matches: '$*'"
 }
 
 write_data() {
     docker exec test_service sh -c "echo $1 >/mnt/volume/msg"
     docker exec test_service sh -c "echo $1 >/mnt/mount/msg"
-    # docker exec test_service sh -c "echo $1 >/msg"
     echo "Wrote data '$1'"
 }
 
 bckupr() {
-    docker exec bckupr_instance /bckupr $@
+    docker exec bckupr_instance /bckupr $@ --backup-dir $PWD/.test_filesystem/backups
 }
 
 # setup
@@ -50,28 +45,16 @@ TEST_FS="$PWD/.test_filesystem"
 docker run --name test_service -d \
     -l bckupr.stop=true \
     \
-    -l bckupr.filesystem=false \
-    \
     -l bckupr.volumes=test_volume_backup \
     -v test_volume_backup:/mnt/volume \
     \
     -l bckupr.volumes.test_mount_backup=$TEST_FS/example-mount \
     -v $TEST_FS/example-mount:/mnt/mount \
-    \
     alpine sleep 120
 
-# write intial data
 write_data pre-backup
-check_data_is pre-backup
-
-# perform backup of intial data
 bckupr backup --backup-id=$BACKUP_ID
-
-# update container data
 write_data post-backup
-check_data_is post-backup
-
-# restore to initial data
 bckupr restore --include-names test_service --backup-id $BACKUP_ID
 check_data_is pre-backup
 
