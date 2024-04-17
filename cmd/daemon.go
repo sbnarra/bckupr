@@ -14,17 +14,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// should this become the "root" command
-
-var Daemon = &cobra.Command{
-	Use:   "daemon",
-	Short: "Cron/Web daemon",
-	Long:  `Cron/Web daemon`,
-	RunE:  runDaemon,
-}
-
 func init() {
-	cobraConf.InitDaemon(Daemon)
+	cobraConf.InitDaemon(Bckupr)
 }
 
 func runDaemon(cmd *cobra.Command, args []string) error {

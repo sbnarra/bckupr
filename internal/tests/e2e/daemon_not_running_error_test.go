@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/pkg/api"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
@@ -11,7 +12,7 @@ import (
 func TestNoDaemonRunning(t *testing.T) {
 	ctx := prepareIntegrationTest(t)
 
-	client := api.Default(ctx)
+	client := api.Unix(ctx, keys.DaemonAddr.Default.(string))
 	createBackup := types.DefaultCreateBackupRequest()
 
 	err := client.CreateBackup(createBackup)
@@ -19,7 +20,7 @@ func TestNoDaemonRunning(t *testing.T) {
 		t.Fatalf("missing expected no socket error")
 	}
 
-	if !strings.HasPrefix(err.Error(), "dial unix .bckupr.sock:") {
+	if !strings.HasPrefix(err.Error(), "dial unix /tmp/.bckupr.sock:") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 

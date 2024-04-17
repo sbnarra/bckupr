@@ -41,6 +41,11 @@ ENV LOCAL_CONTAINERS_CONFIG=/local/tar.yml
 COPY ui/ /ui
 ENV UI_BASE_PATH /
 
+ENV DAEMON_ADDR /.bckupr.sock
+ENV UNIX_SOCKET /.bckupr.sock
+
+ENV PATH /bckupr
+
 ENTRYPOINT ["/bckupr"]
 CMD ["daemon"]
 

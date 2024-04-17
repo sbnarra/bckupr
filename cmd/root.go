@@ -10,6 +10,7 @@ var Bckupr = &cobra.Command{
 	Short: "Docker volume/filesystem backup manager.",
 	Long: `Bckupr is a tool to manage backups  your docker volumes and filesystem.
 This application automates creating new backups and restoring data.`,
+	RunE: runDaemon,
 }
 
 func init() {
@@ -21,9 +22,6 @@ func init() {
 		Delete,
 		Rotate,
 	)
-	addGroup("daemons", "Daemons Commands:", Bckupr,
-		Daemon,
-		Cron)
 
 	Bckupr.AddCommand(Debug)
 	Bckupr.AddCommand(Version)

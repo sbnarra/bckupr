@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/daemon"
 	"github.com/sbnarra/bckupr/pkg/api"
 	"github.com/sbnarra/bckupr/pkg/types"
@@ -22,7 +23,7 @@ func TestRestoreMissingBackupId(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	client := api.Default(ctx)
+	client := api.Unix(ctx, keys.DaemonAddr.Default.(string))
 	restoreBackup := types.DefaultRestoreBackupRequest()
 
 	err := client.RestoreBackup(restoreBackup)

@@ -27,6 +27,9 @@ func createClient(ctx contexts.Context, cmd *cobra.Command) (*api.Client, error)
 	} else if addr, err := cobraKeys.String(keys.DaemonAddr, cmd.Flags()); err != nil {
 		return nil, err
 	} else {
-		return api.New(ctx, network, protocol, addr), nil
+		if network == "unix" {
+			return api.Unix(ctx, addr), nil
+		}
+		return api.New(ctx, network, protocol, addr, addr), nil
 	}
 }

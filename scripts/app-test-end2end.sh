@@ -1,17 +1,16 @@
-TEST_CONTAINER=backup_test
 BACKUP_ID="test-$(date +%Y-%m-%d_%H-%M)"
 VERSION=${VERSION:-local}
 
 check_data_is() {
-    MSG=$(docker exec $TEST_CONTAINER cat /mnt/volume/msg)
+    MSG=$(docker exec test_service cat /mnt/volume/msg)
     if [ "$MSG" != "$*" ]; then
         echo "invalid volume data: on-disk='$MSG' != expected='$*'"; exit 1
     fi
-    MSG=$(docker exec $TEST_CONTAINER cat /mnt/mount/msg)
+    MSG=$(docker exec test_service cat /mnt/mount/msg)
     if [ "$MSG" != "$*" ]; then
         echo "invalid mount data: on-disk='$MSG' != expected='$*'"; exit 1
     fi
-    # MSG=$(docker exec $TEST_CONTAINER cat /msg)
+    # MSG=$(docker exec test_service cat /msg)
     # if [ "$MSG" != "$*" ]; then
     #     echo "invalid mount data: on-disk='$MSG' != expected='$*'"; exit 1
     # fi
@@ -19,21 +18,21 @@ check_data_is() {
 }
 
 write_data() {
-    docker exec $TEST_CONTAINER sh -c "echo $1 >/mnt/volume/msg"
-    docker exec $TEST_CONTAINER sh -c "echo $1 >/mnt/mount/msg"
-    # docker exec $TEST_CONTAINER sh -c "echo $1 >/msg"
+    docker exec test_service sh -c "echo $1 >/mnt/volume/msg"
+    docker exec test_service sh -c "echo $1 >/mnt/mount/msg"
+    # docker exec test_service sh -c "echo $1 >/msg"
     echo "Wrote data '$1'"
 }
 
 bckupr() {
-    docker exec bckupr-test /bckupr $@ --backup-dir $PWD/.test_filesystem/backups --dry-run=false
+    docker exec bckupr_instance /bckupr $@
 }
 
 # setup
 mkdir -p $PWD/.test_filesystem/backups
 rm -rf /tmp/bckupr/mount
-docker rm -f bckupr-test
-docker rm -f $TEST_CONTAINER
+docker rm -f bckupr_instance
+docker rm -f test_service
 docker volume rm test_volume_backup
 
 set -e # start test
@@ -42,13 +41,13 @@ mkdir -p /tmp/bckupr/mount
 docker volume create test_volume_backup
 
 VERSION=test ./scripts/app-build-image.sh
-docker run --name bckupr-test -d \
+docker run --name bckupr_instance -d \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v $PWD/.test_filesystem/backups:$PWD/.test_filesystem/backups \
-    sbnarra/bckupr:test daemon --backup-dir $PWD/.test_filesystem/backups --dry-run=false
+    sbnarra/bckupr:test --backup-dir $PWD/.test_filesystem/backups --dry-run=false
 
 TEST_FS="$PWD/.test_filesystem"
-docker run --name $TEST_CONTAINER -d \
+docker run --name test_service -d \
     -l bckupr.stop=true \
     \
     -l bckupr.filesystem=false \
@@ -73,11 +72,11 @@ write_data post-backup
 check_data_is post-backup
 
 # restore to initial data
-bckupr restore --include-names $TEST_CONTAINER --backup-id $BACKUP_ID
+bckupr restore --include-names test_service --backup-id $BACKUP_ID
 check_data_is pre-backup
 
 echo "test completed successfully, running clean up"
-docker rm -f bckupr-test
-docker rm -f $TEST_CONTAINER
+docker rm -f bckupr_instance
+docker rm -f test_service
 docker volume rm test_volume_backup
 rm -rf /tmp/bckupr/mount

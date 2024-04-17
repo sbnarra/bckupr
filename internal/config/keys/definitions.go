@@ -11,7 +11,7 @@ var LabelPrefix = newKey("label-prefix", "label prefix used to scan containers f
 
 var DaemonNet = newKey("daemon-net", "network connection type for bckupr daemon, unix or tcp", "unix")
 var DaemonProtocol = newKey("daemon-protocol", "protocol for bckupr daemon (don't recommend changing)", "http")
-var DaemonAddr = newKey("daemon-addr", "bind address for bckupr daemon, should use unix:///path/to/socket or tcp binding like 0.0.0.0:8000", UnixSocket.Default)
+var DaemonAddr = newKey("daemon-addr", "bind address for bckupr daemon, should use unix:///tmp/.bckupr or tcp binding like 0.0.0.0:8000", UnixSocket.Default)
 
 var LocalContainers = newKey("local-containers-config", "yaml config for managing local backups", "./configs/local/tar.yml")
 var OffsiteContainers = newKey("offsite-containers-config", "yaml config for managing offsite backups", "")
@@ -40,7 +40,7 @@ var BackupSchedule = newKey("backup-schedule", "cron expression for backups sche
 var RotateSchedule = newKey("rotate-schedule", "cron expression for rotations schedule", "")
 
 // web
-var UnixSocket = newKey("unix-socket", "unix socket to bind daemon", ".bckupr.sock")
+var UnixSocket = newKey("unix-socket", "unix socket to bind daemon", "/tmp/.bckupr.sock")
 var TcpAddr = newKey("tcp-addr", "tcp address to bind ui/api", "0.0.0.0:8000")
 var ExposeApi = newKey("expose-api", "exposes api via tcp (by default only unix for local connections)", false)
 var UiEnabled = newKey("ui-enabled", "exposes gui", true)

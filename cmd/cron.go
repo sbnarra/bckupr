@@ -5,55 +5,10 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
-	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/spf13/cobra"
 )
 
 var instance *cron.Cron
-
-var Cron = &cobra.Command{
-	Use:   "cron",
-	Short: "Scheduled backups",
-	Long:  `Scheduled backups`,
-	RunE:  buildStartCron,
-}
-
-var CronNextBackup = &cobra.Command{
-	Use:   "next",
-	Short: "Scheduled backups",
-	Long:  `Scheduled backups`,
-	RunE:  nextCronBackup,
-}
-
-func init() {
-	cobraKeys.InitCron(Cron)
-	cobraKeys.InitDaemonClient(CronNextBackup)
-	Cron.AddCommand(CronNextBackup)
-}
-
-func nextCronBackup(cmd *cobra.Command, args []string) error {
-	if ctx, err := contexts.Cobra(cmd, feedbackViaLogs); err != nil {
-		return err
-	} else if client, err := createClient(ctx, cmd); err != nil {
-		logging.CheckError(ctx, err)
-	} else if err := client.BackupSchedule(); err != nil {
-		logging.CheckError(ctx, err)
-	}
-	return nil
-}
-
-func buildStartCron(cmd *cobra.Command, args []string) error {
-	if ctx, err := cliContext(cmd); err != nil {
-		return err
-	} else {
-		if err := buildCron(cmd); err != nil {
-			logging.CheckError(ctx, err)
-		} else if err := startCron(ctx, cmd); err != nil {
-			logging.CheckError(ctx, err)
-		}
-		return nil
-	}
-}
 
 func buildCron(cmd *cobra.Command) error {
 	if timezone, err := cobraKeys.String(keys.TimeZone, cmd.Flags()); err != nil {

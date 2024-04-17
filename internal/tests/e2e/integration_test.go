@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/sbnarra/bckupr/internal/app"
+	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/daemon"
 	"github.com/sbnarra/bckupr/pkg/api"
 	"github.com/sbnarra/bckupr/pkg/types"
@@ -48,7 +49,7 @@ func TestE2EWithDaemon(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	client := api.Default(ctx)
+	client := api.Unix(ctx, keys.DaemonAddr.Default.(string))
 	id := time.Now().Format("20060102_1504") + "-client"
 
 	e2e(t,
