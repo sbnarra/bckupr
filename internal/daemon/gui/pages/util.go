@@ -20,9 +20,7 @@ func cronData(cron *cron.Cron) Cron {
 }
 
 func load(name string) *template.Template {
-	wd, _ := os.Getwd()
-
-	base := wd + "/app/"
+	base := ""
 	if val, exists := os.LookupEnv("UI_BASE_PATH"); exists {
 		base = val
 	}
@@ -52,14 +50,5 @@ func load(name string) *template.Template {
 			return m
 		},
 	})
-
-	partsPath := fmt.Sprintf("ui/%v", name)
-	if _, err := os.Stat(partsPath); err != nil {
-		//TODO: delete this noise
-		// fmt.Printf("%+v\n", err)
-	} else {
-		t = template.Must(t.ParseGlob(partsPath + "/*"))
-	}
-
-	return t
+	return template.Must(t.ParseGlob(fmt.Sprintf("ui/%v/*", name)))
 }

@@ -3,7 +3,6 @@ package contexts
 import (
 	"context"
 	"net/http"
-	"path/filepath"
 
 	cobraKeys "github.com/sbnarra/bckupr/internal/config/cobra"
 	"github.com/sbnarra/bckupr/internal/config/keys"
@@ -14,7 +13,7 @@ import (
 type Context struct {
 	context.Context
 	Name      string
-	BackupDir string
+	BackupDir string // initially set by daemon cli, is passed through on all other instances
 	Debug     bool
 	DryRun    bool
 	feedback  func(Context, any)
@@ -25,12 +24,8 @@ func Cobra(cmd *cobra.Command, feedback func(Context, any)) (Context, error) {
 		return Context{}, err
 	} else if debug, err := cobraKeys.Bool(keys.Debug, cmd.Flags()); err != nil {
 		return Context{}, err
-	} else if backupDir, err := cobraKeys.String(keys.BackupDir, cmd.Flags()); err != nil {
-		return Context{}, err
-	} else if backupDir, err := filepath.Abs(backupDir); err != nil {
-		return Context{}, err
 	} else {
-		return Create(cmd.Use, backupDir, debug, dryrun, feedback), nil
+		return Create(cmd.Use, "", debug, dryrun, feedback), nil
 	}
 }
 
@@ -39,12 +34,15 @@ func Request(ctx Context, r *http.Request, feedback func(Context, any)) Context 
 }
 
 func Create(name string, backupDir string, debug bool, dryrun bool, feedback func(Context, any)) Context {
+
 	return Context{
-		Name:      name,
-		BackupDir: backupDir,
-		Debug:     debug,
-		DryRun:    dryrun,
-		feedback:  feedback,
+		context.Background(),
+
+		name,
+		backupDir,
+		debug,
+		dryrun,
+		feedback,
 	}
 }
 

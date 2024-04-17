@@ -14,7 +14,6 @@ import (
 func TestE2EWithoutDaemon(t *testing.T) {
 
 	ctx := prepareIntegrationTest(t)
-
 	id := time.Now().Format("20060102_1504") + "-internal"
 
 	e2e(t,

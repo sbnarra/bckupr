@@ -36,17 +36,18 @@ func (c *Cron) Stop() {
 }
 
 func (c *Cron) Start(ctx contexts.Context,
+	backupDir string,
 	backupSchedule string, backupInput *types.CreateBackupRequest,
 	rotateSchedule string, rotateInput *types.RotateBackupsRequest,
 ) error {
 	c.I.Start()
 	if backupSchedule != "" {
-		if err := c.scheduleBackup(ctx, backupSchedule, backupInput); err != nil {
+		if err := c.scheduleBackup(ctx, backupDir, backupSchedule, backupInput); err != nil {
 			return err
 		}
 	}
 	if rotateSchedule != "" {
-		if err := c.scheduleRotation(ctx, rotateSchedule, rotateInput); err != nil {
+		if err := c.scheduleRotation(ctx, backupDir, rotateSchedule, rotateInput); err != nil {
 			return err
 		}
 	}
@@ -56,7 +57,7 @@ func (c *Cron) Start(ctx contexts.Context,
 	return nil
 }
 
-func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *types.CreateBackupRequest) error {
+func (c *Cron) scheduleBackup(ctx contexts.Context, backupDir string, schedule string, input *types.CreateBackupRequest) error {
 	triggerNotifyNextBackup := func() error {
 		return nil
 	}
@@ -85,11 +86,11 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *type
 	return nil
 }
 
-func (c *Cron) scheduleRotation(ctx contexts.Context, schedule string, input *types.RotateBackupsRequest) error {
+func (c *Cron) scheduleRotation(ctx contexts.Context, backupDir string, schedule string, input *types.RotateBackupsRequest) error {
 	notifyNextRotate := func() {}
 	logging.Info(ctx, schedule)
 	if id, err := c.I.AddFunc(schedule, func() {
-		if err := backups.Rotate(ctx, input); err != nil {
+		if err := backups.Rotate(ctx, backupDir, input); err != nil {
 			logging.CheckError(ctx, err, "Rotate Failure")
 		}
 		notifyNextRotate()

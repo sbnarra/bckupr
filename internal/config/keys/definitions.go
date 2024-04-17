@@ -5,7 +5,6 @@ var Debug = newKey("debug", "enable additional logging information", false)
 
 // backup/restore shared
 var BackupId = newKey("backup-id", "backup id to use (backup tasks will autogenerate if not set)", "")
-var BackupDir = newKey("backup-dir", "backups archieve directory", "")
 var DockerHosts = newKey("docker-hosts", "docker host uri's to manage backups on", []string{"unix:///var/run/docker.sock"})
 var LabelPrefix = newKey("label-prefix", "label prefix used to scan containers for configuration", "bckupr")
 
@@ -39,7 +38,8 @@ var TimeZone = newKey("timezone", "timezone to use for cron scheduling", "UTC")
 var BackupSchedule = newKey("backup-schedule", "cron expression for backups schedule", "0 0 * * *")
 var RotateSchedule = newKey("rotate-schedule", "cron expression for rotations schedule", "")
 
-// web
+// daemon
+var BackupDir = newKey("backup-dir", "backups archieve directory", "")
 var UnixSocket = newKey("unix-socket", "unix socket to bind daemon", "/tmp/.bckupr.sock")
 var TcpAddr = newKey("tcp-addr", "tcp address to bind ui/api", "0.0.0.0:8000")
 var ExposeApi = newKey("expose-api", "exposes api via tcp (by default only unix for local connections)", false)

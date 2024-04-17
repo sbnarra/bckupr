@@ -1,16 +1,15 @@
-BACKUP_ID="test-$(date +%Y-%m-%d_%H-%M)"
-VERSION=${VERSION:-local}
-
 check_data_is() {
-    MSG=$(docker exec test_service cat /mnt/volume/msg)
-    if [ "$MSG" != "$*" ]; then
-        echo "invalid volume data: on-disk='$MSG' != expected='$*'"; exit 1
-    fi
-    MSG=$(docker exec test_service cat /mnt/mount/msg)
+    _check_data_is "volume" $@
+    _check_data_is "mount" $@
+    echo "data matches: '$*'"
+}
+
+_check_data_is() {
+    vol=$1; shift
+    MSG=$(docker exec test_service cat /mnt/${vol}/msg)
     if [ "$MSG" != "$*" ]; then
         echo "invalid mount data: on-disk='$MSG' != expected='$*'"; exit 1
     fi
-    echo "data matches: '$*'"
 }
 
 write_data() {
@@ -19,18 +18,14 @@ write_data() {
     echo "Wrote data '$1'"
 }
 
-bckupr() {
-    docker exec bckupr_instance /bckupr $@ --backup-dir $PWD/.test_filesystem/backups
-}
-
-# setup
+### pre test setup ###
 mkdir -p $PWD/.test_filesystem/backups
 rm -rf /tmp/bckupr/mount
 docker rm -f bckupr_instance
 docker rm -f test_service
 docker volume rm test_volume_backup
 
-set -e # start test
+set -e ### starting test ###
 
 mkdir -p /tmp/bckupr/mount
 docker volume create test_volume_backup
@@ -39,27 +34,35 @@ VERSION=test ./scripts/app-build-image.sh
 docker run --name bckupr_instance -d \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v $PWD/.test_filesystem/backups:$PWD/.test_filesystem/backups \
-    sbnarra/bckupr:test --backup-dir $PWD/.test_filesystem/backups --dry-run=false
+    -e BACKUP_DIR=$PWD/.test_filesystem/backups \
+    sbnarra/bckupr:test --dry-run=false
 
-TEST_FS="$PWD/.test_filesystem"
 docker run --name test_service -d \
     -l bckupr.stop=true \
     \
     -l bckupr.volumes=test_volume_backup \
     -v test_volume_backup:/mnt/volume \
     \
-    -l bckupr.volumes.test_mount_backup=$TEST_FS/example-mount \
-    -v $TEST_FS/example-mount:/mnt/mount \
+    -l bckupr.volumes.test_mount_backup=$PWD/.test_filesystem/example-mount \
+    -v $PWD/.test_filesystem/example-mount:/mnt/mount \
     alpine sleep 120
 
 write_data pre-backup
-bckupr backup --backup-id=$BACKUP_ID
+
+BACKUP_ID="test-$(date +%Y-%m-%d_%H-%M)"
+docker exec bckupr_instance bckupr backup --backup-id=$BACKUP_ID
+
 write_data post-backup
-bckupr restore --include-names test_service --backup-id $BACKUP_ID
+
+docker exec bckupr_instance bckupr restore --include-names test_service --backup-id $BACKUP_ID
+
 check_data_is pre-backup
 
+### post test cleanup ###
 echo "test completed successfully, running clean up"
+
 docker rm -f bckupr_instance
 docker rm -f test_service
+
 docker volume rm test_volume_backup
 rm -rf /tmp/bckupr/mount

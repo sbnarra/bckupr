@@ -2,7 +2,6 @@ package e2e
 
 import (
 	"os"
-	"path/filepath"
 	"strconv"
 	"testing"
 
@@ -14,10 +13,8 @@ func createContext(t *testing.T) contexts.Context {
 
 	debug := true
 	dryRun := false
-
-	path, _ := filepath.Abs("/tmp/backups")
-	backupDir := path
-
+	backupDir := "/tmp/backups"
+	
 	os.Setenv(keys.Debug.EnvId(), strconv.FormatBool(debug))
 	os.Setenv(keys.DryRun.EnvId(), strconv.FormatBool(dryRun))
 	os.Setenv(keys.BackupDir.EnvId(), backupDir)

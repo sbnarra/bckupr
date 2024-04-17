@@ -10,7 +10,6 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
@@ -21,14 +20,14 @@ type Exec func(
 	name string,
 	path string) error
 
-func RunOnEachDockerHost(ctx contexts.Context, backupId string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
+func RunOnEachDockerHost(ctx contexts.Context, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
 	action := ctx.Name
 	return docker.ExecPerHost(ctx, args.DockerHosts, func(d docker.Docker) error {
-		return run(ctx, d, backupId, action, args, notificationSettings, exec)
+		return run(ctx, d, action, args, notificationSettings, exec)
 	})
 }
 
-func run(ctx contexts.Context, docker docker.Docker, backupId string, action string, args types.TaskArgs, notificationSettings *types.NotificationSettings, exec Exec) error {
+func run(ctx contexts.Context, docker docker.Docker, action string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
 	if allContainers, err := docker.List(args.LabelPrefix); err != nil {
 		return err
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args.Filters); err != nil {
@@ -39,13 +38,13 @@ func run(ctx contexts.Context, docker docker.Docker, backupId string, action str
 			backupVolumes = append(backupVolumes, task.Volume)
 		}
 
-		ctx.FeedbackJson(eventBase(ctx, action, backupId, "starting", backupVolumes))
-		defer ctx.FeedbackJson(eventBase(ctx, action, backupId, "completed", backupVolumes))
+		ctx.FeedbackJson(eventBase(ctx, action, args.BackupId, "starting", backupVolumes))
+		defer ctx.FeedbackJson(eventBase(ctx, action, args.BackupId, "completed", backupVolumes))
 
 		var notify *notifications.Notifier
 		if notify, err = notifications.New(action, notificationSettings); err != nil {
 			return err
-		} else if err := notify.JobStarted(ctx, backupId, backupVolumes); err != nil {
+		} else if err := notify.JobStarted(ctx, args.BackupId, backupVolumes); err != nil {
 			logging.CheckError(ctx, err, "failed to send job started notification")
 		}
 
@@ -59,14 +58,14 @@ func run(ctx contexts.Context, docker docker.Docker, backupId string, action str
 				var runErr error
 				if runErr = stopContainers(ctx, docker, task); runErr == nil {
 
-					if err := notify.TaskStarted(ctx, backupId, task.Volume); err != nil {
+					if err := notify.TaskStarted(ctx, args.BackupId, task.Volume); err != nil {
 						logging.CheckError(ctx, err, "failed to send task started notification")
 					}
 
-					runErr = exec(ctx, docker, backupId, name, task.Volume)
+					runErr = exec(ctx, docker, args.BackupId, name, task.Volume)
 
-					feedbackOnComplete(ctx, action, backupId, task.Volume, runErr)
-					if err := notify.TaskCompleted(ctx, backupId, task.Volume, runErr); err != nil {
+					feedbackOnComplete(ctx, action, args.BackupId, task.Volume, runErr)
+					if err := notify.TaskCompleted(ctx, args.BackupId, task.Volume, runErr); err != nil {
 						logging.CheckError(ctx, err, "failed to send task completed notification")
 					}
 					task.Completed = true
@@ -81,7 +80,7 @@ func run(ctx contexts.Context, docker docker.Docker, backupId string, action str
 
 		err := actionTask.Wait()
 		taskCh <- nil
-		if err := notify.JobCompleted(ctx, backupId, backupVolumes, err); err != nil {
+		if err := notify.JobCompleted(ctx, args.BackupId, backupVolumes, err); err != nil {
 			logging.CheckError(ctx, err, "failed to send job completed notification")
 		}
 		return completedTaskListener.Wait()
