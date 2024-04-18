@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strconv"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 )
@@ -56,6 +57,10 @@ func (c *Client) sendRequest(method string, path string, payload []byte, conn ne
 		return err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
+
+		req.Header.Set("dry-run", strconv.FormatBool(c.ctx.DryRun))
+		req.Header.Set("debug", strconv.FormatBool(c.ctx.Debug))
+
 		client := &http.Client{
 			Transport: &http.Transport{
 				Dial: func(proto, addr string) (net.Conn, error) {

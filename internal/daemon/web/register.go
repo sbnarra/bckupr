@@ -5,8 +5,8 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/daemon/dispatcher"
-	"github.com/sbnarra/bckupr/internal/daemon/gui/actions"
-	"github.com/sbnarra/bckupr/internal/daemon/gui/pages"
+	"github.com/sbnarra/bckupr/internal/daemon/web/actions"
+	"github.com/sbnarra/bckupr/internal/daemon/web/pages"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 )
 

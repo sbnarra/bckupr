@@ -2,7 +2,6 @@ package contexts
 
 import (
 	"context"
-	"net/http"
 
 	cobraKeys "github.com/sbnarra/bckupr/internal/config/cobra"
 	"github.com/sbnarra/bckupr/internal/config/keys"
@@ -29,15 +28,9 @@ func Cobra(cmd *cobra.Command, feedback func(Context, any)) (Context, error) {
 	}
 }
 
-func Request(ctx Context, r *http.Request, feedback func(Context, any)) Context {
-	return Create(r.URL.Path, ctx.BackupDir, ctx.Debug, ctx.DryRun, feedback)
-}
-
 func Create(name string, backupDir string, debug bool, dryrun bool, feedback func(Context, any)) Context {
-
 	return Context{
 		context.Background(),
-
 		name,
 		backupDir,
 		debug,

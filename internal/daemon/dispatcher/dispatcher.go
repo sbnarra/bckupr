@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"strconv"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
@@ -54,9 +55,23 @@ func (d *Dispatcher) dispatch(ctx contexts.Context) func(w http.ResponseWriter, 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Transfer-Encoding", "chunked")
 
-		ctx := contexts.Request(ctx, r, func(ctx contexts.Context, data any) {
+		var dryRun bool
+		if dryRunH := r.Header.Get("dry-run"); dryRunH != "" {
+			dryRun, _ = strconv.ParseBool(dryRunH)
+		} else {
+			dryRun = ctx.DryRun
+		}
+
+		var debug bool
+		if debugH := r.Header.Get("debug"); debugH != "" {
+			debug, _ = strconv.ParseBool(debugH)
+		} else {
+			debug = ctx.Debug
+		}
+
+		ctx := contexts.Create(r.URL.Path, ctx.BackupDir, dryRun, debug, func(ctx contexts.Context, data any) {
 			if err := feedbackToClient(w, data); err != nil {
-				logging.CheckError(ctx, err)
+				logging.CheckError(ctx, err, "error feeding back to client")
 			}
 		})
 

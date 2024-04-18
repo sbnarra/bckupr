@@ -21,7 +21,7 @@ func init() {
 }
 
 func runDaemon(cmd *cobra.Command, args []string) error {
-	if ctx, err := cliContext(cmd); err != nil {
+	if ctx, err := contexts.Cobra(cmd, feedbackViaLogs); err != nil {
 		return err
 	} else if backupDir, err := cobraKeys.String(keys.BackupDir, cmd.Flags()); err != nil {
 		return err

@@ -10,10 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func cliContext(cmd *cobra.Command) (contexts.Context, error) {
-	return contexts.Cobra(cmd, feedbackViaLogs)
-}
-
 func feedbackViaLogs(ctx contexts.Context, data any) {
 	// logging.Info(ctx, data) // only used for --no-daemon and cron
 	fmt.Println(data)

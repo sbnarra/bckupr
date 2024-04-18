@@ -34,7 +34,7 @@ COPY --from=base /app/bckupr /bin/bckupr
 COPY --from=base /empty-dir /tmp
 ENV PATH /bin
 
-COPY ui/ /ui
+COPY web/ /web
 ENV UI_BASE_PATH /
 
 COPY configs/local/ /local

@@ -21,14 +21,14 @@ type Cron struct {
 }
 
 func New(timezone string) (*Cron, error) {
-	location, err := time.LoadLocation(timezone)
-	if err != nil {
+	if location, err := time.LoadLocation(timezone); err != nil {
 		return nil, err
+	} else {
+		return &Cron{
+			stop: make(chan os.Signal, 1),
+			I:    cron.New(cron.WithLocation(location)),
+		}, nil
 	}
-	return &Cron{
-		stop: make(chan os.Signal, 1),
-		I:    cron.New(cron.WithLocation(location)),
-	}, nil
 }
 
 func (c *Cron) Stop() {

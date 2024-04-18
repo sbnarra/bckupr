@@ -25,8 +25,8 @@ func load(name string) *template.Template {
 		base = val
 	}
 
-	t := template.Must(template.ParseFiles(fmt.Sprintf(base+"ui/%v.html", name)))
-	t = template.Must(t.ParseGlob(base + "ui/common/*"))
+	t := template.Must(template.ParseFiles(fmt.Sprintf(base+"web/%v.html", name)))
+	t = template.Must(t.ParseGlob(base + "web/common/*"))
 	t = t.Funcs(template.FuncMap{
 		"date": func(t time.Time) string {
 			return t.Format("2006-01-02")
@@ -50,5 +50,5 @@ func load(name string) *template.Template {
 			return m
 		},
 	})
-	return template.Must(t.ParseGlob(fmt.Sprintf("ui/%v/*", name)))
+	return template.Must(t.ParseGlob(fmt.Sprintf("web/%v/*", name)))
 }
