@@ -45,7 +45,7 @@ func (n *Notifier) Send(msg string) error {
 }
 
 func (n *Notifier) NextBackupSchedule(ctx contexts.Context, next time.Time) error {
-	msg := fmt.Sprintf("Next Backup: %v", next)
+	msg := fmt.Sprintf("next backup @ %v", next)
 	logging.Info(ctx, msg)
 	return n.Send(msg)
 }

@@ -9,11 +9,11 @@ import (
 
 func backupSchedule(cron *cron.Cron) func(contexts.Context, http.ResponseWriter, *http.Request) error {
 	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-		entry := cron.I.Entry(cron.Id)
+		entry := cron.I.Entry(cron.BackupId)
 		ctx.FeedbackJson(map[string]any{
 			"next":      entry.Next,
 			"afterNext": entry.Schedule.Next(entry.Next),
-			"schedule":  cron.Schedule,
+			"schedule":  cron.BackupSchedule,
 			"prev":      entry.Prev,
 			"id":        entry.ID,
 		})

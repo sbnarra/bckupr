@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/daemon/web/pages"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/web/pages"
 )
 
 func SettingsActionsHandler(cron *cron.Cron) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {

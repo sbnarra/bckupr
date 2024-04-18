@@ -1,17 +1,32 @@
 package filters
 
 import (
+	"errors"
 	"slices"
+	"strings"
 
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
+	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func Apply(unfiltered map[string]*dockerTypes.Container, filters publicTypes.Filters) map[string]*dockerTypes.Container {
+func Apply(ctx contexts.Context, unfiltered map[string]*dockerTypes.Container, filters publicTypes.Filters) (map[string]*dockerTypes.Container, error) {
 	filtered := applyIncludeFilters(unfiltered, filters)
+	if len(filtered) == 0 {
+		return nil, errors.New("nothing to " + ctx.Name + " after applying include filters: names=" + strings.Join(filters.IncludeNames, ",") + ",volumes=" + strings.Join(filters.IncludeVolumes, ","))
+	}
+
 	filtered = applyExcludeFilters(filtered, filters)
+	if len(filtered) == 0 {
+		return nil, errors.New("nothing to " + ctx.Name + " after applying exclude filters: names=" + strings.Join(filters.ExcludeNames, ",") + ",volumes=" + strings.Join(filters.ExcludeVolumes, ","))
+	}
+
 	filtered = applyStopModes(filtered, filters.StopModes)
-	return filtered
+	if len(filtered) == 0 {
+		return nil, errors.New("nothing to " + ctx.Name + " after applying stop modes: " + strings.Join(filters.StopModes, ","))
+	}
+
+	return filtered, nil
 }
 
 func backupsContain(volumes []string, container *dockerTypes.Container) bool {

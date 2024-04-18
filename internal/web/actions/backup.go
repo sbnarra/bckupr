@@ -7,10 +7,9 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/daemon/web/pages"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
-	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
+	"github.com/sbnarra/bckupr/internal/web/pages"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
@@ -50,9 +49,6 @@ func BackupActionHandler(cron *cron.Cron) func(ctx contexts.Context, w http.Resp
 					}
 				}
 			} else if action == "backup" {
-				j, _ := encodings.ToJson(form)
-				logging.Info(ctx, j)
-
 				input := types.DefaultCreateBackupRequest()
 
 				input.Args.Filters.IncludeNames = form["include-names"]

@@ -2,39 +2,56 @@
 <h4>Notifications</h4>
 <form id="notifications" action="/ui" method="POST">
     <input type="hidden" name="action" value="notifications">
-    
-    <label>
-        Notification URLs:
-        {{range .NotificationUrls}}
-        <input type="text" name="notification-urls" value="{{.}}" disabled>
-        {{end}}
-    </label>
-    </br>
-    <label>
-        Notify Job Started
-        <input type="checkbox" name="notify-job-started" {{if .NotifyJobStarted}}checked{{end}} disabled>
-    </label>
-    <label>
-        Notify Job Completed:
-        <input type="checkbox" name="notify-job-completed" {{if .NotifyJobCompleted}}checked{{end}} disabled>
-    </label>
-    <label>
-        Notify Job Error:
-        <input type="checkbox" name="notify-job-error" {{if .NotifyJobError}}checked{{end}} disabled>
-    </label>
-    </br>
-    <label>
-        Notify Task Started
-        <input type="checkbox" name="notify-task-started" {{if .NotifyTaskStarted}}checked{{end}} disabled>
-    </label>
-    <label>
-        Notify Task Completed
-        <input type="checkbox" name="notify-task-completed" {{if .NotifyTaskCompleted}}checked{{end}} disabled>
-    </label>
-    <label>
-        Notify Task Error
-        <input type="checkbox" name="notify-task-error" {{if .NotifyTaskError}}checked{{end}} disabled>
-    </label>
+
+    <table>
+        <tbody>
+            <tr>
+                <td>Notification URLs (<a href="https://containrrr.dev/shoutrrr/latest/services/overview/" target="_blank">Shoutrrr Docs</a>)</td>
+                <td>
+                    {{range .NotificationUrls}}
+                    <input type="text" name="notification-urls" value="{{.}}" disabled>
+                    {{end}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>Per backup/restore job:</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Job Started</th>
+                <th>Job Completed</th>
+                <th>Job Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="checkbox" name="notify-job-started" {{if .NotifyJobStarted}}checked{{end}} disabled></td>
+                <td><input type="checkbox" name="notify-job-completed" {{if .NotifyJobCompleted}}checked{{end}} disabled></td>
+                <td><input type="checkbox" name="notify-job-error" {{if .NotifyJobError}}checked{{end}} disabled></td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <p>Per volume for each job:</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Task Started</th>
+                <th>Task Completed</th>
+                <th>Task Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="checkbox" name="notify-task-started" {{if .NotifyTaskStarted}}checked{{end}} disabled></td>
+                <td><input type="checkbox" name="notify-task-completed" {{if .NotifyTaskCompleted}}checked{{end}} disabled></td>
+                <td><input type="checkbox" name="notify-task-error" {{if .NotifyTaskError}}checked{{end}} disabled></td>
+            </tr>
+        </tbody>
+    </table>
 </form>
 {{end}}
 urls

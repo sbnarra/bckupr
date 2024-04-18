@@ -2,7 +2,7 @@ package endpoints
 
 import (
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/daemon/dispatcher"
+	"github.com/sbnarra/bckupr/internal/web/dispatcher"
 	"github.com/sbnarra/bckupr/pkg/api"
 )
 

@@ -24,17 +24,20 @@ func Cobra(cmd *cobra.Command, feedback func(Context, any)) (Context, error) {
 	} else if debug, err := cobraKeys.Bool(keys.Debug, cmd.Flags()); err != nil {
 		return Context{}, err
 	} else {
-		return Create(cmd.Use, "", debug, dryrun, feedback), nil
+		return Create(cmd.Use, "", Debug(debug), DryRun(dryrun), feedback), nil
 	}
 }
 
-func Create(name string, backupDir string, debug bool, dryrun bool, feedback func(Context, any)) Context {
+type DryRun bool
+type Debug bool
+
+func Create(name string, backupDir string, debug Debug, dryrun DryRun, feedback func(Context, any)) Context {
 	return Context{
 		context.Background(),
 		name,
 		backupDir,
-		debug,
-		dryrun,
+		bool(debug),
+		bool(dryrun),
 		feedback,
 	}
 }

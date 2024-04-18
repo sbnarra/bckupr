@@ -31,7 +31,7 @@ type RotatePolicies struct {
 	Policies []RotatePolicy `json:"policies"`
 }
 
-func Rotate(ctx contexts.Context, backupDir string, input *types.RotateBackupsRequest) error {
+func Rotate(ctx contexts.Context, input *types.RotateBackupsRequest) error {
 	policies := &RotatePolicies{}
 	if _, err := os.Stat(input.PoliciesPath); err == nil {
 		if handle, err := os.Open(input.PoliciesPath); err != nil {
@@ -47,7 +47,7 @@ func Rotate(ctx contexts.Context, backupDir string, input *types.RotateBackupsRe
 		return err
 	} else {
 		for _, policy := range policies.Policies {
-			if err := applyPolicy(ctx, backupDir, input.Destroy, policy, reader); err != nil {
+			if err := applyPolicy(ctx, input.Destroy, policy, reader); err != nil {
 				logging.CheckError(ctx, err, "error applying rotation policy")
 			}
 		}
@@ -94,7 +94,7 @@ func parsePeriod(period Period) (time.Time, time.Time, error) {
 	}
 }
 
-func applyPolicy(ctx contexts.Context, backupDir string, destroyBackups bool, policy RotatePolicy, reader meta.Reader) error {
+func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy, reader meta.Reader) error {
 	if policyStart, policyEnd, err := parsePeriod(policy.Period); err != nil {
 		return err
 	} else {
@@ -120,14 +120,14 @@ func applyPolicy(ctx contexts.Context, backupDir string, destroyBackups bool, po
 		if policy.Keep > 0 {
 			if len(backups) > policy.Keep {
 				newest := len(backups) - policy.Keep
-				rotateBackups(ctx, backupDir, destroyBackups, backups[:newest])
+				rotateBackups(ctx, destroyBackups, backups[:newest])
 			} else {
 				logging.Info(ctx, "no backups to rotate")
 			}
 		} else {
 			if len(backups) > (policy.Keep * -1) {
 				oldest := policy.Keep * -1
-				rotateBackups(ctx, backupDir, destroyBackups, backups[oldest:])
+				rotateBackups(ctx, destroyBackups, backups[oldest:])
 			} else {
 				logging.Info(ctx, "no backups to rotate")
 			}
@@ -136,10 +136,10 @@ func applyPolicy(ctx contexts.Context, backupDir string, destroyBackups bool, po
 	}
 }
 
-func rotateBackups(ctx contexts.Context, backupDir string, destroyBackups bool, backups []*types.Backup) {
-	binPath := filepath.Join(backupDir, "bin")
+func rotateBackups(ctx contexts.Context, destroyBackups bool, backups []*types.Backup) {
+	binPath := filepath.Join(ctx.BackupDir, "bin")
 	for _, backup := range backups {
-		backupPath := filepath.Join(backupDir, backup.Id)
+		backupPath := filepath.Join(ctx.BackupDir, backup.Id)
 		if err := rotateBackup(ctx, destroyBackups, backupPath, filepath.Join(binPath, backup.Id)); err != nil {
 			logging.CheckError(ctx, err)
 		}

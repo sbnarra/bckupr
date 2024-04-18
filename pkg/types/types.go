@@ -24,12 +24,12 @@ type RestoreBackupRequest struct {
 }
 
 type DaemonInput struct {
-	BackupDir      string `json:"backup-dir"`
-	UnixSocket     string `json:"unix-socket"`
-	TcpAddr        string `json:"tcp-addr"`
-	ExposeApi      bool   `json:"expose-api"`
-	UiEnabled      bool   `json:"ui-enabled"`
-	MetricsEnabled bool   `json:"metrics-enabled"`
+	BackupDir  string `json:"backup-dir"`
+	UnixSocket string `json:"unix-socket"`
+	TcpAddr    string `json:"tcp-addr"`
+	TcpApi     bool   `json:"tcp-api"`
+	UI         bool   `json:"ui-enabled"`
+	Metrics    bool   `json:"metrics-enabled"`
 }
 
 type TaskArgs struct {

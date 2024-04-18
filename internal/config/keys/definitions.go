@@ -42,9 +42,9 @@ var RotateSchedule = newKey("rotate-schedule", "cron expression for rotations sc
 var BackupDir = newKey("backup-dir", "backups archieve directory", "")
 var UnixSocket = newKey("unix-socket", "unix socket to bind daemon", "/tmp/.bckupr.sock")
 var TcpAddr = newKey("tcp-addr", "tcp address to bind ui/api", "0.0.0.0:8000")
-var ExposeApi = newKey("expose-api", "exposes api via tcp (by default only unix for local connections)", false)
-var UiEnabled = newKey("ui-enabled", "exposes gui", true)
-var MetricsEnabled = newKey("metrics-enabled", "enables /metrics endpoint", false)
+var TcpApi = newKey("tcp-api", "exposes api via tcp (by default only unix for local connections)", false)
+var UI = newKey("ui-enabled", "exposes gui", true)
+var Metrics = newKey("metrics", "enables /metrics endpoint", false)
 
 // rotate
 var DestroyBackups = newKey("destroy-backups", "destroy backups instead of moving to bin directory", false)

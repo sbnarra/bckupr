@@ -18,9 +18,9 @@ func InitDaemon(cmd *cobra.Command) {
 
 	register(keys.UnixSocket, cmd.Flags())
 	register(keys.TcpAddr, cmd.Flags())
-	register(keys.ExposeApi, cmd.Flags())
-	register(keys.UiEnabled, cmd.Flags())
-	register(keys.MetricsEnabled, cmd.Flags())
+	register(keys.TcpApi, cmd.Flags())
+	register(keys.UI, cmd.Flags())
+	register(keys.Metrics, cmd.Flags())
 }
 
 func InitCron(cmd *cobra.Command) {

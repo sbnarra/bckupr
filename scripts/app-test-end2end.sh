@@ -50,11 +50,11 @@ docker run --name test_service -d \
 write_data pre-backup
 
 BACKUP_ID="test-$(date +%Y-%m-%d_%H-%M)"
-docker exec bckupr_instance bckupr backup --backup-id=$BACKUP_ID
+docker exec bckupr_instance bckupr backup --dry-run=false --backup-id=$BACKUP_ID
 
 write_data post-backup
 
-docker exec bckupr_instance bckupr restore --include-names test_service --backup-id $BACKUP_ID
+docker exec bckupr_instance bckupr restore --dry-run=false --include-names test_service --backup-id $BACKUP_ID
 
 check_data_is pre-backup
 

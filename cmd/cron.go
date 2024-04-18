@@ -27,11 +27,9 @@ func startCron(ctx contexts.Context, cmd *cobra.Command) error {
 		return err
 	} else if rotateInput, err := cobraKeys.RotateBackupsRequest(cmd); err != nil {
 		return err
-	} else if backupDir, err := cobraKeys.String(keys.BackupDir, cmd.Flags()); err != nil {
-		return err
 	} else if rotateSchedule, err := cobraKeys.String(keys.RotateSchedule, cmd.Flags()); err != nil {
 		return err
-	} else if err := instance.Start(ctx, backupDir, backupSchedule, backupInput, rotateSchedule, rotateInput); err != nil {
+	} else if err := instance.Start(ctx, backupSchedule, backupInput, rotateSchedule, rotateInput); err != nil {
 		return err
 	}
 	return nil

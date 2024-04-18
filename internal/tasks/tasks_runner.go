@@ -28,6 +28,8 @@ func RunOnEachDockerHost(ctx contexts.Context, args publicTypes.TaskArgs, notifi
 }
 
 func run(ctx contexts.Context, docker docker.Docker, action string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
+	ctx.FeedbackJson(args)
+
 	if allContainers, err := docker.List(args.LabelPrefix); err != nil {
 		return err
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args.Filters); err != nil {
@@ -89,22 +91,22 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 
 func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, inputFilters publicTypes.Filters) (map[string]*task, error) {
 	if len(containerMap) == 0 {
-		return nil, fmt.Errorf("no containers")
+		return nil, fmt.Errorf("no containers found")
 	}
 	logging.Debug(ctx, "Found", len(containerMap), "containers")
 
-	filtered := filters.Apply(containerMap, inputFilters)
-	if len(filtered) == 0 {
-		return nil, fmt.Errorf("no containers after filtering")
-	}
-	logging.Debug(ctx, len(filtered), "left after filtering")
+	if filtered, err := filters.Apply(ctx, containerMap, inputFilters); err != nil {
+		return nil, err
+	} else {
+		logging.Debug(ctx, len(filtered), "containers left after filtering")
 
-	tasks := convertToTasks(filtered, inputFilters)
-	if len(tasks) == 0 {
-		return nil, fmt.Errorf("no tasks from filtered containers")
+		tasks := convertToTasks(filtered, inputFilters)
+		if len(tasks) == 0 {
+			return nil, fmt.Errorf("nothing to " + ctx.Name + " from filtered containers")
+		}
+		logging.Debug(ctx, len(tasks), ctx.Name, "(s) to execute")
+		return tasks, nil
 	}
-	logging.Debug(ctx, len(tasks), "task(s) to execute")
-	return tasks, nil
 }
 
 func stopContainers(ctx contexts.Context, docker docker.Docker, task *task) error {

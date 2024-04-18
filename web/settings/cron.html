@@ -1,12 +1,27 @@
 {{define "cron"}}
 <h4>Cron</h4>
+
 <form id="cron" action="/ui/settings" method="POST">
-    <input type="hidden" name="action" value="cron">
-
-    <label for="schedule">Schedule</label>
-    <input type="text" name="schedule" value="{{.Schedule}}" disabled>
-
-    <label for="next">Next</label>
-    <input type="text" name="next" value="{{.Next}}" disabled>
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Schedule</th>
+                <th>Next</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Backup</td>
+                <td><input type="text" name="backup-schedule" value="{{.BackupSchedule}}" disabled></td>
+                <td><input type="text" name="next" value="{{.NextBackup}}" disabled></td>
+            </tr>
+            <tr>
+                <td>Rotate</td>
+                <td><input type="text" name="rotate-schedule" value="{{.RotateSchedule}}" disabled></td>
+                <td><input type="text" name="rotate-next" value="{{.NextRotate}}" disabled></td>
+            </tr>
+        </tbody>
+    </table>
 </form>
 {{end}}

@@ -1,8 +1,6 @@
 package pages
 
 import (
-	"time"
-
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
@@ -14,8 +12,10 @@ type IndexPage struct {
 }
 
 type Cron struct {
-	Schedule string
-	Next     time.Time
+	BackupSchedule string
+	NextBackup     string
+	RotateSchedule string
+	NextRotate     string
 }
 
 type SettingsPage struct {

@@ -2,6 +2,7 @@ package pages
 
 import (
 	"net/http"
+	"sort"
 
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/meta"
@@ -21,7 +22,11 @@ func RenderIndex(cron *cron.Cron, err error) func(ctx contexts.Context, w http.R
 			return nil
 		})
 
-		return load("index").Execute(w, IndexPage{
+		sort.Slice(backups[:], func(i, j int) bool {
+			return backups[i].Created.After(backups[j].Created)
+		})
+
+		return load(ctx, "index").Execute(w, IndexPage{
 			Cron:        cronData(cron),
 			Backups:     backups,
 			BackupInput: types.DefaultCreateBackupRequest(),
