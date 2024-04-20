@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	pkgErrors "github.com/pkg/errors"
-
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )

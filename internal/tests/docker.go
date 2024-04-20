@@ -47,9 +47,9 @@ func (d docker) RemoveContainer(id string) error {
 	return d.err
 }
 
-func (d docker) ContainerLogs(id string) error {
+func (d docker) ContainerLogs(id string) (string, error) {
 	logging.Warn(Context, "Docker: Container Logs")
-	return d.err
+	return "_MOCKED_", d.err
 }
 
 func (d docker) WaitForContainer(ctx contexts.Context, id string) error {
@@ -57,7 +57,7 @@ func (d docker) WaitForContainer(ctx contexts.Context, id string) error {
 	return d.err
 }
 
-func (d docker) RunContainer(image string, cmd []string, env []string, volumes []string) (string, error) {
+func (d docker) RunContainer(image string, cmd []string, env []string, volumes []string, labels map[string]string) (string, error) {
 	logging.Warn(Context, "Docker: Run Container")
 	return "_test-container-id_", d.err
 }

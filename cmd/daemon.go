@@ -1,48 +1,61 @@
 package cmd
 
 import (
-	cobraConf "github.com/sbnarra/bckupr/internal/config/cobra"
-	"github.com/sbnarra/bckupr/pkg/types"
+	"errors"
+	"net/http"
 
-	"github.com/sbnarra/bckupr/internal/service"
+	cobraConf "github.com/sbnarra/bckupr/internal/config/cobra"
+	cobraKeys "github.com/sbnarra/bckupr/internal/config/cobra"
+	"github.com/sbnarra/bckupr/internal/config/keys"
+
+	"github.com/sbnarra/bckupr/internal/daemon"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/spf13/cobra"
 )
 
-// should this become the "root" command
-
-var Daemon = &cobra.Command{
-	Use:   "daemon",
-	Short: "Cron/Web daemon",
-	Long:  `Cron/Web daemon`,
-	RunE:  runDaemon,
-}
-
 func init() {
-	cobraConf.InitDaemon(Daemon)
+	cobraConf.InitDaemon(Bckupr)
 }
 
 func runDaemon(cmd *cobra.Command, args []string) error {
-	if ctx, err := cliContext(cmd); err != nil {
+	if ctx, err := contexts.Cobra(cmd, feedbackViaLogs); err != nil {
+		return err
+	} else if backupDir, err := cobraConf.String(keys.BackupDir, cmd.Flags()); err != nil {
 		return err
 	} else {
-		daemon := concurrent.New(ctx, "daemon", 2)
+		ctx.BackupDir = backupDir
 
-		if err = buildCron(ctx, cmd); err != nil {
+		runner := concurrent.New(ctx, "daemon", 2)
+
+		if err = buildCron(cmd); err != nil {
 			return err
 		} else {
-			daemon.RunN("cron", func(ctx contexts.Context) error {
+			runner.RunN("cron", func(ctx contexts.Context) error {
 				return startCron(ctx, cmd)
 			})
 		}
 
-		daemon.RunN("bckupr", func(ctx contexts.Context) error {
-			return service.Start(ctx, types.DefaultWebInput(), instance)
-		})
+		if input, err := cobraKeys.DaemonInput(cmd); err != nil {
+			return err
+		} else {
+			runner.RunN("bckupr", func(ctx contexts.Context) error {
+				runner, dispatchers := daemon.Start(ctx, *input, instance)
+				defer func() {
+					for _, dispatcher := range dispatchers {
+						dispatcher.Close()
+					}
+				}()
+				if err := runner.Wait(); !errors.Is(err, http.ErrServerClosed) {
+					logging.CheckError(ctx, err)
+					return err
+				}
+				return nil
+			})
+		}
 
-		logging.CheckError(ctx, daemon.Wait())
+		logging.CheckError(ctx, runner.Wait())
 		return nil
 	}
 }

@@ -10,9 +10,9 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonEnv, template types.ContainerTemplate) error {
+func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonEnv, template types.ContainerTemplate, waitLogCleanup bool) (string, error) {
 	if len(template.Image) == 0 || len(template.Cmd) == 0 {
-		return &MisconfiguredTemplate{Message: "Misconfigured template: " + encodings.ToJsonIE(template)}
+		return "", &MisconfiguredTemplate{Message: "Misconfigured template: " + encodings.ToJsonIE(template)}
 	}
 
 	copy := template
@@ -24,27 +24,34 @@ func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonE
 		"BACKUP_DIR=/backup",
 		"DATA_DIR=/data",
 	)
-	return runContainer(ctx, client, copy)
+	return runContainer(ctx, client, copy, waitLogCleanup)
 }
 
-func runContainer(ctx contexts.Context, client client.DockerClient, template types.ContainerTemplate) error {
+func runContainer(ctx contexts.Context, client client.DockerClient, template types.ContainerTemplate, waitLogCleanup bool) (string, error) {
 	if ctx.DryRun {
 		logging.Info(ctx, "Dry Run!", encodings.ToJsonIE(template))
-		return nil
+		return "", nil
 	}
 	logging.Debug(ctx, "Executing:", encodings.ToJsonIE(template))
 
-	id, err := client.RunContainer(template.Image, template.Cmd, template.Env, template.Volumes)
-	if err == nil {
-		err = waitAndLog(ctx, client, id)
+	id, err := client.RunContainer(template.Image, template.Cmd, template.Env, template.Volumes, template.Labels)
+
+	if !waitLogCleanup {
+		return id, err
+	} else if err == nil {
+		err = WaitThenLog(ctx, client, id)
 	}
 
 	removalErr := client.RemoveContainer(id)
-	return errors.Join(err, removalErr)
+	return id, errors.Join(err, removalErr)
 }
 
-func waitAndLog(ctx contexts.Context, client client.DockerClient, id string) error {
+func WaitThenLog(ctx contexts.Context, client client.DockerClient, id string) error {
 	waitErr := client.WaitForContainer(ctx, id)
-	logErr := client.ContainerLogs(id)
+	logs, logErr := client.ContainerLogs(id)
+
+	logCtx := ctx
+	logCtx.Name = id
+	logging.Debug(logCtx, logs)
 	return errors.Join(waitErr, logErr)
 }

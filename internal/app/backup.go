@@ -17,43 +17,42 @@ import (
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) error {
+func CreateBackup(ctx contexts.Context, input *publicTypes.CreateBackupRequest) (string, error) {
 
 	backupCtx := ctx
 	backupCtx.Name = "backup"
-	backupId := getBackupId(ctx, input)
+	setBackupId(ctx, input)
 
 	if local, offsite, err := containerConfig.ContainerTemplates(input.Args.LocalContainersConfig, input.Args.OffsiteContainersConfig); err != nil {
-		return err
+		return input.Args.BackupId, err
 	} else {
-		backupDir := ctx.BackupDir + "/" + backupId
+		backupDir := ctx.BackupDir + "/" + input.Args.BackupId
 		if !ctx.DryRun {
 			if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
-				return fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
+				return input.Args.BackupId, fmt.Errorf("failed to create backup dir: %v: %w", backupDir, err)
 			}
 		}
 
-		mw := meta.NewWriter(ctx, backupId, "full")
+		mw := meta.NewWriter(ctx, input.Args.BackupId, "full")
 		if !ctx.DryRun {
 			defer mw.Write(ctx)
 		}
 
-		return tasks.RunOnEachDockerHost(
+		return input.Args.BackupId, tasks.RunOnEachDockerHost(
 			backupCtx,
-			backupId,
 			input.Args,
 			input.NotificationSettings,
 			newBackupVolumeTask(local, offsite, mw))
 	}
 }
 
-func getBackupId(ctx contexts.Context, input *publicTypes.CreateBackupRequest) string {
+func setBackupId(ctx contexts.Context, input *publicTypes.CreateBackupRequest) {
 	backupId := time.Now().Format("20060102_1504")
 	if input.Args.BackupId != "" {
 		backupId = input.Args.BackupId
 	}
 	logging.Info(ctx, "Using backup id", backupId)
-	return backupId
+	input.Args.BackupId = backupId
 }
 
 func newBackupVolumeTask(
@@ -105,6 +104,5 @@ func backupVolume(
 			}
 		}
 	}
-
 	return nil
 }

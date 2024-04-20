@@ -29,7 +29,8 @@ func New(client client.DockerClient) Docker {
 }
 
 func (d docker) Run(ctx contexts.Context, meta run.CommonEnv, template publicTypes.ContainerTemplate) error {
-	return run.RunContainer(ctx, d.client, meta, template)
+	_, err := run.RunContainer(ctx, d.client, meta, template, true)
+	return err
 }
 
 func (d docker) Start(ctx contexts.Context, containers *dockerTypes.Container) error {

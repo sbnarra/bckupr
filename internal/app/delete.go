@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"os"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
@@ -9,6 +10,9 @@ import (
 )
 
 func DeleteBackup(ctx contexts.Context, input *types.DeleteBackupRequest) error {
+	if input.Args.BackupId == "" {
+		return errors.New("missing backup id")
+	}
 	path := ctx.BackupDir + "/" + input.Args.BackupId
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {

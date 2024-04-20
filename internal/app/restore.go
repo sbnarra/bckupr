@@ -15,6 +15,10 @@ import (
 )
 
 func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest) error {
+	if input.Args.BackupId == "" {
+		return errors.New("missing backup id")
+	}
+
 	restoreCtx := ctx
 	restoreCtx.Name = "restore"
 
@@ -23,7 +27,6 @@ func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest
 	} else {
 		return tasks.RunOnEachDockerHost(
 			restoreCtx,
-			input.Args.BackupId,
 			input.Args,
 			input.NotificationSettings,
 			newRestoreBackupTask(local, offsite))

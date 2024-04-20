@@ -8,8 +8,8 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strconv"
 
-	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 )
 
@@ -17,34 +17,33 @@ type Client struct {
 	ctx      contexts.Context
 	protocol string
 	network  string
-	addr     string
-}
-
-func Default(ctx contexts.Context) *Client {
-	return New(ctx, keys.DaemonNet.Default.(string), keys.DaemonProtocol.Default.(string), keys.DaemonAddr.Default.(string))
+	conAddr  string
+	reqAddr  string
 }
 
 func Unix(ctx contexts.Context, socket string) *Client {
-	return New(ctx, "unix", "http", socket)
+	return New(ctx, "unix", "http", socket, "unix")
 }
 
 func Tcp(ctx contexts.Context, protocol string, host string, port int) *Client {
-	return New(ctx, "tcp", protocol, fmt.Sprintf("%v:%v", host, port))
+	addr := fmt.Sprintf("%v:%v", host, port)
+	return New(ctx, "tcp", protocol, addr, addr)
 }
 
-func New(ctx contexts.Context, network string, protocol string, addr string) *Client {
+func New(ctx contexts.Context, network string, protocol string, conAddr string, reqAddr string) *Client {
 	return &Client{
 		ctx:      ctx,
 		protocol: protocol,
 		network:  network,
-		addr:     addr,
+		conAddr:  conAddr,
+		reqAddr:  reqAddr,
 	}
 }
 
 func (c *Client) send(method string, path string, request any) error {
 	if payload, err := json.Marshal(request); err != nil {
 		return err
-	} else if conn, err := net.Dial(c.network, c.addr); err != nil {
+	} else if conn, err := net.Dial(c.network, c.conAddr); err != nil {
 		return err
 	} else {
 		defer conn.Close()
@@ -53,11 +52,15 @@ func (c *Client) send(method string, path string, request any) error {
 }
 
 func (c *Client) sendRequest(method string, path string, payload []byte, conn net.Conn) error {
-	url := c.protocol + "://" + c.addr + path
+	url := c.protocol + "://" + c.reqAddr + path
 	if req, err := http.NewRequest(method, url, bytes.NewBuffer(payload)); err != nil {
 		return err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
+
+		req.Header.Set("dry-run", strconv.FormatBool(c.ctx.DryRun))
+		req.Header.Set("debug", strconv.FormatBool(c.ctx.Debug))
+
 		client := &http.Client{
 			Transport: &http.Transport{
 				Dial: func(proto, addr string) (net.Conn, error) {
@@ -69,7 +72,11 @@ func (c *Client) sendRequest(method string, path string, payload []byte, conn ne
 		if resp, err := client.Do(req); err != nil {
 			return err
 		} else {
-			return c.logResponse(resp)
+			err := c.logResponse(resp)
+			if (resp.StatusCode / 100) != 2 {
+				return fmt.Errorf("error %v", resp.StatusCode)
+			}
+			return err
 		}
 	}
 }

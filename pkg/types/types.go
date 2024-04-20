@@ -23,6 +23,15 @@ type RestoreBackupRequest struct {
 	NotificationSettings *NotificationSettings `json:"notification-settings"`
 }
 
+type DaemonInput struct {
+	BackupDir  string `json:"backup-dir"`
+	UnixSocket string `json:"unix-socket"`
+	TcpAddr    string `json:"tcp-addr"`
+	TcpApi     bool   `json:"tcp-api"`
+	UI         bool   `json:"ui-enabled"`
+	Metrics    bool   `json:"metrics-enabled"`
+}
+
 type TaskArgs struct {
 	BackupId                string   `json:"backup-id"`
 	DockerHosts             []string `json:"docker-hosts"`
@@ -54,10 +63,11 @@ type OffsiteContainerTemplates struct {
 }
 
 type ContainerTemplate struct {
-	Image   string   `json:"image"`
-	Cmd     []string `json:"cmd"`
-	Env     []string `json:"env"`
-	Volumes []string `json:"volumes"`
+	Image   string            `json:"image"`
+	Cmd     []string          `json:"cmd"`
+	Env     []string          `json:"env"`
+	Volumes []string          `json:"volumes"`
+	Labels  map[string]string `json:"labels"`
 }
 
 type Filters struct {
@@ -82,12 +92,4 @@ type Backup struct {
 	Type    string    `json:"type"`
 	Created time.Time `json:"created"`
 	Volumes []Volume  `json:"volumes"`
-}
-
-type WebInput struct {
-	UnixSocket     string
-	TcpAddr        string
-	ExposeApi      bool
-	UiEnabled      bool
-	MetricsEnabled bool
 }

@@ -12,7 +12,8 @@ import (
 )
 
 type Writer struct {
-	data types.Backup
+	data      types.Backup
+	backupDir string
 }
 
 func NewWriter(ctx contexts.Context, backupId string, backupType string) *Writer {
@@ -22,6 +23,7 @@ func NewWriter(ctx contexts.Context, backupId string, backupType string) *Writer
 			Created: time.Now(),
 			Type:    backupType,
 		},
+		backupDir: ctx.BackupDir,
 	}
 }
 
@@ -29,7 +31,7 @@ func (mw *Writer) AddVolume(ctx contexts.Context, backupId string, name string, 
 	var size int64
 	if ctx.DryRun {
 		size = 0
-	} else if s, err := os.Stat(ctx.BackupDir + "/" + backupId + "/" + name + "." + ext); err == nil {
+	} else if s, err := os.Stat(mw.backupDir + "/" + backupId + "/" + name + "." + ext); err == nil {
 		size = s.Size()
 	} else {
 		size = -1
@@ -56,7 +58,7 @@ func (mw *Writer) Write(ctx contexts.Context) error {
 		return err
 	} else {
 		return os.WriteFile(
-			ctx.BackupDir+"/"+mw.data.Id+"/meta.yaml",
+			mw.backupDir+"/"+mw.data.Id+"/meta.yaml",
 			bytes.NewBufferString("# DO NOT DELETE OR EDIT BY HAND\n"+yaml).Bytes(),
 			os.ModePerm)
 	}
