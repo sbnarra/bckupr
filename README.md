@@ -46,7 +46,9 @@ cd bckupr
 # Initialise the dependancies
 go mod init
 # Run the project to see the CLI help menu
-go run . -h
+go run .
+# Open UI
+open http://localhost:8000
 ```
 
 ## Running the tests
@@ -70,14 +72,20 @@ The project is built automatically on each commit using GitHub actions. To publi
 Building image locally:
 ```shell
 ./scripts/app-build-image.sh
+docker run \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /tmp/backups:/tmp/backups \
+    -e BACKUP_DIR=/tmp/backups \
+    -p 8000:8000 \
+    sbnarra/bckupr:local
 ```
 
-Building documentation locally:
+Building user documentation locally:
 ```shell
 ./scripts/docs-build-site.sh
 ```
 
-Viewing documentation locally on port 8000:
+Viewing user documentation locally on port 8000:
 ```shell
 ./scripts/docs-serve-local.sh
 ```
