@@ -1,0 +1,17 @@
+name: Build
+on:
+  push:
+    branches:
+      - dockerhub-readme
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: sbnarra/bckupr
+          short-description: Backup automation and management for docker volumes using labelled containers.
+          readme-filepath: ./docs/dockerhub-readme.md
