@@ -13,11 +13,14 @@ func InitGlobal(cmd *cobra.Command) {
 func InitDaemon(cmd *cobra.Command) {
 	InitCron(cmd)
 
+	register(keys.BackupDir, cmd.Flags())
+	required(keys.BackupDir, cmd)
+
 	register(keys.UnixSocket, cmd.Flags())
 	register(keys.TcpAddr, cmd.Flags())
-	register(keys.ExposeApi, cmd.Flags())
-	register(keys.UiEnabled, cmd.Flags())
-	register(keys.MetricsEnabled, cmd.Flags())
+	register(keys.TcpApi, cmd.Flags())
+	register(keys.UI, cmd.Flags())
+	register(keys.Metrics, cmd.Flags())
 }
 
 func InitCron(cmd *cobra.Command) {
@@ -37,9 +40,6 @@ func InitRotate(cmd *cobra.Command) {
 	InitDaemonClient(cmd)
 
 	initRotate(cmd)
-
-	register(keys.BackupDir, cmd.Flags())
-	required(keys.BackupDir, cmd)
 }
 
 func initRotate(cmd *cobra.Command) {
@@ -63,7 +63,6 @@ func InitBackup(cmd *cobra.Command) {
 }
 
 func InitDaemonClient(cmd *cobra.Command) {
-	register(keys.NoDaemon, cmd.Flags())
 	register(keys.DaemonAddr, cmd.Flags())
 	register(keys.DaemonProtocol, cmd.Flags())
 	register(keys.DaemonNet, cmd.Flags())
@@ -87,8 +86,6 @@ func initTaskArgs(cmd *cobra.Command, stopModes *keys.Key) {
 	register(keys.LabelPrefix, cmd.Flags())
 
 	register(keys.BackupId, cmd.Flags())
-	register(keys.BackupDir, cmd.Flags())
-	required(keys.BackupDir, cmd)
 
 	register(keys.LocalContainers, cmd.Flags())
 	register(keys.OffsiteContainers, cmd.Flags())

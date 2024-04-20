@@ -16,9 +16,10 @@ func RenderSettings(cron *cron.Cron, err error) func(ctx contexts.Context, w htt
 		taskArgs := types.DefaultCreateBackupRequest().Args
 		notifications := types.DefaultNotificationSettings()
 		if len(notifications.NotificationUrls) == 0 {
-			notifications.NotificationUrls = append(notifications.NotificationUrls, "not configured")
+			notifications.NotificationUrls = append(notifications.NotificationUrls, "None Configured")
 		}
-		return load("settings").Execute(w, SettingsPage{
+
+		return load(ctx, "settings").Execute(w, SettingsPage{
 			Cron: cronData(cron),
 			Global: GlobalSettings{
 				DryRun:    ctx.DryRun,

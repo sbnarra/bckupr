@@ -1,5 +1,5 @@
-name: 'Build Application'
-description: 'Builds and tests application'
+name: 'Test Application'
+description: 'Run GO Tests and Image Test'
 runs:
   using: "composite"
   steps:
@@ -9,11 +9,4 @@ runs:
     - shell: bash
       run: go test -v ./...
     - shell: bash
-      run: ./scripts/app-build-image.sh
-      env:
-        VERSION: test
-    - shell: bash
       run: ./scripts/app-test-end2end.sh
-      env:
-        VERSION: test
-

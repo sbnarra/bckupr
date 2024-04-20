@@ -3,12 +3,12 @@ package daemon
 import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/daemon/dispatcher"
-	"github.com/sbnarra/bckupr/internal/daemon/endpoints"
-	"github.com/sbnarra/bckupr/internal/daemon/gui"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
+	"github.com/sbnarra/bckupr/internal/web"
+	"github.com/sbnarra/bckupr/internal/web/dispatcher"
+	"github.com/sbnarra/bckupr/internal/web/endpoints"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
@@ -39,15 +39,15 @@ func unixDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cr
 
 func tcpDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
 	d := dispatcher.New(ctx, "tcp")
-	if input.UiEnabled {
+	if input.UI {
 		logging.Debug(ctx, "ui enabled")
-		gui.Register(d, cron)
+		web.Register(d, cron)
 	}
-	if input.ExposeApi {
+	if input.TcpApi {
 		logging.Warn(ctx, "tcp api enabled")
 		endpoints.Register(d, cron, input.UnixSocket)
 	}
-	if input.MetricsEnabled {
+	if input.Metrics {
 		logging.Info(ctx, "metrics enabled")
 		d.Handle("/metrics", promhttp.Handler())
 	}
@@ -60,5 +60,5 @@ func tcpDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cro
 }
 
 func enableTcp(input types.DaemonInput) bool {
-	return input.UiEnabled || input.ExposeApi || input.MetricsEnabled
+	return input.UI || input.TcpApi || input.Metrics
 }

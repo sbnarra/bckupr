@@ -1,13 +1,13 @@
-package gui
+package web
 
 import (
 	"net/http"
 
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/daemon/dispatcher"
-	"github.com/sbnarra/bckupr/internal/daemon/gui/actions"
-	"github.com/sbnarra/bckupr/internal/daemon/gui/pages"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/web/actions"
+	"github.com/sbnarra/bckupr/internal/web/dispatcher"
+	"github.com/sbnarra/bckupr/internal/web/pages"
 )
 
 func Register(d *dispatcher.Dispatcher, cron *cron.Cron) {

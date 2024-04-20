@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/sbnarra/bckupr/internal/app"
-	"github.com/sbnarra/bckupr/internal/daemon/dispatcher"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/web/dispatcher"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
@@ -15,7 +15,6 @@ func createBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 	_, err := app.CreateBackup(ctx, input)
-	// TODO: on error response
 	return err
 }
 

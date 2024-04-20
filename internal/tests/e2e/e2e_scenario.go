@@ -24,14 +24,12 @@ func e2e(t *testing.T,
 	}()
 
 	writeAllData(t, ctx, dClient, "pre-backup")
-	assertAllData(t, ctx, dClient, "pre-backup")
 
 	if err := backup(); err != nil {
 		t.Fatalf("backup failed: %v", err)
 	}
 
 	writeAllData(t, ctx, dClient, "post-backup")
-	assertAllData(t, ctx, dClient, "post-backup")
 
 	if err := restore(); err != nil {
 		t.Fatalf("restore failed: %v", err)

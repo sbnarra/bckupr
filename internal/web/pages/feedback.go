@@ -11,7 +11,7 @@ func RenderFeedback(cron *cron.Cron, action string, exec func() error) func(ctx 
 	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
 		w.Header().Set("Content-Type", "text/html")
 
-		if err := load("feedback-pre_exec").Execute(w, FeedbackPage{
+		if err := load(ctx, "feedback-pre_exec").Execute(w, FeedbackPage{
 			Action: action,
 			Cron:   cronData(cron),
 		}); err != nil {
@@ -20,7 +20,7 @@ func RenderFeedback(cron *cron.Cron, action string, exec func() error) func(ctx 
 
 		execErr := exec()
 
-		return load("feedback-post_exec").Execute(w, FeedbackPage{
+		return load(ctx, "feedback-post_exec").Execute(w, FeedbackPage{
 			Action: action,
 			Cron:   cronData(cron),
 			Error:  execErr,

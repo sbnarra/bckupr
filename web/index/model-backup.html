@@ -19,7 +19,7 @@
             </p>
             <label>
                 Backup Id
-                <input type="text" id="id-override" placeholder="Leave blank to autogenerate" value="{{.BackupIdOverride}}"/>
+                <input type="text" id="id-override" placeholder="Leave blank to autogenerate" value="{{.Args.BackupId}}"/>
             </label>  
             {{template "filter-option" map "Name" "Include Names" "Id" "include-names" "Existing" .Args.Filters.IncludeNames}}
             {{template "filter-option" map "Name" "Include Volumes" "Id" "include-volumes" "Existing" .Args.Filters.IncludeVolumes}}

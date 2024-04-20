@@ -27,7 +27,6 @@ func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest
 	} else {
 		return tasks.RunOnEachDockerHost(
 			restoreCtx,
-			input.Args.BackupId,
 			input.Args,
 			input.NotificationSettings,
 			newRestoreBackupTask(local, offsite))

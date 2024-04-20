@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"strconv"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
@@ -54,31 +55,56 @@ func (d *Dispatcher) dispatch(ctx contexts.Context) func(w http.ResponseWriter, 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Transfer-Encoding", "chunked")
 
-		ctx := contexts.Request(ctx, r, func(ctx contexts.Context, data any) {
+		var dryRun bool
+		if dryRunH := r.Header.Get("dry-run"); dryRunH != "" {
+			dryRun, _ = strconv.ParseBool(dryRunH)
+		} else {
+			dryRun = ctx.DryRun
+		}
+
+		var debug bool
+		if debugH := r.Header.Get("debug"); debugH != "" {
+			debug, _ = strconv.ParseBool(debugH)
+		} else {
+			debug = ctx.Debug
+		}
+
+		ctx := contexts.Create(r.URL.Path, ctx.BackupDir, contexts.Debug(debug), contexts.DryRun(dryRun), func(ctx contexts.Context, data any) {
 			if err := feedbackToClient(w, data); err != nil {
-				logging.CheckError(ctx, err)
+				logging.CheckError(ctx, err, "error feeding back to client")
 			}
 		})
 
 		for path, handler := range paths {
 			if regex, err := regexp.Compile("^" + string(path) + "$"); err != nil {
 				logging.CheckError(ctx, err)
+				continue
 			} else if !regex.MatchString(r.URL.Path) {
 				continue
 			} else if err := handler(ctx, w, r); err != nil {
-				logging.CheckError(ctx, err)
-				return
-			} else if f, o := w.(http.Flusher); o {
-				f.Flush()
-				return
-			} else {
-				return
+				onError(ctx, err, w)
 			}
+
+			if f, o := w.(http.Flusher); o {
+				f.Flush()
+			}
+			return
 		}
 
 		logging.Error(d.ctx, fmt.Sprintf("no route found: method=%v,path=%v", r.Method, r.URL.Path))
 		w.WriteHeader(http.StatusNotFound)
 	}
+}
+
+func onError(ctx contexts.Context, err error, w http.ResponseWriter) {
+	logging.CheckError(ctx, err)
+
+	w.WriteHeader(http.StatusInternalServerError)
+	data := map[string]string{
+		"error": err.Error(),
+	}
+	encoded := encodings.ToJsonIE(data)
+	w.Write([]byte(encoded))
 }
 
 func feedbackToClient(w http.ResponseWriter, data any) error {
@@ -107,10 +133,6 @@ func (d *Dispatcher) Start(network string, addr string) error {
 			<-sig
 			d.server.Shutdown(d.ctx)
 		}()
-		// required for remote restart others we'll have a build up of goroutines
-		// d.server.RegisterOnShutdown(func() {
-		// 	sig <- nil
-		// })
 		return d.server.Serve(ln)
 	}
 }

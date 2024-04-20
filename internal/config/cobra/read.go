@@ -184,6 +184,50 @@ func createFilters(stopModesKey *keys.Key, cmd *cobra.Command) (*types.Filters, 
 	}, nil
 }
 
+func DaemonInput(cmd *cobra.Command) (*types.DaemonInput, error) {
+	var err error
+
+	var backupDir string
+	if backupDir, err = String(keys.BackupDir, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var unixSocket string
+	if unixSocket, err = String(keys.UnixSocket, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var tcpAddr string
+	if tcpAddr, err = String(keys.TcpAddr, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var tcpApi bool
+	if tcpApi, err = Bool(keys.TcpApi, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var ui bool
+	if ui, err = Bool(keys.UI, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var metrics bool
+	if metrics, err = Bool(keys.Metrics, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	return &types.DaemonInput{
+		BackupDir:  backupDir,
+		UnixSocket: unixSocket,
+		TcpAddr:    tcpAddr,
+		TcpApi:     tcpApi,
+		UI:         ui,
+		Metrics:    metrics,
+	}, nil
+
+}
+
 func RotateBackupsRequest(cmd *cobra.Command) (*types.RotateBackupsRequest, error) {
 	var err error
 

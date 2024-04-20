@@ -59,10 +59,11 @@ func defaultFilters(stopModes *keys.Key) Filters {
 
 func DefaultDaemonInput() DaemonInput {
 	return DaemonInput{
-		UnixSocket:     keys.UnixSocket.EnvString(),
-		TcpAddr:        keys.TcpAddr.EnvString(),
-		ExposeApi:      keys.ExposeApi.EnvBool(),
-		UiEnabled:      keys.UiEnabled.EnvBool(),
-		MetricsEnabled: keys.MetricsEnabled.EnvBool(),
+		BackupDir:  keys.BackupDir.EnvString(),
+		UnixSocket: keys.UnixSocket.EnvString(),
+		TcpAddr:    keys.TcpAddr.EnvString(),
+		TcpApi:     keys.TcpApi.EnvBool(),
+		UI:         keys.UI.EnvBool(),
+		Metrics:    keys.Metrics.EnvBool(),
 	}
 }
