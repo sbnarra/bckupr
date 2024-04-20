@@ -13,3 +13,4 @@ jobs:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           publish_version: nightly
+          publish_dockerhub_readme: true

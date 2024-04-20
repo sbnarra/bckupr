@@ -13,6 +13,10 @@ inputs:
   buildx_args:
     description: 'Additional buildx args'
     required: false
+  publish_dockerhub_readme:
+    type: boolean
+    description: 'Publish docs/dockerhub-readme.md to dockerhub'
+    required: false
 runs:
   using: "composite"
   steps:
@@ -22,8 +26,16 @@ runs:
       with:
         username: ${{ inputs.dockerhub_username }}
         password: ${{ inputs.dockerhub_token }}
-    - shell: bash
-      run: ./scripts/app-build-image.sh --push ${{ inputs.buildx_args }}
-      env:
-        VERSION: ${{ inputs.publish_version }}
-        DOCKER_ARGS: --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le,linux/s390x
+    # - shell: bash
+    #   run: ./scripts/app-build-image.sh --push ${{ inputs.buildx_args }}
+    #   env:
+    #     VERSION: ${{ inputs.publish_version }}
+    #     DOCKER_ARGS: --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le,linux/s390x
+    - uses: peter-evans/dockerhub-description@v4
+      if: ${{ inputs.publish_dockerhub_readme }}
+      with:
+        username: ${{ inputs.dockerhub_username }}
+        password: ${{ inputs.dockerhub_token }}
+        repository: sbnarra/bckupr
+        short-description: Backup automation and management for docker volumes using labelled containers.
+        readme-filepath: ./docs/dockerhub-readme.md
