@@ -1,10 +1,13 @@
 # Bckupr
 
-![GitHub Build Workflow](https://github.com/sbnarra/bckupr/actions/workflows/build.yml/badge.svg)
-![GitHub Dependabot Workflow](https://github.com/sbnarra/bckupr/actions/workflows/dependabot.yml/badge.svg?event=pull_request)
-![GitHub Nightly Workflow](https://github.com/sbnarra/bckupr/actions/workflows/nightly.yml/badge.svg?branch=development)
-![GitHub Latest Workflow](https://github.com/sbnarra/bckupr/actions/workflows/latest.yml/badge.svg?branch=main)
-[![Pulls from DockerHub](https://img.shields.io/docker/pulls/sbnarra/bckupr.svg)](https://hub.docker.com/r/sbnarra/bckupr)
+![Build Workflow](https://github.com/sbnarra/bckupr/actions/workflows/build.yml/badge.svg)
+![Dependabot Workflow](https://github.com/sbnarra/bckupr/actions/workflows/dependabot.yml/badge.svg?event=pull_request)
+![Nightly Workflow](https://github.com/sbnarra/bckupr/actions/workflows/nightly.yml/badge.svg?branch=development)
+![Latest Workflow](https://github.com/sbnarra/bckupr/actions/workflows/latest.yml/badge.svg?branch=main)
+
+[![DockerHub Pulls](https://img.shields.io/docker/pulls/sbnarra/bckupr.svg)](https://hub.docker.com/r/sbnarra/bckupr)
+![Latest Version](https://img.shields.io/docker/v/sbnarra/bckupr/latest)
+![Image Size](https://img.shields.io/docker/image-size/sbnarra/bckupr/latest)
 
 Bckupr is program to automate backup creation and data restoration.
 
@@ -12,12 +15,12 @@ This tool reads docker labels to determine which volumes/mounts require backing 
 
 Features:
 * Simple label configuration
-* Schedule backups using cron expressions
+* Schedule backups and rotations using cron expressions
 * Builtin CLI tool for managing backups
 * Web interface for managing backups
 * Notifications - via shoutrr
 * Metrics via Prometheus
-* Automatic backup retention - *Coming Soon*
+* backup retention
 
 See the [User Docs](https://sbnarra.github.io/bckupr) for detailed instructions on running Bckupr.
 

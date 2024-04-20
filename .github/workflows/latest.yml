@@ -33,3 +33,4 @@ jobs:
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           publish_version: ${{ needs.increment-version.outputs.version }}
           buildx_args: --tag sbnarra/bckupr:latest
+          publish_dockerhub_readme: true
