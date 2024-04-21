@@ -9,13 +9,15 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func createBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-	input := types.DefaultCreateBackupRequest()
-	if err := dispatcher.ParsePayload(ctx, input, w, r); err != nil {
+func createBackup(containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+		input := types.DefaultCreateBackupRequest()
+		if err := dispatcher.ParsePayload(ctx, input, w, r); err != nil {
+			return err
+		}
+		_, err := app.CreateBackup(ctx, input, containers)
 		return err
 	}
-	_, err := app.CreateBackup(ctx, input)
-	return err
 }
 
 func listBackups(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
@@ -30,10 +32,12 @@ func deleteBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) 
 	return app.DeleteBackup(ctx, input)
 }
 
-func restoreBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-	input := types.DefaultRestoreBackupRequest()
-	if err := dispatcher.ParsePayload(ctx, input, w, r); err != nil {
-		return err
+func restoreBackup(containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+		input := types.DefaultRestoreBackupRequest()
+		if err := dispatcher.ParsePayload(ctx, input, w, r); err != nil {
+			return err
+		}
+		return app.RestoreBackup(ctx, input, containers)
 	}
-	return app.RestoreBackup(ctx, input)
 }

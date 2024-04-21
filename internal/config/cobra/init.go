@@ -87,8 +87,8 @@ func initTaskArgs(cmd *cobra.Command, stopModes *keys.Key) {
 
 	register(keys.BackupId, cmd.Flags())
 
-	register(keys.LocalContainers, cmd.Flags())
-	register(keys.OffsiteContainers, cmd.Flags())
+	register(keys.LocalContainersConfig, cmd.Flags())
+	register(keys.OffsiteContainersConfig, cmd.Flags())
 }
 
 func initNotifications(cmd *cobra.Command) {

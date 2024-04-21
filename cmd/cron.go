@@ -5,6 +5,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +21,7 @@ func buildCron(cmd *cobra.Command) error {
 	}
 }
 
-func startCron(ctx contexts.Context, cmd *cobra.Command) error {
+func startCron(ctx contexts.Context, cmd *cobra.Command, containers types.ContainerTemplates) error {
 	if backupSchedule, err := cobraKeys.String(keys.BackupSchedule, cmd.Flags()); err != nil {
 		return err
 	} else if backupInput, err := cobraKeys.CreateBackupRequest(cmd); err != nil {
@@ -29,7 +30,7 @@ func startCron(ctx contexts.Context, cmd *cobra.Command) error {
 		return err
 	} else if rotateSchedule, err := cobraKeys.String(keys.RotateSchedule, cmd.Flags()); err != nil {
 		return err
-	} else if err := instance.Start(ctx, backupSchedule, backupInput, rotateSchedule, rotateInput); err != nil {
+	} else if err := instance.Start(ctx, backupSchedule, backupInput, rotateSchedule, rotateInput, containers); err != nil {
 		return err
 	}
 	return nil

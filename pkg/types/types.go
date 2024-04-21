@@ -24,7 +24,10 @@ type RestoreBackupRequest struct {
 }
 
 type DaemonInput struct {
-	BackupDir  string `json:"backup-dir"`
+	BackupDir               string `json:"backup-dir"`
+	LocalContainersConfig   string `json:"local-containers-config"`
+	OffsiteContainersConfig string `json:"offsite-containers-config"`
+
 	UnixSocket string `json:"unix-socket"`
 	TcpAddr    string `json:"tcp-addr"`
 	TcpApi     bool   `json:"tcp-api"`
@@ -33,12 +36,10 @@ type DaemonInput struct {
 }
 
 type TaskArgs struct {
-	BackupId                string   `json:"backup-id"`
-	DockerHosts             []string `json:"docker-hosts"`
-	LabelPrefix             string   `json:"label-prefix"`
-	Filters                 Filters  `json:"filters"`
-	LocalContainersConfig   string   `json:"local-containers-config"`
-	OffsiteContainersConfig string   `json:"offsite-containers-config"`
+	BackupId    string   `json:"backup-id"`
+	DockerHosts []string `json:"docker-hosts"`
+	LabelPrefix string   `json:"label-prefix"`
+	Filters     Filters  `json:"filters"`
 }
 
 type NotificationSettings struct {
@@ -49,25 +50,6 @@ type NotificationSettings struct {
 	NotifyTaskStarted   bool     `json:"notify-task-started"`
 	NotifyTaskCompleted bool     `json:"notify-task-completed"`
 	NotifyTaskError     bool     `json:"notify-task-error"`
-}
-
-type LocalContainerTemplates struct {
-	FileExt string            `json:"file-ext"`
-	Backup  ContainerTemplate `json:"backup"`
-	Restore ContainerTemplate `json:"restore"`
-}
-
-type OffsiteContainerTemplates struct {
-	OffsitePush ContainerTemplate `json:"offsite-push"`
-	OffsitePull ContainerTemplate `json:"offsite-pull"`
-}
-
-type ContainerTemplate struct {
-	Image   string            `json:"image"`
-	Cmd     []string          `json:"cmd"`
-	Env     []string          `json:"env"`
-	Volumes []string          `json:"volumes"`
-	Labels  map[string]string `json:"labels"`
 }
 
 type Filters struct {
@@ -92,4 +74,28 @@ type Backup struct {
 	Type    string    `json:"type"`
 	Created time.Time `json:"created"`
 	Volumes []Volume  `json:"volumes"`
+}
+
+type ContainerTemplates struct {
+	Local   LocalContainerTemplates
+	Offsite *OffsiteContainerTemplates
+}
+
+type LocalContainerTemplates struct {
+	Backup  ContainerTemplate `yaml:"backup"`
+	Restore ContainerTemplate `yaml:"restore"`
+	FileExt string            `yaml:"file-ext"`
+}
+
+type OffsiteContainerTemplates struct {
+	OffsitePush ContainerTemplate `yaml:"offsite-push"`
+	OffsitePull ContainerTemplate `yaml:"offsite-pull"`
+}
+
+type ContainerTemplate struct {
+	Image   string            `yaml:"image"`
+	Cmd     []string          `yaml:"cmd"`
+	Env     []string          `yaml:"env"`
+	Volumes []string          `yaml:"volumes"`
+	Labels  map[string]string `yaml:"labels"`
 }
