@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/sbnarra/bckupr/internal/app"
+	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/daemon"
 	"github.com/sbnarra/bckupr/pkg/api"
@@ -16,17 +17,23 @@ func TestE2EWithoutDaemon(t *testing.T) {
 	ctx := prepareIntegrationTest(t)
 	id := time.Now().Format("20060102_1504") + "-internal"
 
+	daemonInput := types.DefaultDaemonInput()
+	containers, err := containers.ContainerTemplates(daemonInput.LocalContainersConfig, daemonInput.OffsiteContainersConfig)
+	if err != nil {
+		t.Fatalf("failed to load container templates: %v", err)
+	}
+
 	e2e(t,
 		func() error {
 			createBackup := types.DefaultCreateBackupRequest()
-			createdId, err := app.CreateBackup(ctx, createBackup)
+			createdId, err := app.CreateBackup(ctx, createBackup, containers)
 			id = createdId
 			return err
 		},
 		func() error {
 			restoreBackup := types.DefaultRestoreBackupRequest()
 			restoreBackup.Args.BackupId = id
-			return app.RestoreBackup(ctx, restoreBackup)
+			return app.RestoreBackup(ctx, restoreBackup, containers)
 		},
 		func() error {
 			deleteBackup := types.DefaultDeleteBackupRequest()
@@ -39,12 +46,16 @@ func TestE2EWithDaemon(t *testing.T) {
 	ctx := prepareIntegrationTest(t)
 
 	daemonInput := types.DefaultDaemonInput()
-	_, dispatchers := daemon.Start(ctx, daemonInput, nil)
-	defer func() {
-		for _, dispatcher := range dispatchers {
-			dispatcher.Close()
-		}
-	}()
+	if containers, err := containers.ContainerTemplates(daemonInput.LocalContainersConfig, daemonInput.OffsiteContainersConfig); err != nil {
+		t.Fatalf("failed to load container templates: %v", err)
+	} else {
+		_, dispatchers := daemon.Start(ctx, daemonInput, nil, containers)
+		defer func() {
+			for _, dispatcher := range dispatchers {
+				dispatcher.Close()
+			}
+		}()
+	}
 
 	time.Sleep(2 * time.Second)
 

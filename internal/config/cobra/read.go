@@ -122,28 +122,16 @@ func createTaskArgs(stopModes *keys.Key, cmd *cobra.Command) (*types.TaskArgs, e
 		return nil, err
 	}
 
-	var localContainersConfig string
-	if localContainersConfig, err = String(keys.LocalContainers, cmd.Flags()); err != nil {
-		return nil, err
-	}
-
-	var offsiteContainersConfig string
-	if offsiteContainersConfig, err = String(keys.OffsiteContainers, cmd.Flags()); err != nil {
-		return nil, err
-	}
-
 	var backupId string
 	if backupId, err = String(keys.BackupId, cmd.Flags()); err != nil {
 		return nil, err
 	}
 
 	return &types.TaskArgs{
-		BackupId:                backupId,
-		DockerHosts:             dockerHosts,
-		Filters:                 *filters,
-		LabelPrefix:             labelPrefix,
-		LocalContainersConfig:   localContainersConfig,
-		OffsiteContainersConfig: offsiteContainersConfig,
+		BackupId:    backupId,
+		DockerHosts: dockerHosts,
+		Filters:     *filters,
+		LabelPrefix: labelPrefix,
 	}, nil
 }
 
@@ -192,6 +180,16 @@ func DaemonInput(cmd *cobra.Command) (*types.DaemonInput, error) {
 		return nil, err
 	}
 
+	var localContainersConfig string
+	if localContainersConfig, err = String(keys.LocalContainersConfig, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var offsiteContainersConfig string
+	if offsiteContainersConfig, err = String(keys.OffsiteContainersConfig, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
 	var unixSocket string
 	if unixSocket, err = String(keys.UnixSocket, cmd.Flags()); err != nil {
 		return nil, err
@@ -218,7 +216,10 @@ func DaemonInput(cmd *cobra.Command) (*types.DaemonInput, error) {
 	}
 
 	return &types.DaemonInput{
-		BackupDir:  backupDir,
+		BackupDir:               backupDir,
+		LocalContainersConfig:   localContainersConfig,
+		OffsiteContainersConfig: offsiteContainersConfig,
+
 		UnixSocket: unixSocket,
 		TcpAddr:    tcpAddr,
 		TcpApi:     tcpApi,
