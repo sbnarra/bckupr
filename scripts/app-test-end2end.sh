@@ -8,6 +8,7 @@ _check_data_is() {
     vol=$1; shift
     MSG=$(docker exec test_service cat /mnt/${vol}/msg)
     if [ "$MSG" != "$*" ]; then
+        docker logs bckupr_instance
         echo "invalid mount data: on-disk='$MSG' != expected='$*'"; exit 1
     fi
 }
@@ -33,9 +34,8 @@ docker volume create test_volume_backup
 VERSION=test ./scripts/app-build-image.sh
 docker run --name bckupr_instance -d \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -v $PWD/.test_filesystem/backups:$PWD/.test_filesystem/backups \
-    -e BACKUP_DIR=$PWD/.test_filesystem/backups \
-    sbnarra/bckupr:test --dry-run=false
+    -v $PWD/.test_filesystem/backups:/backups \
+    sbnarra/bckupr:test --dry-run=false --debug
 
 docker run --name test_service -d \
     -l bckupr.stop=true \

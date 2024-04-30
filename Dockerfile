@@ -28,6 +28,9 @@ LABEL org.opencontainers.image.revision ${REVISION:-unset}
 ARG BASE_IMAGE
 LABEL org.opencontainers.image.base.name ${BASE_IMAGE:-scratch}
 
+ENV VERSION ${VERSION:-unset}
+ENV RUNNING_IN_CONTAINER 1
+
 WORKDIR /
 
 COPY --from=base /app/bckupr /bin/bckupr

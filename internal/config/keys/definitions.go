@@ -39,7 +39,8 @@ var BackupSchedule = newKey("backup-schedule", "cron expression for backups sche
 var RotateSchedule = newKey("rotate-schedule", "cron expression for rotations schedule", "")
 
 // daemon
-var BackupDir = newKey("backup-dir", "backups archieve directory", "")
+var ContainerBackupDir = newKey("container-backup-dir", "backups archieve directory", "/backups")
+var HostBackupDir = newKey("host-backup-dir", "backups archieve directory", "")
 var UnixSocket = newKey("unix-socket", "unix socket to bind daemon", "/tmp/.bckupr.sock")
 var TcpAddr = newKey("tcp-addr", "tcp address to bind ui/api", "0.0.0.0:8000")
 var TcpApi = newKey("tcp-api", "exposes api via tcp (by default only unix for local connections)", false)

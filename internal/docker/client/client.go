@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/docker/docker/api/types"
@@ -15,6 +17,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
+
+	"github.com/docker/docker/api/types/filters"
 )
 
 type Docker struct {
@@ -25,11 +29,13 @@ type DockerClient interface {
 	Close() error
 	StopContainer(id string) error
 	AllContainers() ([]types.Container, error)
+	FindContainers(keyValuePairs ...filters.KeyValuePair) ([]types.Container, error)
 	StartContainer(id string) error
 	RemoveContainer(id string) error
 	ContainerLogs(id string) (string, error)
 	RunContainer(image string, cmd []string, env []string, volumes []string, labels map[string]string) (string, error)
 	WaitForContainer(ctx contexts.Context, id string) error
+	Exec(containerId string, cmd []string, detach bool) error
 }
 
 func Client(socket string) (DockerClient, error) {
@@ -49,8 +55,35 @@ func (d Docker) Close() error {
 	return nil
 }
 
+func (d Docker) Exec(containerId string, cmd []string, detach bool) error {
+	ctx := context.Background()
+	startConfig := types.ExecStartCheck{
+		Detach: detach,
+	}
+	if create, err := d.client.ContainerExecCreate(ctx, containerId, types.ExecConfig{
+		Cmd: cmd,
+	}); err != nil {
+		return err
+	} else if attach, err := d.client.ContainerExecAttach(ctx, create.ID, startConfig); err != nil {
+		return err
+	} else if err := d.client.ContainerExecStart(ctx, create.ID, startConfig); err != nil {
+		return err
+	} else if _, err := io.Copy(os.Stdout, attach.Reader); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d Docker) AllContainers() ([]types.Container, error) {
 	return d.client.ContainerList(context.Background(), containerTypes.ListOptions{All: true})
+}
+
+func (d Docker) FindContainers(keyValuePairs ...filters.KeyValuePair) ([]types.Container, error) {
+	filterArgs := filters.NewArgs(keyValuePairs...)
+	return d.client.ContainerList(context.Background(), containerTypes.ListOptions{
+		// All:     false,
+		Filters: filterArgs,
+	})
 }
 
 func (d Docker) StopContainer(id string) error {

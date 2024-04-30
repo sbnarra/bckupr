@@ -22,7 +22,7 @@ type Exec func(
 
 func RunOnEachDockerHost(ctx contexts.Context, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
 	action := ctx.Name
-	return docker.ExecPerHost(ctx, args.DockerHosts, func(d docker.Docker) error {
+	return docker.ExecPerHost(ctx, func(d docker.Docker) error {
 		return run(ctx, d, action, args, notificationSettings, exec)
 	})
 }
