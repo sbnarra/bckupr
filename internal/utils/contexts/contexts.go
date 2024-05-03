@@ -11,11 +11,13 @@ import (
 
 type Context struct {
 	context.Context
-	Name      string
-	BackupDir string // initially set by daemon cli, is passed through on all other instances
-	Debug     bool
-	DryRun    bool
-	feedback  func(Context, any)
+	Name               string
+	ContainerBackupDir string   // initially set by daemon cli, is passed through on all other instances
+	HostBackupDir      string   // initially set by daemon cli, is passed through on all other instances
+	DockerHosts        []string // initially set by daemon cli, is passed through on all other instances
+	Debug              bool
+	DryRun             bool
+	feedback           func(Context, any)
 }
 
 func Cobra(cmd *cobra.Command, feedback func(Context, any)) (Context, error) {
@@ -24,18 +26,20 @@ func Cobra(cmd *cobra.Command, feedback func(Context, any)) (Context, error) {
 	} else if debug, err := cobraKeys.Bool(keys.Debug, cmd.Flags()); err != nil {
 		return Context{}, err
 	} else {
-		return Create(cmd.Use, "", Debug(debug), DryRun(dryrun), feedback), nil
+		return Create(cmd.Context(), cmd.Use, "", "", []string{}, Debug(debug), DryRun(dryrun), feedback), nil
 	}
 }
 
 type DryRun bool
 type Debug bool
 
-func Create(name string, backupDir string, debug Debug, dryrun DryRun, feedback func(Context, any)) Context {
+func Create(context context.Context, name string, containerBackupDir string, hostBackupDir string, dockerHosts []string, debug Debug, dryrun DryRun, feedback func(Context, any)) Context {
 	return Context{
-		context.Background(),
+		context,
 		name,
-		backupDir,
+		containerBackupDir,
+		hostBackupDir,
+		dockerHosts,
 		bool(debug),
 		bool(dryrun),
 		feedback,

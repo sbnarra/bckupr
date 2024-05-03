@@ -107,11 +107,6 @@ func CreateBackupRequest(cmd *cobra.Command) (*types.CreateBackupRequest, error)
 func createTaskArgs(stopModes *keys.Key, cmd *cobra.Command) (*types.TaskArgs, error) {
 	var err error
 
-	var dockerHosts []string
-	if dockerHosts, err = StringSlice(keys.DockerHosts, cmd.Flags()); err != nil {
-		return nil, err
-	}
-
 	var filters *types.Filters
 	if filters, err = createFilters(stopModes, cmd); err != nil {
 		return nil, err
@@ -122,28 +117,15 @@ func createTaskArgs(stopModes *keys.Key, cmd *cobra.Command) (*types.TaskArgs, e
 		return nil, err
 	}
 
-	var localContainersConfig string
-	if localContainersConfig, err = String(keys.LocalContainers, cmd.Flags()); err != nil {
-		return nil, err
-	}
-
-	var offsiteContainersConfig string
-	if offsiteContainersConfig, err = String(keys.OffsiteContainers, cmd.Flags()); err != nil {
-		return nil, err
-	}
-
 	var backupId string
 	if backupId, err = String(keys.BackupId, cmd.Flags()); err != nil {
 		return nil, err
 	}
 
 	return &types.TaskArgs{
-		BackupId:                backupId,
-		DockerHosts:             dockerHosts,
-		Filters:                 *filters,
-		LabelPrefix:             labelPrefix,
-		LocalContainersConfig:   localContainersConfig,
-		OffsiteContainersConfig: offsiteContainersConfig,
+		BackupId:    backupId,
+		Filters:     *filters,
+		LabelPrefix: labelPrefix,
 	}, nil
 }
 
@@ -188,7 +170,17 @@ func DaemonInput(cmd *cobra.Command) (*types.DaemonInput, error) {
 	var err error
 
 	var backupDir string
-	if backupDir, err = String(keys.BackupDir, cmd.Flags()); err != nil {
+	if backupDir, err = String(keys.HostBackupDir, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var localContainersConfig string
+	if localContainersConfig, err = String(keys.LocalContainersConfig, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var offsiteContainersConfig string
+	if offsiteContainersConfig, err = String(keys.OffsiteContainersConfig, cmd.Flags()); err != nil {
 		return nil, err
 	}
 
@@ -217,8 +209,17 @@ func DaemonInput(cmd *cobra.Command) (*types.DaemonInput, error) {
 		return nil, err
 	}
 
+	var dockerHosts []string
+	if dockerHosts, err = StringSlice(keys.DockerHosts, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
 	return &types.DaemonInput{
-		BackupDir:  backupDir,
+		BackupDir:               backupDir,
+		DockerHosts:             dockerHosts,
+		LocalContainersConfig:   localContainersConfig,
+		OffsiteContainersConfig: offsiteContainersConfig,
+
 		UnixSocket: unixSocket,
 		TcpAddr:    tcpAddr,
 		TcpApi:     tcpApi,

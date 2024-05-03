@@ -24,7 +24,7 @@ func RenderSettings(cron *cron.Cron, err error) func(ctx contexts.Context, w htt
 			Global: GlobalSettings{
 				DryRun:    ctx.DryRun,
 				Debug:     ctx.Debug,
-				BackupDir: ctx.BackupDir,
+				BackupDir: ctx.HostBackupDir,
 				Args:      taskArgs,
 				Web:       web,
 			},

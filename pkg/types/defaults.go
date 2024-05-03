@@ -38,12 +38,9 @@ func DefaultNotificationSettings() *NotificationSettings {
 
 func DefaultTaskArgs(stopModes *keys.Key) TaskArgs {
 	return TaskArgs{
-		BackupId:                keys.BackupId.EnvString(),
-		DockerHosts:             keys.DockerHosts.EnvStringSlice(),
-		Filters:                 defaultFilters(stopModes),
-		LabelPrefix:             keys.LabelPrefix.EnvString(),
-		LocalContainersConfig:   keys.LocalContainers.EnvString(),
-		OffsiteContainersConfig: keys.OffsiteContainers.EnvString(),
+		BackupId:    keys.BackupId.EnvString(),
+		Filters:     defaultFilters(stopModes),
+		LabelPrefix: keys.LabelPrefix.EnvString(),
 	}
 }
 
@@ -59,7 +56,10 @@ func defaultFilters(stopModes *keys.Key) Filters {
 
 func DefaultDaemonInput() DaemonInput {
 	return DaemonInput{
-		BackupDir:  keys.BackupDir.EnvString(),
+		BackupDir:               keys.HostBackupDir.EnvString(),
+		LocalContainersConfig:   keys.LocalContainersConfig.EnvString(),
+		OffsiteContainersConfig: keys.OffsiteContainersConfig.EnvString(),
+
 		UnixSocket: keys.UnixSocket.EnvString(),
 		TcpAddr:    keys.TcpAddr.EnvString(),
 		TcpApi:     keys.TcpApi.EnvBool(),

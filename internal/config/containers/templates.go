@@ -11,13 +11,16 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func ContainerTemplates(local string, offsite string) (types.LocalContainerTemplates, *types.OffsiteContainerTemplates, error) {
+func ContainerTemplates(local string, offsite string) (types.ContainerTemplates, error) {
 	if local, err := LocalContainerTemplates(local); err != nil {
-		return local, nil, err
+		return types.ContainerTemplates{}, err
 	} else if offsite, err := OffsiteContainerTemplates(offsite); err != nil {
-		return local, nil, err
+		return types.ContainerTemplates{}, err
 	} else {
-		return local, offsite, nil
+		return types.ContainerTemplates{
+			Local:   local,
+			Offsite: offsite,
+		}, nil
 	}
 }
 

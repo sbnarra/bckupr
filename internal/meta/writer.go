@@ -23,7 +23,7 @@ func NewWriter(ctx contexts.Context, backupId string, backupType string) *Writer
 			Created: time.Now(),
 			Type:    backupType,
 		},
-		backupDir: ctx.BackupDir,
+		backupDir: ctx.ContainerBackupDir,
 	}
 }
 

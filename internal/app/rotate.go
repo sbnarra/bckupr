@@ -137,9 +137,9 @@ func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy,
 }
 
 func rotateBackups(ctx contexts.Context, destroyBackups bool, backups []*types.Backup) {
-	binPath := filepath.Join(ctx.BackupDir, "bin")
+	binPath := filepath.Join(ctx.HostBackupDir, "bin")
 	for _, backup := range backups {
-		backupPath := filepath.Join(ctx.BackupDir, backup.Id)
+		backupPath := filepath.Join(ctx.ContainerBackupDir, backup.Id)
 		if err := rotateBackup(ctx, destroyBackups, backupPath, filepath.Join(binPath, backup.Id)); err != nil {
 			logging.CheckError(ctx, err)
 		}

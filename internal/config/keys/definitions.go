@@ -12,8 +12,8 @@ var DaemonNet = newKey("daemon-net", "network connection type for bckupr daemon,
 var DaemonProtocol = newKey("daemon-protocol", "protocol for bckupr daemon (don't recommend changing)", "http")
 var DaemonAddr = newKey("daemon-addr", "bind address for bckupr daemon, should use unix:///tmp/.bckupr or tcp binding like 0.0.0.0:8000", UnixSocket.Default)
 
-var LocalContainers = newKey("local-containers-config", "yaml config for managing local backups", "./configs/local/tar.yml")
-var OffsiteContainers = newKey("offsite-containers-config", "yaml config for managing offsite backups", "")
+var LocalContainersConfig = newKey("local-containers-config", "yaml config for managing local backups", "./configs/local/tar.yml")
+var OffsiteContainersConfig = newKey("offsite-containers-config", "yaml config for managing offsite backups", "")
 
 var NotificationUrls = newKey("notification-urls", "shoutrrr service notification urls (https://containrrr.dev/shoutrrr/latest/services/overview/)", []string{
 	// "discord://IT4QcVejlF8P5On9Fn6XTJCpjwnkEWhPnV97JI_KJ3ztKuk7aSLc40jK9bu3OeaSowV9@1221065822185853078",
@@ -39,7 +39,8 @@ var BackupSchedule = newKey("backup-schedule", "cron expression for backups sche
 var RotateSchedule = newKey("rotate-schedule", "cron expression for rotations schedule", "")
 
 // daemon
-var BackupDir = newKey("backup-dir", "backups archieve directory", "")
+var ContainerBackupDir = newKey("container-backup-dir", "backups archieve directory", "/backups")
+var HostBackupDir = newKey("host-backup-dir", "backups archieve directory", "")
 var UnixSocket = newKey("unix-socket", "unix socket to bind daemon", "/tmp/.bckupr.sock")
 var TcpAddr = newKey("tcp-addr", "tcp address to bind ui/api", "0.0.0.0:8000")
 var TcpApi = newKey("tcp-api", "exposes api via tcp (by default only unix for local connections)", false)
