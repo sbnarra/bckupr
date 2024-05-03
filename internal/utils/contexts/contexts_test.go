@@ -5,16 +5,11 @@ import (
 	"testing"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
-	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
-
-var Test = contexts.Create(context.Background(), "under-test", "/tmp/backups", "/tmp/backups", []string{}, false, true, func(ctx contexts.Context, a any) {
-	logging.Info(ctx, a)
-})
 
 func TestFeedback(t *testing.T) {
 	var data any
-	context := contexts.Create(context.Background(), "under-test", "/tmp/backups", "/tmp/backups", []string{}, false, true, func(ctx contexts.Context, a any) {
+	context := contexts.Create(context.Background(), "test", "/tmp/backups", "/tmp/backups", []string{}, false, true, func(ctx contexts.Context, a any) {
 		data = a
 	})
 
@@ -26,7 +21,7 @@ func TestFeedback(t *testing.T) {
 
 func TestFeedbackData(t *testing.T) {
 	var data any
-	context := contexts.Create(context.Background(), "under-test", "/tmp/backups", "/tmp/backups", []string{}, false, true, func(ctx contexts.Context, a any) {
+	context := contexts.Create(context.Background(), "test", "/tmp/backups", "/tmp/backups", []string{}, false, true, func(ctx contexts.Context, a any) {
 		data = a
 	})
 
