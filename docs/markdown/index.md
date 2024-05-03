@@ -26,8 +26,7 @@ Next run Bckupr using the following docker commands:
     ```bash
     $ docker run --name bckupr -d \
         -p 8000:8000 \
-        -e BACKUP_DIR=/tmp/backups \
-        -v /tmp/backups:/tmp/backups \
+        -v /tmp/backups:/backups \
         -v /var/run/docker.sock:/var/run/docker.sock \
         sbnarra/bckupr
     ```
@@ -46,12 +45,10 @@ Next run Bckupr using the following docker commands:
     services:
       bckupr:
         image: sbnarra/bckupr
-        environment:
-          BACKUP_DIR: /tmp/backups
         ports:
           - 8000:8000
         volumes:
-          - /tmp/backups:/tmp/backups
+          - /tmp/backups:/backups
           - /var/run/docker.sock:/var/run/docker.sock
     ```
     Create new ad-hoc backup:

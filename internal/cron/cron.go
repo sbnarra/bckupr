@@ -42,10 +42,11 @@ func (c *Cron) Stop() {
 func (c *Cron) Start(ctx contexts.Context,
 	backupSchedule string, backupInput *types.CreateBackupRequest,
 	rotateSchedule string, rotateInput *types.RotateBackupsRequest,
+	containers types.ContainerTemplates,
 ) error {
 	c.I.Start()
 	if backupSchedule != "" {
-		if err := c.scheduleBackup(ctx, backupSchedule, backupInput); err != nil {
+		if err := c.scheduleBackup(ctx, backupSchedule, backupInput, containers); err != nil {
 			return err
 		}
 	} else {
@@ -64,13 +65,13 @@ func (c *Cron) Start(ctx contexts.Context,
 	return nil
 }
 
-func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *types.CreateBackupRequest) error {
+func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *types.CreateBackupRequest, containers types.ContainerTemplates) error {
 	triggerNotifyNextBackup := func() error {
 		return nil
 	}
 	logging.Info(ctx, "backup schedule", schedule)
 	if id, err := c.I.AddFunc(schedule, func() {
-		if id, err := backups.CreateBackup(ctx, input); err != nil {
+		if id, err := backups.CreateBackup(ctx, input, containers); err != nil {
 			logging.CheckError(ctx, err, "Backup Failure", id)
 		}
 		if err := triggerNotifyNextBackup(); err != nil {

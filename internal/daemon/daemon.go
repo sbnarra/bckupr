@@ -12,19 +12,19 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func Start(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron) (*concurrent.Concurrent, []*dispatcher.Dispatcher) {
+func Start(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates) (*concurrent.Concurrent, []*dispatcher.Dispatcher) {
 	runner := concurrent.New(ctx, "daemon", 2)
 	dispatchers := []*dispatcher.Dispatcher{}
-	dispatchers = append(dispatchers, unixDispatcher(ctx, input, cron, runner))
+	dispatchers = append(dispatchers, unixDispatcher(ctx, input, cron, containers, runner))
 	if enableTcp(input) {
-		dispatchers = append(dispatchers, tcpDispatcher(ctx, input, cron, runner))
+		dispatchers = append(dispatchers, tcpDispatcher(ctx, input, cron, containers, runner))
 	}
 	return runner, dispatchers
 }
 
-func unixDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
+func unixDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
 	d := dispatcher.New(ctx, "unix")
-	endpoints.Register(d, cron, input.UnixSocket)
+	endpoints.Register(d, cron, input.UnixSocket, containers)
 	if ctx.Debug {
 		logging.Info(ctx, "debug endpoints enabled")
 		d.EnableDebug()
@@ -37,15 +37,15 @@ func unixDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cr
 	return d
 }
 
-func tcpDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
+func tcpDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
 	d := dispatcher.New(ctx, "tcp")
 	if input.UI {
 		logging.Debug(ctx, "ui enabled")
-		web.Register(d, cron)
+		web.Register(d, cron, containers)
 	}
 	if input.TcpApi {
 		logging.Warn(ctx, "tcp api enabled")
-		endpoints.Register(d, cron, input.UnixSocket)
+		endpoints.Register(d, cron, input.UnixSocket, containers)
 	}
 	if input.Metrics {
 		logging.Info(ctx, "metrics enabled")

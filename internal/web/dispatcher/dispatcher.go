@@ -69,7 +69,7 @@ func (d *Dispatcher) dispatch(ctx contexts.Context) func(w http.ResponseWriter, 
 			debug = ctx.Debug
 		}
 
-		ctx := contexts.Create(r.URL.Path, ctx.BackupDir, contexts.Debug(debug), contexts.DryRun(dryRun), func(ctx contexts.Context, data any) {
+		ctx := contexts.Create(ctx.Context, r.URL.Path, ctx.ContainerBackupDir, ctx.HostBackupDir, ctx.DockerHosts, contexts.Debug(debug), contexts.DryRun(dryRun), func(ctx contexts.Context, data any) {
 			if err := feedbackToClient(w, data); err != nil {
 				logging.CheckError(ctx, err, "error feeding back to client")
 			}

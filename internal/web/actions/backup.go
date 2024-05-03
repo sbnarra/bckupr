@@ -13,7 +13,7 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func BackupActionHandler(cron *cron.Cron) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func BackupActionHandler(cron *cron.Cron, containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
 	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
 		if form, err := readForm(r); err != nil {
 			return pages.RenderIndex(cron, err)(ctx, w, r)
@@ -45,7 +45,7 @@ func BackupActionHandler(cron *cron.Cron) func(ctx contexts.Context, w http.Resp
 					input.Args.Filters.IncludeVolumes = form["volumes"]
 					logging.Info(ctx, input.Args.Filters.IncludeVolumes)
 					exec = func() error {
-						return app.RestoreBackup(ctx, input)
+						return app.RestoreBackup(ctx, input, containers)
 					}
 				}
 			} else if action == "backup" {
@@ -61,7 +61,7 @@ func BackupActionHandler(cron *cron.Cron) func(ctx contexts.Context, w http.Resp
 				}
 
 				exec = func() error {
-					_, err := app.CreateBackup(ctx, input)
+					_, err := app.CreateBackup(ctx, input, containers)
 					return err
 				}
 
