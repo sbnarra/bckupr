@@ -23,7 +23,7 @@ func init() {
 }
 
 func runDaemon(cmd *cobra.Command, args []string) error {
-	if ctx, input, err := createContextAndInput(cmd); err != nil {
+	if ctx, input, err := createDaemonContextAndInput(cmd); err != nil {
 		return err
 	} else if err = buildCron(cmd); err != nil {
 		return err
@@ -53,7 +53,7 @@ func runDaemon(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func createContextAndInput(cmd *cobra.Command) (contexts.Context, *types.DaemonInput, error) {
+func createDaemonContextAndInput(cmd *cobra.Command) (contexts.Context, *types.DaemonInput, error) {
 	var ctx contexts.Context
 	var input *types.DaemonInput
 	var err error

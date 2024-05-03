@@ -40,7 +40,7 @@ func MountedBackupDir(ctx contexts.Context, dockerHosts []string) (string, error
 }
 
 func mountedBackupDir(ctx contexts.Context, dockerHost string) (string, error) {
-	if val := os.Getenv("RUNNING_IN_CONTAINER"); val != "1" {
+	if val := os.Getenv("BCKUPR_IN_CONTAINER"); val != "1" {
 		return "", &UnableToDetect{"not running in container"}
 	}
 	version := os.Getenv("VERSION")

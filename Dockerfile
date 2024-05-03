@@ -29,7 +29,7 @@ ARG BASE_IMAGE
 LABEL org.opencontainers.image.base.name ${BASE_IMAGE:-scratch}
 
 ENV VERSION ${VERSION:-unset}
-ENV RUNNING_IN_CONTAINER 1
+ENV BCKUPR_IN_CONTAINER 1
 
 WORKDIR /
 

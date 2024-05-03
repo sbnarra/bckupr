@@ -5,7 +5,7 @@ The `rotate` command is used to clean up old backups. You configure policies whi
 |Env|Flag|Description||
 |-|-|-|-|
 |`DRY_RUN`|`--dry-run`|Needs disabling once completed testing|_Optional: Defaults `true`_|
-|`DESTROY_BACKUPS`|`--destroy-backups`|Backups are removed from disk rather than moved to _bin_|_Optional: Defaults `true`_|
+|`DESTROY_BACKUPS`|`--destroy-backups`|Backups are removed from disk rather than moved to _bin_|_Optional: Defaults `false`_|
 
 ## Modes
 

@@ -38,8 +38,7 @@ func DefaultNotificationSettings() *NotificationSettings {
 
 func DefaultTaskArgs(stopModes *keys.Key) TaskArgs {
 	return TaskArgs{
-		BackupId: keys.BackupId.EnvString(),
-		// DockerHosts: keys.DockerHosts.EnvStringSlice(),
+		BackupId:    keys.BackupId.EnvString(),
 		Filters:     defaultFilters(stopModes),
 		LabelPrefix: keys.LabelPrefix.EnvString(),
 	}

@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"context"
 	"os"
 	"strconv"
 	"testing"
@@ -20,7 +21,7 @@ func createContext(t *testing.T) contexts.Context {
 	os.Setenv(keys.DryRun.EnvId(), strconv.FormatBool(dryRun))
 	os.Setenv(keys.HostBackupDir.EnvId(), backupDir)
 
-	return contexts.Create(t.Name(), backupDir, backupDir, dockerHosts, contexts.Debug(debug), contexts.DryRun(dryRun), logFeedback)
+	return contexts.Create(context.Background(), t.Name(), backupDir, backupDir, dockerHosts, contexts.Debug(debug), contexts.DryRun(dryRun), logFeedback)
 }
 
 func logFeedback(ctx contexts.Context, a any) {}
