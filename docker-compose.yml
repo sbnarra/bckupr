@@ -1,12 +1,9 @@
 services:
   bckupr:
-    # image: sbnarra/bckupr:nightly
-    build:
-      context: ./
-      args:
-        VERSION: compose
-    environment:
-      DRY_RUN: ${DRY_RUN:-true}
+    image: sbnarra/bckupr:nightly
+    env_file:
+      - path: ./.env
+        required: false
     volumes:
       - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock
       - ${BACKUP_DIR:-/tmp/backups}:/backups
