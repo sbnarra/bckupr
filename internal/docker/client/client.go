@@ -81,7 +81,6 @@ func (d Docker) AllContainers() ([]types.Container, error) {
 func (d Docker) FindContainers(keyValuePairs ...filters.KeyValuePair) ([]types.Container, error) {
 	filterArgs := filters.NewArgs(keyValuePairs...)
 	return d.client.ContainerList(context.Background(), containerTypes.ListOptions{
-		// All:     false,
 		Filters: filterArgs,
 	})
 }
