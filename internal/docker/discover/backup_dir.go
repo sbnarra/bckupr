@@ -27,7 +27,7 @@ func MountedBackupDir(ctx contexts.Context, dockerHosts []string) (string, error
 	for _, dockerHost := range dockerHosts {
 		dir, err := mountedBackupDir(ctx, dockerHost)
 		if errors.Is(err, &UnableToDetect{}) {
-			logging.CheckError(ctx, err, dockerHost)
+			logging.CheckWarn(ctx, err, dockerHost)
 		} else {
 			fErr = fmt.Errorf("%v: %w", dockerHost, err)
 		}
@@ -36,7 +36,6 @@ func MountedBackupDir(ctx contexts.Context, dockerHosts []string) (string, error
 			return dir, nil
 		}
 	}
-
 	return "", fErr
 }
 
@@ -51,8 +50,6 @@ func mountedBackupDir(ctx contexts.Context, dockerHost string) (string, error) {
 		return "", err
 	}
 
-	expectedBackupDir := "/backups"
-
 	var c *dockerTypes.Container
 
 	kv := func(key, value string) filters.KeyValuePair {
@@ -61,7 +58,7 @@ func mountedBackupDir(ctx contexts.Context, dockerHost string) (string, error) {
 	if found, err := docker.FindContainers(
 		kv("label", "org.opencontainers.image.ref.name=sbnarra/bckupr"),
 		kv("label", "org.opencontainers.image.version="+version),
-		kv("volume", expectedBackupDir),
+		kv("volume", ctx.ContainerBackupDir),
 	); err != nil {
 		return "", err
 	} else if foundLen := len(found); foundLen == 1 {
@@ -76,7 +73,7 @@ func mountedBackupDir(ctx contexts.Context, dockerHost string) (string, error) {
 		return "", &UnableToDetect{"bckupr container not found"}
 	}
 
-	backupDirHostDir := backupDirHostDir(c, expectedBackupDir)
+	backupDirHostDir := backupDirHostDir(c, ctx.ContainerBackupDir)
 	return backupDirHostDir, nil
 }
 
@@ -101,9 +98,9 @@ func detectRunningInstance(ctx contexts.Context, docker client.DockerClient, cs 
 	return nil, nil
 }
 
-func backupDirHostDir(c *dockerTypes.Container, expectedBackupDir string) string {
+func backupDirHostDir(c *dockerTypes.Container, containerBackupDir string) string {
 	for _, mount := range c.Mounts {
-		if mount.Destination == expectedBackupDir {
+		if mount.Destination == containerBackupDir {
 			return mount.Source
 		}
 	}

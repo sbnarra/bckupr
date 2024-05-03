@@ -23,43 +23,14 @@ func init() {
 }
 
 func runDaemon(cmd *cobra.Command, args []string) error {
-	var ctx contexts.Context
-	var err error
-	if ctx, err = contexts.Cobra(cmd, feedbackViaLogs); err != nil {
+	if ctx, input, err := createContextAndInput(cmd); err != nil {
 		return err
-	}
-
-	var input *types.DaemonInput
-	if input, err = cobraConf.DaemonInput(cmd); err != nil {
-		return err
-	}
-	ctx.DockerHosts = input.DockerHosts
-
-	if input.BackupDir == "" {
-		if backupDir, err := discover.MountedBackupDir(ctx, input.DockerHosts); err != nil {
-			return err
-		} else if backupDir != "" {
-			input.BackupDir = backupDir
-		} else {
-			return errors.New("unable to detect backup dir, supply --" + keys.HostBackupDir.CliId)
-		}
-	}
-	ctx.HostBackupDir = input.BackupDir
-
-	var containerBackupDir string
-	if containerBackupDir, err = cobraKeys.String(keys.ContainerBackupDir, cmd.Flags()); err != nil {
-		return err
-	} else {
-		ctx.ContainerBackupDir = containerBackupDir
-	}
-
-	runner := concurrent.New(ctx, "daemon", 2)
-
-	if err = buildCron(cmd); err != nil {
+	} else if err = buildCron(cmd); err != nil {
 		return err
 	} else if containers, err := containers.ContainerTemplates(input.LocalContainersConfig, input.OffsiteContainersConfig); err != nil {
 		return err
 	} else {
+		runner := concurrent.New(ctx, "daemon", 2)
 		runner.RunN("cron", func(ctx contexts.Context) error {
 			return startCron(ctx, cmd, containers)
 		})
@@ -77,8 +48,39 @@ func runDaemon(cmd *cobra.Command, args []string) error {
 			}
 			return nil
 		})
+		logging.CheckError(ctx, runner.Wait())
 	}
-
-	logging.CheckError(ctx, runner.Wait())
 	return nil
+}
+
+func createContextAndInput(cmd *cobra.Command) (contexts.Context, *types.DaemonInput, error) {
+	var ctx contexts.Context
+	var input *types.DaemonInput
+	var err error
+
+	if ctx, err = contexts.Cobra(cmd, feedbackViaLogs); err != nil {
+		return ctx, input, err
+	} else if input, err = cobraConf.DaemonInput(cmd); err != nil {
+		return ctx, input, err
+	}
+	ctx.DockerHosts = input.DockerHosts
+
+	var containerBackupDir string
+	if containerBackupDir, err = cobraKeys.String(keys.ContainerBackupDir, cmd.Flags()); err != nil {
+		return ctx, input, err
+	}
+	ctx.ContainerBackupDir = containerBackupDir
+
+	if input.BackupDir == "" {
+		if backupDir, err := discover.MountedBackupDir(ctx, input.DockerHosts); err != nil {
+			return ctx, input, err
+		} else if backupDir != "" {
+			input.BackupDir = backupDir
+		} else {
+			return ctx, input, errors.New("unable to detect backup dir, supply --" + keys.HostBackupDir.CliId)
+		}
+	}
+	ctx.HostBackupDir = input.BackupDir
+
+	return ctx, input, err
 }

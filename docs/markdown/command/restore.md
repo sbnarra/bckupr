@@ -10,7 +10,6 @@ The `restore` command requires a valid `backup-id` and executes the following pr
 
 |Env|Flag|Description||
 |-|-|-|-|
-|`BACKUP_DIR`|`--backup-dir`|Directory containing local backups|_Required: Must be supplied_|
 |`BACKUP_ID`|`--backup-id`|Id of specific backup|_Required: Must be supplied_|
 |`DRY_RUN`|`--dry-run`|Needs disabling once completed testing|_Optional: Defaults `true`_|
 |`STOP_MODES`|`--stop-modes`|See [stop modes](#stop_modes) for more info|_Optional: Defaults `labelled,attached,linked`_|
