@@ -6,6 +6,7 @@ This also runs the builtin cron scheduler to automate executing the `backup` and
 
 |Env|Flag|Description|||
 |-|-|-|-|-|
+|`BACKUP_DIR`|`--backup-dir`|Directory containing local backups|_Required: Must be supplied_|
 |`UNIX_SOCKET`|`--unix-socket`|Path to bckupr unix socket, used by cli commands|_Optional: Defaults `.bckupr.sock`_|
 |`TCP_ADDR`|`--tcp-addr`|Tcp bind address|_Optional: Defaults `0.0.0.0:8000`_|
 |`EXPOSE_API`|`--expose-api`|Exposes API via TCP for external access|_Optional: Defaults `false`_|

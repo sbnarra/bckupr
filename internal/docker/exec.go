@@ -7,10 +7,10 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func ExecPerHost(ctx contexts.Context, hosts []string, exec func(Docker) error) error {
+func ExecPerHost(ctx contexts.Context, exec func(Docker) error) error {
 	runner := concurrent.Default(ctx, ctx.Name)
 
-	for _, dockerHost := range hosts {
+	for _, dockerHost := range ctx.DockerHosts {
 		runner.Run(func(ctx contexts.Context) error {
 			logging.Info(ctx, "Connecting to ", dockerHost)
 			client, err := client.Client(dockerHost)

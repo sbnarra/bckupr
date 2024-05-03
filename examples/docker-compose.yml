@@ -3,13 +3,12 @@ services:
     build: $PWD/..
     environment:
       DRY_RUN: false
-      BACKUP_DIR: $PWD/.test_filesystem/backups
       BACKUP_SCHEDULE: "* * * * *"
     ports:
       - 8001:8000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - $PWD/.test_filesystem/backups:$PWD/.test_filesystem/backups
+      - $PWD/.test_filesystem/backups:/backups
     # command: |
     #   sh -c "while [ true ]; do
     #     go run . debug

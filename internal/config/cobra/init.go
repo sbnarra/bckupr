@@ -13,9 +13,8 @@ func InitGlobal(cmd *cobra.Command) {
 func InitDaemon(cmd *cobra.Command) {
 	InitCron(cmd)
 
-	register(keys.BackupDir, cmd.Flags())
-	required(keys.BackupDir, cmd)
-
+	register(keys.ContainerBackupDir, cmd.Flags())
+	register(keys.HostBackupDir, cmd.Flags())
 	register(keys.UnixSocket, cmd.Flags())
 	register(keys.TcpAddr, cmd.Flags())
 	register(keys.TcpApi, cmd.Flags())

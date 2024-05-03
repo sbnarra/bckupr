@@ -13,7 +13,7 @@ func DeleteBackup(ctx contexts.Context, input *types.DeleteBackupRequest) error 
 	if input.Args.BackupId == "" {
 		return errors.New("missing backup id")
 	}
-	path := ctx.BackupDir + "/" + input.Args.BackupId
+	path := ctx.ContainerBackupDir + "/" + input.Args.BackupId
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return err

@@ -15,6 +15,15 @@ func CheckError(ctx contexts.Context, err error, msg ...any) bool {
 	return true
 }
 
+func CheckWarn(ctx contexts.Context, err error, msg ...any) bool {
+	if err == nil {
+		return false
+	}
+
+	handleLogMsgs(ctx, "WARN", append(msg, fmt.Sprintf("%T: %+v", err, err))...)
+	return true
+}
+
 func Error(ctx contexts.Context, msgs ...any) {
 	handleLogMsgs(ctx, "ERROR", msgs...)
 }

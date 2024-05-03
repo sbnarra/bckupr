@@ -41,7 +41,7 @@ func (s storage) ForEach(forEach func(*types.Backup) error) error {
 
 func loadData(ctx contexts.Context) (map[string]*types.Backup, error) {
 	backups := map[string]*types.Backup{}
-	err := filepath.Walk(ctx.BackupDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(ctx.HostBackupDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			logging.CheckError(ctx, err)
 			return err

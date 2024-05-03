@@ -44,16 +44,15 @@ func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, 
 		FileExt:    containers.Local.FileExt,
 	}
 
-	filename := ctx.BackupDir + "/" + backupId
-
-	if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
+	containerBackupDir := ctx.ContainerBackupDir + "/" + backupId
+	if _, err := os.Stat(containerBackupDir); errors.Is(err, os.ErrNotExist) {
 		if containers.Offsite != nil {
 			offsite := *containers.Offsite
-			offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, ctx.BackupDir+":/backup:rw")
+			offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, ctx.HostBackupDir+":/backup:rw")
 
 			if err := docker.Run(ctx, meta, offsite.OffsitePull); err != nil {
 				if errors.Is(err, &run.MisconfiguredTemplate{}) {
-					return fmt.Errorf("backup doesn't exist(no offsite pull template available): %v", filename)
+					return fmt.Errorf("backup doesn't exist(no offsite pull template available): %v", containerBackupDir)
 				}
 				return err
 			}
@@ -61,7 +60,7 @@ func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, 
 	}
 
 	containers.Local.Restore.Volumes = append(containers.Local.Restore.Volumes,
-		ctx.BackupDir+":/backup:ro",
+		ctx.HostBackupDir+":/backup:ro",
 		path+":/data:rw")
 	if err := docker.Run(ctx, meta, containers.Local.Restore); err != nil {
 		return err

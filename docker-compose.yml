@@ -7,7 +7,6 @@ services:
         VERSION: compose
     environment:
       DRY_RUN: ${DRY_RUN:-true}
-      BACKUP_DIR: ${BACKUP_DIR:-/tmp/backups}
     volumes:
-      - ${BACKUP_DIR:-/tmp/backups}:${BACKUP_DIR:-/tmp/backups}
       - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock
+      - ${BACKUP_DIR:-/tmp/backups}:/backups

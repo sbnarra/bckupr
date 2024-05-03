@@ -12,7 +12,7 @@ import (
 )
 
 type docker struct {
-	client client.DockerClient
+	Client client.DockerClient
 }
 
 type Docker interface {
@@ -24,23 +24,23 @@ type Docker interface {
 
 func New(client client.DockerClient) Docker {
 	return docker{
-		client: client,
+		Client: client,
 	}
 }
 
 func (d docker) Run(ctx contexts.Context, meta run.CommonEnv, template publicTypes.ContainerTemplate) error {
-	_, err := run.RunContainer(ctx, d.client, meta, template, true)
+	_, err := run.RunContainer(ctx, d.Client, meta, template, true)
 	return err
 }
 
 func (d docker) Start(ctx contexts.Context, containers *dockerTypes.Container) error {
-	return start.StartContainer(ctx, d.client, containers)
+	return start.StartContainer(ctx, d.Client, containers)
 }
 
 func (d docker) Stop(ctx contexts.Context, container *dockerTypes.Container) (bool, error) {
-	return stop.StopContainer(ctx, d.client, container)
+	return stop.StopContainer(ctx, d.Client, container)
 }
 
 func (d docker) List(labelPrefix string) (map[string]*dockerTypes.Container, error) {
-	return list.ListContainers(d.client, labelPrefix)
+	return list.ListContainers(d.Client, labelPrefix)
 }
