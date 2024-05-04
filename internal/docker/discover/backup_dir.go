@@ -46,7 +46,7 @@ func mountedBackupDir(ctx contexts.Context, dockerHost string) (string, error) {
 	}
 	version := os.Getenv("VERSION")
 
-	docker, err := client.Client(dockerHost)
+	docker, err := client.Client(ctx, dockerHost)
 	if err != nil {
 		return "", err
 	}

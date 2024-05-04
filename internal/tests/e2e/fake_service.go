@@ -78,7 +78,7 @@ func readData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, f
 	}, false)
 	defer dClient.RemoveContainer(id)
 
-	dClient.WaitForContainer(ctx, id)
+	dClient.WaitForContainer(id)
 
 	if logs, err := dClient.ContainerLogs(id); err != nil {
 		t.Fatalf("failed to get logs for %v: %v", id, err)
@@ -99,12 +99,12 @@ func startService(t *testing.T, ctx contexts.Context, dClient client.DockerClien
 	}
 }
 
-func dockerClient(t *testing.T) client.DockerClient {
+func dockerClient(t *testing.T, ctx contexts.Context) client.DockerClient {
 	var err error
 	var dClient client.DockerClient
 
 	hosts := keys.DockerHosts.Default.([]string)
-	if dClient, err = client.Client(hosts[0]); err != nil {
+	if dClient, err = client.Client(ctx, hosts[0]); err != nil {
 		t.Fatalf("failed to connect to docker: %v", err)
 	}
 	return dClient

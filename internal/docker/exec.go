@@ -13,7 +13,7 @@ func ExecPerHost(ctx contexts.Context, exec func(Docker) error) error {
 	for _, dockerHost := range ctx.DockerHosts {
 		runner.Run(func(ctx contexts.Context) error {
 			logging.Info(ctx, "Connecting to ", dockerHost)
-			client, err := client.Client(dockerHost)
+			client, err := client.Client(ctx, dockerHost)
 			if err != nil {
 				return err
 			}

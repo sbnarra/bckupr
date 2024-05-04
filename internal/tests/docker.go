@@ -4,7 +4,6 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/sbnarra/bckupr/internal/docker/client"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
@@ -53,7 +52,7 @@ func (d docker) ContainerLogs(id string) (string, error) {
 	return "_MOCKED_", d.err
 }
 
-func (d docker) WaitForContainer(ctx contexts.Context, id string) error {
+func (d docker) WaitForContainer(id string) error {
 	logging.Warn(Context, "Docker: Wait For Container")
 	return d.err
 }

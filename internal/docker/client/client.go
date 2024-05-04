@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -23,6 +22,7 @@ import (
 
 type Docker struct {
 	client *client.Client
+	ctx    contexts.Context
 }
 
 type DockerClient interface {
@@ -34,17 +34,18 @@ type DockerClient interface {
 	RemoveContainer(id string) error
 	ContainerLogs(id string) (string, error)
 	RunContainer(image string, cmd []string, env []string, volumes []string, labels map[string]string) (string, error)
-	WaitForContainer(ctx contexts.Context, id string) error
+	WaitForContainer(id string) error
 	Exec(containerId string, cmd []string, detach bool) error
 }
 
-func Client(socket string) (DockerClient, error) {
+func Client(ctx contexts.Context, socket string) (DockerClient, error) {
 	client, err := client.NewClientWithOpts(client.WithHost(socket), client.WithAPIVersionNegotiation())
 	if err != nil {
 		return Docker{}, err
 	}
 	return Docker{
 		client: client,
+		ctx:    ctx,
 	}, nil
 }
 
@@ -56,17 +57,16 @@ func (d Docker) Close() error {
 }
 
 func (d Docker) Exec(containerId string, cmd []string, detach bool) error {
-	ctx := context.Background()
 	startConfig := types.ExecStartCheck{
 		Detach: detach,
 	}
-	if create, err := d.client.ContainerExecCreate(ctx, containerId, types.ExecConfig{
+	if create, err := d.client.ContainerExecCreate(d.ctx, containerId, types.ExecConfig{
 		Cmd: cmd,
 	}); err != nil {
 		return err
-	} else if attach, err := d.client.ContainerExecAttach(ctx, create.ID, startConfig); err != nil {
+	} else if attach, err := d.client.ContainerExecAttach(d.ctx, create.ID, startConfig); err != nil {
 		return err
-	} else if err := d.client.ContainerExecStart(ctx, create.ID, startConfig); err != nil {
+	} else if err := d.client.ContainerExecStart(d.ctx, create.ID, startConfig); err != nil {
 		return err
 	} else if _, err := io.Copy(os.Stdout, attach.Reader); err != nil {
 		return err
@@ -75,30 +75,30 @@ func (d Docker) Exec(containerId string, cmd []string, detach bool) error {
 }
 
 func (d Docker) AllContainers() ([]types.Container, error) {
-	return d.client.ContainerList(context.Background(), containerTypes.ListOptions{All: true})
+	return d.client.ContainerList(d.ctx, containerTypes.ListOptions{All: true})
 }
 
 func (d Docker) FindContainers(keyValuePairs ...filters.KeyValuePair) ([]types.Container, error) {
 	filterArgs := filters.NewArgs(keyValuePairs...)
-	return d.client.ContainerList(context.Background(), containerTypes.ListOptions{
+	return d.client.ContainerList(d.ctx, containerTypes.ListOptions{
 		Filters: filterArgs,
 	})
 }
 
 func (d Docker) StopContainer(id string) error {
-	return d.client.ContainerStop(context.Background(), id, containerTypes.StopOptions{})
+	return d.client.ContainerStop(d.ctx, id, containerTypes.StopOptions{})
 }
 
 func (d Docker) StartContainer(id string) error {
-	return d.client.ContainerStart(context.Background(), id, containerTypes.StartOptions{})
+	return d.client.ContainerStart(d.ctx, id, containerTypes.StartOptions{})
 }
 
 func (d Docker) RemoveContainer(id string) error {
-	return d.client.ContainerRemove(context.Background(), id, containerTypes.RemoveOptions{})
+	return d.client.ContainerRemove(d.ctx, id, containerTypes.RemoveOptions{})
 }
 
 func (d Docker) ContainerLogs(id string) (string, error) {
-	if out, err := d.client.ContainerLogs(context.Background(), id, containerTypes.LogsOptions{
+	if out, err := d.client.ContainerLogs(d.ctx, id, containerTypes.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: false,
 	}); err != nil {
@@ -116,16 +116,16 @@ func (d Docker) ContainerLogs(id string) (string, error) {
 	}
 }
 
-func (d Docker) WaitForContainer(ctx contexts.Context, id string) error {
-	statusCh, errCh := d.client.ContainerWait(context.Background(), id, containerTypes.WaitConditionNotRunning)
+func (d Docker) WaitForContainer(id string) error {
+	statusCh, errCh := d.client.ContainerWait(d.ctx, id, containerTypes.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
-			return errors.Wrap(err, ctx.Name+"; failure waiting for container")
+			return errors.Wrap(err, d.ctx.Name+"; failure waiting for container")
 		}
 	case status := <-statusCh:
 		if status.StatusCode != 0 {
-			return errors.WithStack(errors.New(ctx.Name + "; container failure: " + fmt.Sprintf("%v", status.StatusCode)))
+			return errors.WithStack(errors.New(d.ctx.Name + "; container failure: " + fmt.Sprintf("%v", status.StatusCode)))
 		}
 	}
 	return nil
@@ -137,7 +137,7 @@ func (d Docker) RunContainer(image string, cmd []string, env []string, volumes [
 
 func (d Docker) runContainer(image string, cmd []string, env []string, volumes []string, labels map[string]string, pullIfMissing bool) (string, error) {
 	if container, err := d.client.ContainerCreate(
-		context.Background(),
+		d.ctx,
 		&containerTypes.Config{
 			Image:        image,
 			Cmd:          cmd,
@@ -169,7 +169,7 @@ func (d Docker) runContainer(image string, cmd []string, env []string, volumes [
 }
 
 func (d Docker) pullImage(name string) error {
-	if out, err := d.client.ImagePull(context.Background(), name, image.PullOptions{}); err != nil {
+	if out, err := d.client.ImagePull(d.ctx, name, image.PullOptions{}); err != nil {
 		return errors.Wrap(err, "failed to pull image: "+name)
 	} else {
 		defer out.Close()

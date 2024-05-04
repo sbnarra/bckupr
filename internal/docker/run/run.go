@@ -47,7 +47,7 @@ func runContainer(ctx contexts.Context, client client.DockerClient, template typ
 }
 
 func WaitThenLog(ctx contexts.Context, client client.DockerClient, id string) error {
-	waitErr := client.WaitForContainer(ctx, id)
+	waitErr := client.WaitForContainer(id)
 	logs, logErr := client.ContainerLogs(id)
 
 	logCtx := ctx

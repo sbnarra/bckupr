@@ -14,7 +14,7 @@ func e2e(t *testing.T,
 ) {
 	ctx := prepareIntegrationTest(t)
 
-	dClient := dockerClient(t)
+	dClient := dockerClient(t, ctx)
 	defer dClient.Close()
 
 	dummyServiceId := startDummyService(t, ctx, dClient)
