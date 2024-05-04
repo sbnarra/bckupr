@@ -2,6 +2,7 @@ package contexts_test
 
 import (
 	"context"
+	"runtime"
 	"testing"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
@@ -9,7 +10,7 @@ import (
 
 func TestFeedback(t *testing.T) {
 	var data any
-	context := contexts.Create(context.Background(), "test", "/tmp/backups", "/tmp/backups", []string{}, false, true, func(ctx contexts.Context, a any) {
+	context := contexts.Create(context.Background(), "test", runtime.NumCPU(), "/tmp/backups", "/tmp/backups", []string{}, false, true, func(ctx contexts.Context, a any) {
 		data = a
 	})
 
@@ -21,7 +22,7 @@ func TestFeedback(t *testing.T) {
 
 func TestFeedbackData(t *testing.T) {
 	var data any
-	context := contexts.Create(context.Background(), "test", "/tmp/backups", "/tmp/backups", []string{}, false, true, func(ctx contexts.Context, a any) {
+	context := contexts.Create(context.Background(), "test", runtime.NumCPU(), "/tmp/backups", "/tmp/backups", []string{}, false, true, func(ctx contexts.Context, a any) {
 		data = a
 	})
 

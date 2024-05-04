@@ -1,7 +1,10 @@
 package keys
 
+import "runtime"
+
 var DryRun = newKey("dry-run", "only log actions and not executed", true)
 var Debug = newKey("debug", "enable additional logging information", false)
+var Concurrency = newKey("concurrency", "number of concurrent tasks", runtime.NumCPU())
 
 // backup/restore shared
 var BackupId = newKey("backup-id", "backup id to use (backup tasks will autogenerate if not set)", "")
