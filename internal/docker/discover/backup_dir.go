@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/docker/client"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -36,7 +37,7 @@ func MountedBackupDir(ctx contexts.Context, dockerHosts []string) (string, error
 			return dir, nil
 		}
 	}
-	return "", fErr
+	return "", fmt.Errorf("supply --%v: %w", keys.HostBackupDir.CliId, fErr)
 }
 
 func mountedBackupDir(ctx contexts.Context, dockerHost string) (string, error) {
@@ -67,6 +68,8 @@ func mountedBackupDir(ctx contexts.Context, dockerHost string) (string, error) {
 		if c, err = detectRunningInstance(ctx, docker, found); err != nil {
 			return "", err
 		}
+	} else {
+		return "", &UnableToDetect{"bckupr container not matched with labels"}
 	}
 
 	if c == nil {

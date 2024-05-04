@@ -1,0 +1,18 @@
+#!/command/execlineb -S0
+
+foreground { redirfd -w 1 /run/s6-linux-init-container-results/exitcode echo 0 }
+/run/s6/basedir/bin/halt
+
+# #!/bin/sh
+
+# if test "$1" -eq 256 ; then
+#   e=$((128 + $2))
+# else
+#   e="$1"
+# fi
+
+# rm /tmp/.bckupr.sock
+# echo "Exit Code: $e"
+
+# echo "$e" > /run/s6-linux-init-container-results/exitcode
+# exit $e
