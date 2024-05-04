@@ -17,6 +17,7 @@ type Context struct {
 	DockerHosts        []string // initially set by daemon cli, is passed through on all other instances
 	Debug              bool
 	DryRun             bool
+	Concurrency        int
 	feedback           func(Context, any)
 }
 
@@ -25,15 +26,17 @@ func Cobra(cmd *cobra.Command, feedback func(Context, any)) (Context, error) {
 		return Context{}, err
 	} else if debug, err := cobraKeys.Bool(keys.Debug, cmd.Flags()); err != nil {
 		return Context{}, err
+	} else if concurrency, err := cobraKeys.Int(keys.Concurrency, cmd.Flags()); err != nil {
+		return Context{}, err
 	} else {
-		return Create(cmd.Context(), cmd.Use, "", "", []string{}, Debug(debug), DryRun(dryrun), feedback), nil
+		return Create(cmd.Context(), cmd.Use, concurrency, "", "", []string{}, Debug(debug), DryRun(dryrun), feedback), nil
 	}
 }
 
 type DryRun bool
 type Debug bool
 
-func Create(context context.Context, name string, containerBackupDir string, hostBackupDir string, dockerHosts []string, debug Debug, dryrun DryRun, feedback func(Context, any)) Context {
+func Create(context context.Context, name string, concurrency int, containerBackupDir string, hostBackupDir string, dockerHosts []string, debug Debug, dryrun DryRun, feedback func(Context, any)) Context {
 	return Context{
 		context,
 		name,
@@ -42,6 +45,7 @@ func Create(context context.Context, name string, containerBackupDir string, hos
 		dockerHosts,
 		bool(debug),
 		bool(dryrun),
+		concurrency,
 		feedback,
 	}
 }

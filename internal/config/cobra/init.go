@@ -8,6 +8,7 @@ import (
 func InitGlobal(cmd *cobra.Command) {
 	register(keys.DryRun, cmd.PersistentFlags())
 	register(keys.Debug, cmd.PersistentFlags())
+	register(keys.Concurrency, cmd.PersistentFlags())
 }
 
 func InitDaemon(cmd *cobra.Command) {
