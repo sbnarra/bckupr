@@ -5,19 +5,20 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/sbnarra/bckupr/internal/docker/client"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
 type docker struct {
 	containers []types.Container
-	err        error
+	err        *errors.Error
 }
 
 func Docker(containers ...types.Container) client.DockerClient {
 	return DockerE(containers, nil)
 }
 
-func DockerE(containers []types.Container, err error) client.DockerClient {
+func DockerE(containers []types.Container, err *errors.Error) client.DockerClient {
 	return docker{
 		containers: containers,
 		err:        err,
@@ -29,44 +30,44 @@ func (d docker) Close() error {
 	return d.err
 }
 
-func (d docker) AllContainers() ([]types.Container, error) {
+func (d docker) AllContainers(ctx contexts.Context) ([]types.Container, *errors.Error) {
 	return d.containers, d.err
 }
 
-func (d docker) StopContainer(id string) error {
+func (d docker) StopContainer(ctx contexts.Context, id string) *errors.Error {
 	logging.Warn(Context, "Docker: Stop Container")
-	return d.err
+	return nil
 }
 
-func (d docker) StartContainer(id string) error {
+func (d docker) StartContainer(ctx contexts.Context, id string) *errors.Error {
 	logging.Warn(Context, "Docker: Start Container")
 	return d.err
 }
 
-func (d docker) RemoveContainer(id string) error {
+func (d docker) RemoveContainer(ctx contexts.Context, id string) *errors.Error {
 	logging.Warn(Context, "Docker: Remove Container")
 	return d.err
 }
 
-func (d docker) ContainerLogs(id string) (string, error) {
+func (d docker) ContainerLogs(ctx contexts.Context, id string) (string, *errors.Error) {
 	logging.Warn(Context, "Docker: Container Logs")
 	return "_MOCKED_", d.err
 }
 
-func (d docker) WaitForContainer(ctx contexts.Context, id string) error {
+func (d docker) WaitForContainer(ctx contexts.Context, id string) *errors.Error {
 	logging.Warn(Context, "Docker: Wait For Container")
 	return d.err
 }
 
-func (d docker) RunContainer(image string, cmd []string, env []string, volumes []string, labels map[string]string) (string, error) {
+func (d docker) RunContainer(ctx contexts.Context, image string, cmd []string, env []string, volumes []string, labels map[string]string) (string, *errors.Error) {
 	logging.Warn(Context, "Docker: Run Container")
 	return "_test-container-id_", d.err
 }
 
-func (d docker) FindContainers(keyValuePairs ...filters.KeyValuePair) ([]types.Container, error) {
+func (d docker) FindContainers(ctx contexts.Context, keyValuePairs ...filters.KeyValuePair) ([]types.Container, *errors.Error) {
 	return nil, nil
 }
 
-func (d docker) Exec(containerId string, cmd []string, detach bool) error {
+func (d docker) Exec(ctx contexts.Context, containerId string, cmd []string, detach bool) *errors.Error {
 	return nil
 }

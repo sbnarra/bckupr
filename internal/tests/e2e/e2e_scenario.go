@@ -5,22 +5,23 @@ import (
 	"testing"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
 func e2e(t *testing.T,
-	backup func() error,
-	restore func() error,
-	delete func() error,
+	backup func() *errors.Error,
+	restore func() *errors.Error,
+	delete func() *errors.Error,
 ) {
 	ctx := prepareIntegrationTest(t)
 
-	dClient := dockerClient(t)
+	dClient := dockerClient(t, ctx)
 	defer dClient.Close()
 
 	dummyServiceId := startDummyService(t, ctx, dClient)
 	defer func() {
-		dClient.StopContainer(dummyServiceId)
-		dClient.RemoveContainer(dummyServiceId)
+		dClient.StopContainer(ctx, dummyServiceId)
+		dClient.RemoveContainer(ctx, dummyServiceId)
 	}()
 
 	writeAllData(t, ctx, dClient, "pre-backup")

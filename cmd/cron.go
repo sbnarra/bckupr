@@ -5,13 +5,14 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/types"
 	"github.com/spf13/cobra"
 )
 
 var instance *cron.Cron
 
-func buildCron(cmd *cobra.Command) error {
+func buildCron(cmd *cobra.Command) *errors.Error {
 	if timezone, err := cobraKeys.String(keys.TimeZone, cmd.Flags()); err != nil {
 		return err
 	} else if instance, err = cron.New(timezone); err != nil {
@@ -21,7 +22,7 @@ func buildCron(cmd *cobra.Command) error {
 	}
 }
 
-func startCron(ctx contexts.Context, cmd *cobra.Command, containers types.ContainerTemplates) error {
+func startCron(ctx contexts.Context, cmd *cobra.Command, containers types.ContainerTemplates) *errors.Error {
 	if backupSchedule, err := cobraKeys.String(keys.BackupSchedule, cmd.Flags()); err != nil {
 		return err
 	} else if backupInput, err := cobraKeys.CreateBackupRequest(cmd); err != nil {

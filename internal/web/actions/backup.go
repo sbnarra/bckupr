@@ -1,20 +1,19 @@
 package actions
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/internal/web/pages"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func BackupActionHandler(cron *cron.Cron, containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func BackupActionHandler(cron *cron.Cron, containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 		if form, err := readForm(r); err != nil {
 			return pages.RenderIndex(cron, err)(ctx, w, r)
 		} else {
@@ -26,11 +25,11 @@ func BackupActionHandler(cron *cron.Cron, containers types.ContainerTemplates) f
 				ctx.DryRun = false
 			}
 
-			var exec func() error
+			var exec func() *errors.Error
 			if action == "delete" {
 				input := types.DefaultDeleteBackupRequest()
 				input.Args.BackupId = form["id"][0]
-				exec = func() error {
+				exec = func() *errors.Error {
 					return app.DeleteBackup(ctx, input)
 				}
 			} else if action == "restore" {
@@ -38,13 +37,13 @@ func BackupActionHandler(cron *cron.Cron, containers types.ContainerTemplates) f
 				input.Args.BackupId = form["id"][0]
 
 				if len(form["volumes"]) == 0 {
-					exec = func() error {
+					exec = func() *errors.Error {
 						return errors.New("no volumes selected")
 					}
 				} else {
 					input.Args.Filters.IncludeVolumes = form["volumes"]
 					logging.Info(ctx, input.Args.Filters.IncludeVolumes)
-					exec = func() error {
+					exec = func() *errors.Error {
 						return app.RestoreBackup(ctx, input, containers)
 					}
 				}
@@ -60,14 +59,14 @@ func BackupActionHandler(cron *cron.Cron, containers types.ContainerTemplates) f
 					input.Args.BackupId = form["id-override"][0]
 				}
 
-				exec = func() error {
+				exec = func() *errors.Error {
 					_, err := app.CreateBackup(ctx, input, containers)
 					return err
 				}
 
 			} else {
-				exec = func() error {
-					return fmt.Errorf("unknown action %v", form["action"])
+				exec = func() *errors.Error {
+					return errors.Errorf("unknown action %v", form["action"])
 				}
 			}
 

@@ -8,8 +8,10 @@ import (
 	"github.com/robfig/cron/v3"
 	backups "github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/config/keys"
+	"github.com/sbnarra/bckupr/internal/interrupt"
 	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
@@ -24,14 +26,16 @@ type Cron struct {
 	RotateSchedule string
 }
 
-func New(timezone string) (*Cron, error) {
+func New(timezone string) (*Cron, *errors.Error) {
 	if location, err := time.LoadLocation(timezone); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error loading timezone: "+timezone)
 	} else {
-		return &Cron{
+		cron := &Cron{
 			stop: make(chan os.Signal, 1),
 			I:    cron.New(cron.WithLocation(location)),
-		}, nil
+		}
+		interrupt.Handle("cron", cron.Stop)
+		return cron, nil
 	}
 }
 
@@ -43,7 +47,7 @@ func (c *Cron) Start(ctx contexts.Context,
 	backupSchedule string, backupInput *types.CreateBackupRequest,
 	rotateSchedule string, rotateInput *types.RotateBackupsRequest,
 	containers types.ContainerTemplates,
-) error {
+) *errors.Error {
 	c.I.Start()
 	if backupSchedule != "" {
 		if err := c.scheduleBackup(ctx, backupSchedule, backupInput, containers); err != nil {
@@ -65,8 +69,8 @@ func (c *Cron) Start(ctx contexts.Context,
 	return nil
 }
 
-func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *types.CreateBackupRequest, containers types.ContainerTemplates) error {
-	triggerNotifyNextBackup := func() error {
+func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *types.CreateBackupRequest, containers types.ContainerTemplates) *errors.Error {
+	triggerNotifyNextBackup := func() *errors.Error {
 		return nil
 	}
 	logging.Info(ctx, "backup schedule", schedule)
@@ -78,11 +82,11 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *type
 			logging.CheckError(ctx, err, "Notify Failure")
 		}
 	}); err != nil {
-		return err
+		return errors.Wrap(err, "error adding backup cron job")
 	} else {
 		c.BackupId = id
 		c.BackupSchedule = schedule
-		triggerNotifyNextBackup = func() error {
+		triggerNotifyNextBackup = func() *errors.Error {
 			if notify, err := notifications.New("cron", input.NotificationSettings); err != nil {
 				return err
 			} else {
@@ -94,7 +98,7 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *type
 	return nil
 }
 
-func (c *Cron) scheduleRotation(ctx contexts.Context, schedule string, input *types.RotateBackupsRequest) error {
+func (c *Cron) scheduleRotation(ctx contexts.Context, schedule string, input *types.RotateBackupsRequest) *errors.Error {
 	notifyNextRotate := func() {}
 	logging.Info(ctx, "rotation schedule", schedule)
 	if id, err := c.I.AddFunc(schedule, func() {
@@ -103,7 +107,7 @@ func (c *Cron) scheduleRotation(ctx contexts.Context, schedule string, input *ty
 		}
 		notifyNextRotate()
 	}); err != nil {
-		return err
+		return errors.Wrap(err, "error adding rotation cron job")
 	} else {
 		c.RotateId = id
 		c.RotateSchedule = schedule

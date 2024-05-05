@@ -2,12 +2,13 @@ package cobra
 
 import (
 	"github.com/sbnarra/bckupr/internal/config/keys"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/types"
 	"github.com/spf13/cobra"
 )
 
-func RestoreBackupRequest(cmd *cobra.Command) (*types.RestoreBackupRequest, error) {
-	var err error
+func RestoreBackupRequest(cmd *cobra.Command) (*types.RestoreBackupRequest, *errors.Error) {
+	var err *errors.Error
 
 	var taskArgs *types.TaskArgs
 	if taskArgs, err = createTaskArgs(keys.BackupStopModes, cmd); err != nil {
@@ -25,8 +26,8 @@ func RestoreBackupRequest(cmd *cobra.Command) (*types.RestoreBackupRequest, erro
 	}, nil
 }
 
-func createNotificationSettings(cmd *cobra.Command) (*types.NotificationSettings, error) {
-	var err error
+func createNotificationSettings(cmd *cobra.Command) (*types.NotificationSettings, *errors.Error) {
+	var err *errors.Error
 
 	var notificationUrls []string
 	if notificationUrls, err = StringSlice(keys.NotificationUrls, cmd.Flags()); err != nil {
@@ -75,7 +76,7 @@ func createNotificationSettings(cmd *cobra.Command) (*types.NotificationSettings
 	}, nil
 }
 
-func DeleteRequest(cmd *cobra.Command) (*types.DeleteBackupRequest, error) {
+func DeleteRequest(cmd *cobra.Command) (*types.DeleteBackupRequest, *errors.Error) {
 	if backupArgs, err := createTaskArgs(keys.BackupStopModes, cmd); err != nil {
 		return nil, err
 	} else {
@@ -85,8 +86,8 @@ func DeleteRequest(cmd *cobra.Command) (*types.DeleteBackupRequest, error) {
 	}
 }
 
-func CreateBackupRequest(cmd *cobra.Command) (*types.CreateBackupRequest, error) {
-	var err error
+func CreateBackupRequest(cmd *cobra.Command) (*types.CreateBackupRequest, *errors.Error) {
+	var err *errors.Error
 
 	var backupArgs *types.TaskArgs
 	if backupArgs, err = createTaskArgs(keys.BackupStopModes, cmd); err != nil {
@@ -104,8 +105,8 @@ func CreateBackupRequest(cmd *cobra.Command) (*types.CreateBackupRequest, error)
 	}, nil
 }
 
-func createTaskArgs(stopModes *keys.Key, cmd *cobra.Command) (*types.TaskArgs, error) {
-	var err error
+func createTaskArgs(stopModes *keys.Key, cmd *cobra.Command) (*types.TaskArgs, *errors.Error) {
+	var err *errors.Error
 
 	var filters *types.Filters
 	if filters, err = createFilters(stopModes, cmd); err != nil {
@@ -129,8 +130,8 @@ func createTaskArgs(stopModes *keys.Key, cmd *cobra.Command) (*types.TaskArgs, e
 	}, nil
 }
 
-func createFilters(stopModesKey *keys.Key, cmd *cobra.Command) (*types.Filters, error) {
-	var err error
+func createFilters(stopModesKey *keys.Key, cmd *cobra.Command) (*types.Filters, *errors.Error) {
+	var err *errors.Error
 
 	var stopModes []string
 	if stopModes, err = StringSlice(stopModesKey, cmd.Flags()); err != nil {
@@ -166,8 +167,8 @@ func createFilters(stopModesKey *keys.Key, cmd *cobra.Command) (*types.Filters, 
 	}, nil
 }
 
-func DaemonInput(cmd *cobra.Command) (*types.DaemonInput, error) {
-	var err error
+func DaemonInput(cmd *cobra.Command) (*types.DaemonInput, *errors.Error) {
+	var err *errors.Error
 
 	var backupDir string
 	if backupDir, err = String(keys.HostBackupDir, cmd.Flags()); err != nil {
@@ -229,8 +230,8 @@ func DaemonInput(cmd *cobra.Command) (*types.DaemonInput, error) {
 
 }
 
-func RotateBackupsRequest(cmd *cobra.Command) (*types.RotateBackupsRequest, error) {
-	var err error
+func RotateBackupsRequest(cmd *cobra.Command) (*types.RotateBackupsRequest, *errors.Error) {
+	var err *errors.Error
 
 	var destroyBackups bool
 	if destroyBackups, err = Bool(keys.DestroyBackups, cmd.Flags()); err != nil {

@@ -1,16 +1,16 @@
 package filters
 
 import (
-	"errors"
 	"slices"
 	"strings"
 
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func Apply(ctx contexts.Context, unfiltered map[string]*dockerTypes.Container, filters publicTypes.Filters) (map[string]*dockerTypes.Container, error) {
+func Apply(ctx contexts.Context, unfiltered map[string]*dockerTypes.Container, filters publicTypes.Filters) (map[string]*dockerTypes.Container, *errors.Error) {
 	filtered := applyIncludeFilters(unfiltered, filters)
 	if len(filtered) == 0 {
 		return nil, errors.New("nothing to " + ctx.Name + " after applying include filters: names=" + strings.Join(filters.IncludeNames, ",") + ",volumes=" + strings.Join(filters.IncludeVolumes, ","))

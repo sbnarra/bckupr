@@ -1,7 +1,7 @@
 ARG GO_VERSION
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION:-1.22}-alpine AS app
 
-WORKDIR /src
+WORKDIR /
 COPY ./ .
 
 RUN GO111MODULE=on CGO_ENABLED=0 \
@@ -58,4 +58,4 @@ ENV LOCAL_CONTAINERS_CONFIG=/local/tar.yml
 ENV ROTATION_POLICIES_CONFIG=/rotation/policies.yaml
 ENV BCKUPR_IN_CONTAINER 1
 
-COPY --from=app /src/bckupr /bin/bckupr
+COPY --from=app /bckupr /bin/bckupr

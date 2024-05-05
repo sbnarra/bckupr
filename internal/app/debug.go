@@ -27,7 +27,7 @@ func Debug(ctx contexts.Context, network string, addr string) {
 	}
 
 	wg.Wait()
-	ctx.FeedbackJson(map[string]interface{}{"debug": "success"})
+	ctx.RespondJson(map[string]interface{}{"debug": "success"})
 }
 
 func callDebugEndpoint(ctx contexts.Context, network string, addr string, path string) error {
@@ -64,7 +64,7 @@ func callDebugEndpoint(ctx contexts.Context, network string, addr string, path s
 			log.Printf("Response from %s:\n", path)
 
 			if _, err := io.Copy(logWriter{func(format string, v ...interface{}) {
-				ctx.Feedback(fmt.Sprintf(format, v...))
+				ctx.Respond(fmt.Sprintf(format, v...))
 			}}, resp.Body); err != nil {
 				return err
 			}

@@ -7,17 +7,18 @@ import (
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/meta"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func RenderIndex(cron *cron.Cron, err error) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func RenderIndex(cron *cron.Cron, err error) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 		w.Header().Set("Content-Type", "text/html")
 
 		var backups []*types.Backup
 
 		meta, err := meta.NewReader(ctx)
-		meta.ForEach(func(b *types.Backup) error {
+		meta.ForEach(func(b *types.Backup) *errors.Error {
 			backups = append(backups, b)
 			return nil
 		})
@@ -26,7 +27,7 @@ func RenderIndex(cron *cron.Cron, err error) func(ctx contexts.Context, w http.R
 			return backups[i].Created.After(backups[j].Created)
 		})
 
-		return load(ctx, "index").Execute(w, IndexPage{
+		return loadAndExecute(ctx, "index", w, IndexPage{
 			Cron:        cronData(cron),
 			Backups:     backups,
 			BackupInput: types.DefaultCreateBackupRequest(),

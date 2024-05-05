@@ -20,7 +20,7 @@ func TestNoDaemonRunning(t *testing.T) {
 		t.Fatalf("missing expected no socket error")
 	}
 
-	if !strings.HasPrefix(err.Error(), "dial unix /tmp/.bckupr.sock:") {
+	if !strings.HasPrefix(err.Error(), "error dailing unix /tmp/.bckupr.sock") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 

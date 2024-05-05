@@ -1,24 +1,23 @@
 package concurrent
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
-	pkgErrors "github.com/pkg/errors"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
 type Concurrent struct {
-	channels []chan error
+	channels []chan *errors.Error
 	wg       sync.WaitGroup
 	limit    int
 	limiter  chan struct{}
 	ctx      contexts.Context
 }
 
-func Single(ctx contexts.Context, name string, exec func(ctx contexts.Context) error) *Concurrent {
+func Single(ctx contexts.Context, name string, exec func(ctx contexts.Context) *errors.Error) *Concurrent {
 	c := New(ctx, name, 1)
 	c.Run(exec)
 	return c
@@ -43,12 +42,12 @@ func New(ctx contexts.Context, name string, limit int) *Concurrent {
 		limiter: limiter}
 }
 
-func (c *Concurrent) Run(exec func(ctx contexts.Context) error) {
+func (c *Concurrent) Run(exec func(ctx contexts.Context) *errors.Error) {
 	c.RunN(c.ctx.Name, exec)
 }
 
-func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) error) {
-	errCh := make(chan error)
+func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) *errors.Error) {
+	errCh := make(chan *errors.Error)
 	c.channels = append(c.channels, errCh)
 	c.wg.Add(1)
 	go func() {
@@ -58,14 +57,18 @@ func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) error) {
 
 		ctx := c.ctx
 		if name == "" {
-			name := c.ctx.Name
-			ctx.Name = fmt.Sprintf("%v-%v", name, len(c.limiter))
+			ctx.Name = fmt.Sprintf("%v-%v", c.ctx.Name, len(c.limiter))
 		} else {
 			ctx.Name = name
 		}
 
-		err := exec(ctx)
-		logging.CheckError(ctx, err)
+		var err *errors.Error
+		if c.ctx.Cancelled() {
+			err = errors.Errorf("context cancelled: not running '%v'", ctx.Name)
+		} else {
+			err = exec(ctx)
+			logging.CheckError(ctx, err)
+		}
 
 		if c.limit > 0 {
 			<-c.limiter
@@ -76,10 +79,10 @@ func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) error) {
 	}()
 }
 
-func (c *Concurrent) Wait() error {
+func (c *Concurrent) Wait() *errors.Error {
 	c.wg.Wait()
 
-	var err error
+	var err *errors.Error
 	i := 0
 	for _, errCh := range c.channels {
 		i++
@@ -93,9 +96,5 @@ func (c *Concurrent) Wait() error {
 		close(errCh)
 	}
 	close(c.limiter)
-
-	if c.ctx.Debug {
-		return pkgErrors.WithStack(err)
-	}
 	return err
 }

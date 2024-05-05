@@ -11,8 +11,10 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/sbnarra/bckupr/internal/interrupt"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
@@ -34,21 +36,20 @@ func New(ctx contexts.Context, name string) *Dispatcher {
 		routes:  make(routingTable),
 		server:  server,
 	}
-	handler.HandleFunc("/", d.dispatch(ctx))
+	handler.HandleFunc("/", d.dispatch())
+	interrupt.Handle(name+" dispatcher", d.Close)
 	return d
 }
 
-func (d *Dispatcher) Close() error {
-	return d.server.Close()
+func (d *Dispatcher) Close() {
+	if err := d.server.Close(); err != nil {
+		fmt.Println(err)
+	}
 }
 
-func accept(d *Dispatcher, method string, path string) {
-	logging.Info(d.ctx, fmt.Sprintf("method=%v,path=%v", method, path))
-}
-
-func (d *Dispatcher) dispatch(ctx contexts.Context) func(w http.ResponseWriter, r *http.Request) {
+func (d *Dispatcher) dispatch() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accept(d, r.Method, r.URL.Path)
+		logging.Info(d.ctx, fmt.Sprintf("method=%v,path=%v", r.Method, r.URL.Path))
 
 		paths := d.routes[Method(r.Method)]
 
@@ -59,30 +60,33 @@ func (d *Dispatcher) dispatch(ctx contexts.Context) func(w http.ResponseWriter, 
 		if dryRunH := r.Header.Get("dry-run"); dryRunH != "" {
 			dryRun, _ = strconv.ParseBool(dryRunH)
 		} else {
-			dryRun = ctx.DryRun
+			dryRun = d.ctx.DryRun
 		}
 
 		var debug bool
 		if debugH := r.Header.Get("debug"); debugH != "" {
 			debug, _ = strconv.ParseBool(debugH)
 		} else {
-			debug = ctx.Debug
+			debug = d.ctx.Debug
 		}
 
-		ctx := contexts.Create(ctx.Context, r.URL.Path, ctx.Concurrency, ctx.ContainerBackupDir, ctx.HostBackupDir, ctx.DockerHosts, contexts.Debug(debug), contexts.DryRun(dryRun), func(ctx contexts.Context, data any) {
-			if err := feedbackToClient(w, data); err != nil {
-				logging.CheckError(ctx, err, "error feeding back to client")
-			}
-		})
-
 		for path, handler := range paths {
-			if regex, err := regexp.Compile("^" + string(path) + "$"); err != nil {
-				logging.CheckError(ctx, err)
+			regexP := "^" + string(path) + "$"
+			if regex, err := regexp.Compile(regexP); err != nil {
+				logging.CheckError(d.ctx, errors.Wrap(err, "regex failure: "+regexP))
 				continue
 			} else if !regex.MatchString(r.URL.Path) {
 				continue
-			} else if err := handler(ctx, w, r); err != nil {
-				onError(ctx, err, w)
+			}
+
+			ctx := contexts.Create(r.Context(), r.URL.Path, d.ctx.Concurrency, d.ctx.ContainerBackupDir, d.ctx.HostBackupDir, d.ctx.DockerHosts, contexts.Debug(debug), contexts.DryRun(dryRun), func(ctx contexts.Context, data any) {
+				if err := feedbackToClient(w, data); err != nil {
+					logging.CheckError(ctx, err, "error feeding back to client")
+				}
+			})
+
+			if err := handler(ctx, w, r); err != nil {
+				onError(d.ctx, err, w)
 			}
 
 			if f, o := w.(http.Flusher); o {
@@ -96,10 +100,17 @@ func (d *Dispatcher) dispatch(ctx contexts.Context) func(w http.ResponseWriter, 
 	}
 }
 
-func onError(ctx contexts.Context, err error, w http.ResponseWriter) {
+var statusIsSet = errors.New("status is set")
+
+func onError(ctx contexts.Context, err *errors.Error, w http.ResponseWriter) {
 	logging.CheckError(ctx, err)
 
-	w.WriteHeader(http.StatusInternalServerError)
+	if errors.Is(err, statusIsSet) {
+		err = errors.Unwrap(err)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
 	data := map[string]string{
 		"error": err.Error(),
 	}
@@ -107,25 +118,25 @@ func onError(ctx contexts.Context, err error, w http.ResponseWriter) {
 	w.Write([]byte(encoded))
 }
 
-func feedbackToClient(w http.ResponseWriter, data any) error {
+func feedbackToClient(w http.ResponseWriter, data any) *errors.Error {
 	if _, err := w.Write([]byte(fmt.Sprintf("%v\n", data))); err != nil {
-		return err
+		return errors.Wrap(err, "failed to write feedback to client")
 	} else if f, o := w.(http.Flusher); o {
 		f.Flush()
 	}
 	return nil
 }
 
-func ParsePayload[T any](ctx contexts.Context, input T, w http.ResponseWriter, r *http.Request) error {
+func ParsePayload[T any](ctx contexts.Context, input T, w http.ResponseWriter, r *http.Request) *errors.Error {
 	if err := json.NewDecoder(r.Body).Decode(input); err != nil {
-		return WriteError(ctx, w, http.StatusBadRequest, err.Error())
+		return WriteError(ctx, w, http.StatusBadRequest, errors.Wrap(err, "error parsing payload"))
 	}
 	return nil
 }
 
-func (d *Dispatcher) Start(network string, addr string) error {
+func (d *Dispatcher) Start(network string, addr string) *errors.Error {
 	if ln, err := net.Listen(network, addr); err != nil {
-		return err
+		return errors.Wrap(err, "failed to start listening on "+network+" "+addr)
 	} else {
 		sig := make(chan os.Signal, 1)
 		go func() {
@@ -133,13 +144,14 @@ func (d *Dispatcher) Start(network string, addr string) error {
 			<-sig
 			d.server.Shutdown(d.ctx)
 		}()
-		return d.server.Serve(ln)
+		err := d.server.Serve(ln)
+		return errors.Wrap(err, "failed to serve on "+network+" "+addr)
 	}
 }
 
 type Method string
 type Path string
-type Handler func(contexts.Context, http.ResponseWriter, *http.Request) error
+type Handler func(contexts.Context, http.ResponseWriter, *http.Request) *errors.Error
 type routingTable map[Method]map[Path]Handler
 
 func (d *Dispatcher) GET(path Path, handler Handler) *Dispatcher {
@@ -166,16 +178,16 @@ func (d *Dispatcher) EnableDebug() {
 	d.handler.HandleFunc("/debug/pprof/trace", pprof.Trace)
 }
 
-func WriteError(ctx contexts.Context, w http.ResponseWriter, status int, msg string) error {
-	w.WriteHeader(status)
+func WriteError(ctx contexts.Context, w http.ResponseWriter, status int, originErr *errors.Error) *errors.Error {
 	errData := map[string]string{
-		"error": msg}
+		"error": originErr.Error()}
 	if data, err := encodings.ToJson(errData); err != nil {
-		return err
+		return errors.Join(originErr, err)
 	} else if _, err := w.Write([]byte(data)); err != nil {
-		return err
+		return errors.Join(originErr, errors.Wrap(err, "failed to write error message"))
 	}
-	return nil
+	w.WriteHeader(status)
+	return errors.Join(statusIsSet, originErr)
 }
 
 func (d *Dispatcher) Route(method Method, path Path, handler Handler) *Dispatcher {

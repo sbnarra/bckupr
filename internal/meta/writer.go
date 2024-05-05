@@ -7,6 +7,7 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
@@ -27,7 +28,7 @@ func NewWriter(ctx contexts.Context, backupId string, backupType string) *Writer
 	}
 }
 
-func (mw *Writer) AddVolume(ctx contexts.Context, backupId string, name string, ext string, volume string, err error) {
+func (mw *Writer) AddVolume(ctx contexts.Context, backupId string, name string, ext string, volume string, err *errors.Error) {
 	var size int64
 	if ctx.DryRun {
 		size = 0
@@ -35,7 +36,7 @@ func (mw *Writer) AddVolume(ctx contexts.Context, backupId string, name string, 
 		size = s.Size()
 	} else {
 		size = -1
-		logging.CheckError(ctx, err, "failed to find backup size")
+		logging.CheckError(ctx, errors.Wrap(err, "failed to find backup size"))
 	}
 
 	errMsg := ""
@@ -53,13 +54,12 @@ func (mw *Writer) AddVolume(ctx contexts.Context, backupId string, name string, 
 	})
 }
 
-func (mw *Writer) Write(ctx contexts.Context) error {
+func (mw *Writer) Write(ctx contexts.Context) *errors.Error {
 	if yaml, err := encodings.ToYaml(mw.data); err != nil {
 		return err
 	} else {
-		return os.WriteFile(
-			mw.backupDir+"/"+mw.data.Id+"/meta.yaml",
-			bytes.NewBufferString("# DO NOT DELETE OR EDIT BY HAND\n"+yaml).Bytes(),
-			os.ModePerm)
+		content := bytes.NewBufferString("# DO NOT DELETE OR EDIT BY HAND\n" + yaml).Bytes()
+		err := os.WriteFile(mw.backupDir+"/"+mw.data.Id+"/meta.yaml", content, os.ModePerm)
+		return errors.Wrap(err, "failed to write file meta")
 	}
 }

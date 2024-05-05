@@ -9,6 +9,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/docker/client"
 	"github.com/sbnarra/bckupr/internal/docker/run"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
@@ -76,11 +77,11 @@ func readData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, f
 		Cmd:     []string{"cat", file},
 		Volumes: volumes(),
 	}, false)
-	defer dClient.RemoveContainer(id)
+	defer dClient.RemoveContainer(ctx, id)
 
 	dClient.WaitForContainer(ctx, id)
 
-	if logs, err := dClient.ContainerLogs(id); err != nil {
+	if logs, err := dClient.ContainerLogs(ctx, id); err != nil {
 		t.Fatalf("failed to get logs for %v: %v", id, err)
 		return ""
 	} else {
@@ -99,13 +100,13 @@ func startService(t *testing.T, ctx contexts.Context, dClient client.DockerClien
 	}
 }
 
-func dockerClient(t *testing.T) client.DockerClient {
-	var err error
+func dockerClient(t *testing.T, ctx contexts.Context) client.DockerClient {
+	var err *errors.Error
 	var dClient client.DockerClient
 
 	hosts := keys.DockerHosts.Default.([]string)
-	if dClient, err = client.Client(hosts[0]); err != nil {
-		t.Fatalf("failed to connect to docker: %v", err)
+	if dClient, err = client.Client(ctx, hosts[0]); err != nil {
+		t.Fatalf("failed to connect to docker: %+v", err)
 	}
 	return dClient
 }

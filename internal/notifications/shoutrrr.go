@@ -1,7 +1,6 @@
 package notifications
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/containrrr/shoutrrr/pkg/router"
 	shoutrrrTypes "github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
@@ -19,7 +19,7 @@ type Notifier struct {
 	settings *types.NotificationSettings
 }
 
-func New(action string, notificationSettings *types.NotificationSettings) (*Notifier, error) {
+func New(action string, notificationSettings *types.NotificationSettings) (*Notifier, *errors.Error) {
 	notifier := &Notifier{
 		action:   action,
 		settings: notificationSettings,
@@ -27,30 +27,30 @@ func New(action string, notificationSettings *types.NotificationSettings) (*Noti
 	if len(notificationSettings.NotificationUrls) == 0 {
 		return notifier, nil
 	} else if shoutrrr, err := shoutrrr.CreateSender(notificationSettings.NotificationUrls...); err != nil {
-		return notifier, err
+		return notifier, errors.Wrap(err, "failed to create shoutrrr sender")
 	} else {
 		notifier.shoutrrr = shoutrrr
 		return notifier, nil
 	}
 }
 
-func (n *Notifier) Send(msg string) error {
-	var err error
+func (n *Notifier) Send(msg string) *errors.Error {
+	var err *errors.Error
 	if n.shoutrrr != nil {
 		for _, sendErr := range n.shoutrrr.Send(msg, &shoutrrrTypes.Params{}) {
-			err = errors.Join(err, sendErr)
+			err = errors.Join(err, errors.Wrap(sendErr, "error sending message"))
 		}
 	}
 	return err
 }
 
-func (n *Notifier) NextBackupSchedule(ctx contexts.Context, next time.Time) error {
+func (n *Notifier) NextBackupSchedule(ctx contexts.Context, next time.Time) *errors.Error {
 	msg := fmt.Sprintf("next backup @ %v", next)
 	logging.Info(ctx, msg)
 	return n.Send(msg)
 }
 
-func (n *Notifier) JobStarted(ctx contexts.Context, id string, volumes []string) error {
+func (n *Notifier) JobStarted(ctx contexts.Context, id string, volumes []string) *errors.Error {
 	msg := fmt.Sprintf("Started Job '%v': id=%v, volumes=%v", n.action, id, volumes)
 	logging.Info(ctx, msg)
 	if n.settings.NotifyJobStarted {
@@ -59,7 +59,7 @@ func (n *Notifier) JobStarted(ctx contexts.Context, id string, volumes []string)
 	return nil
 }
 
-func (n *Notifier) TaskStarted(ctx contexts.Context, id string, volume string) error {
+func (n *Notifier) TaskStarted(ctx contexts.Context, id string, volume string) *errors.Error {
 	msg := fmt.Sprintf("Started Task '%v': id=%v, volumes=%v", n.action, id, volume)
 	logging.Info(ctx, msg)
 	if n.settings.NotifyTaskStarted {
@@ -68,7 +68,7 @@ func (n *Notifier) TaskStarted(ctx contexts.Context, id string, volume string) e
 	return nil
 }
 
-func (n *Notifier) TaskCompleted(ctx contexts.Context, id string, volume string, err error) error {
+func (n *Notifier) TaskCompleted(ctx contexts.Context, id string, volume string, err *errors.Error) *errors.Error {
 	var msg string
 	if err != nil {
 		msg = fmt.Sprintf("Completed Task '%v': id=%v, volume=%v, err=%v", n.action, id, volume, err)
@@ -85,7 +85,7 @@ func (n *Notifier) TaskCompleted(ctx contexts.Context, id string, volume string,
 	return nil
 }
 
-func (n *Notifier) JobCompleted(ctx contexts.Context, id string, volumes []string, err error) error {
+func (n *Notifier) JobCompleted(ctx contexts.Context, id string, volumes []string, err *errors.Error) *errors.Error {
 	var msg string
 	if err != nil {
 		msg = fmt.Sprintf("Completed Job %v: id=%v, volumes=%v, err=%v", n.action, id, volumes, err)

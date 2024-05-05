@@ -1,17 +1,17 @@
 package containers
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func ContainerTemplates(local string, offsite string) (types.ContainerTemplates, error) {
+func ContainerTemplates(local string, offsite string) (types.ContainerTemplates, *errors.Error) {
 	if local, err := LocalContainerTemplates(local); err != nil {
 		return types.ContainerTemplates{}, err
 	} else if offsite, err := OffsiteContainerTemplates(offsite); err != nil {
@@ -24,13 +24,13 @@ func ContainerTemplates(local string, offsite string) (types.ContainerTemplates,
 	}
 }
 
-func LocalContainerTemplates(location string) (types.LocalContainerTemplates, error) {
+func LocalContainerTemplates(location string) (types.LocalContainerTemplates, *errors.Error) {
 	config := types.LocalContainerTemplates{}
 	err := loadContainerTemplates(location, "local", &config)
 	return config, err
 }
 
-func OffsiteContainerTemplates(location string) (*types.OffsiteContainerTemplates, error) {
+func OffsiteContainerTemplates(location string) (*types.OffsiteContainerTemplates, *errors.Error) {
 	if location == "" {
 		return nil, nil
 	}
@@ -39,7 +39,7 @@ func OffsiteContainerTemplates(location string) (*types.OffsiteContainerTemplate
 	return config, err
 }
 
-func loadContainerTemplates[T any](location string, usage string, data T) error {
+func loadContainerTemplates[T any](location string, usage string, data T) *errors.Error {
 	if reader, err := getReader(location, usage); err != nil {
 		return err
 	} else {
@@ -47,9 +47,9 @@ func loadContainerTemplates[T any](location string, usage string, data T) error 
 	}
 }
 
-func getReader(location string, usage string) (io.Reader, error) {
+func getReader(location string, usage string) (io.Reader, *errors.Error) {
 	if parsed, err := url.Parse(location); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to parse: "+location)
 	} else {
 		switch parsed.Scheme {
 		case "file", "":
@@ -57,23 +57,23 @@ func getReader(location string, usage string) (io.Reader, error) {
 		case "http", "https":
 			return httpGet(location)
 		default:
-			return nil, fmt.Errorf("unsupported scheme for %v containers: '%v'", usage, parsed.Scheme)
+			return nil, errors.Errorf("unsupported scheme for %v containers: '%v'", usage, parsed.Scheme)
 		}
 	}
 }
 
-func httpGet(location string) (io.Reader, error) {
+func httpGet(location string) (io.Reader, *errors.Error) {
 	if res, err := http.Get(location); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to GET: "+location)
 	} else {
 		return res.Body, nil
 	}
 }
 
-func fileRead(location string) (io.Reader, error) {
+func fileRead(location string) (io.Reader, *errors.Error) {
 	if reader, err := os.Open(location); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to read file: "+location)
 	} else {
-		return reader, err
+		return reader, nil
 	}
 }

@@ -2,22 +2,22 @@ package meta
 
 import (
 	"bufio"
-	"errors"
 	"os"
 	"path/filepath"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
 type Reader interface {
 	Get(id string) *types.Backup
-	ForEach(forEach func(*types.Backup) error) error
+	ForEach(forEach func(*types.Backup) *errors.Error) *errors.Error
 }
 
-func NewReader(ctx contexts.Context) (Reader, error) {
+func NewReader(ctx contexts.Context) (Reader, *errors.Error) {
 	if data, err := loadData(ctx); err != nil {
 		return nil, err
 	} else {
@@ -31,19 +31,19 @@ func (s storage) Get(id string) *types.Backup {
 	return s.data[id]
 }
 
-func (s storage) ForEach(forEach func(*types.Backup) error) error {
-	var err error
+func (s storage) ForEach(forEach func(*types.Backup) *errors.Error) *errors.Error {
+	var err *errors.Error
 	for _, backup := range s.data {
 		errors.Join(err, forEach(backup))
 	}
 	return err
 }
 
-func loadData(ctx contexts.Context) (map[string]*types.Backup, error) {
+func loadData(ctx contexts.Context) (map[string]*types.Backup, *errors.Error) {
 	backups := map[string]*types.Backup{}
 	err := filepath.Walk(ctx.HostBackupDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			logging.CheckError(ctx, err)
+			logging.CheckError(ctx, errors.Wrap(err, "error walking "+path))
 			return err
 		} else if !info.IsDir() {
 			return nil
@@ -61,5 +61,5 @@ func loadData(ctx contexts.Context) (map[string]*types.Backup, error) {
 		return nil
 
 	})
-	return backups, err
+	return backups, errors.Wrap(err, "error walking "+ctx.HostBackupDir)
 }

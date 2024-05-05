@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"net/http"
 
 	cobraConf "github.com/sbnarra/bckupr/internal/config/cobra"
@@ -14,6 +13,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/daemon"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/spf13/cobra"
 )
@@ -31,17 +31,13 @@ func runDaemon(cmd *cobra.Command, args []string) error {
 		return err
 	} else {
 		runner := concurrent.New(ctx, "daemon", 2)
-		runner.RunN("cron", func(ctx contexts.Context) error {
+		runner.RunN("cron", func(ctx contexts.Context) *errors.Error {
 			return startCron(ctx, cmd, containers)
 		})
 
-		runner.RunN("bckupr", func(ctx contexts.Context) error {
-			runner, dispatchers := daemon.Start(ctx, *input, instance, containers)
-			defer func() {
-				for _, dispatcher := range dispatchers {
-					dispatcher.Close()
-				}
-			}()
+		runner.RunN("bckupr", func(ctx contexts.Context) *errors.Error {
+			runner, close := daemon.Start(ctx, *input, instance, containers)
+			defer close()
 			if err := runner.Wait(); !errors.Is(err, http.ErrServerClosed) {
 				logging.CheckError(ctx, err)
 				return err
@@ -53,10 +49,10 @@ func runDaemon(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func createDaemonContextAndInput(cmd *cobra.Command) (contexts.Context, *types.DaemonInput, error) {
+func createDaemonContextAndInput(cmd *cobra.Command) (contexts.Context, *types.DaemonInput, *errors.Error) {
 	var ctx contexts.Context
 	var input *types.DaemonInput
-	var err error
+	var err *errors.Error
 
 	if ctx, err = contexts.Cobra(cmd, feedbackViaLogs); err != nil {
 		return ctx, input, err

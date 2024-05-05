@@ -5,11 +5,12 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func RenderSettings(cron *cron.Cron, err error) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func RenderSettings(cron *cron.Cron, err error) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 		w.Header().Set("Content-Type", "text/html")
 
 		web := types.DefaultDaemonInput()
@@ -19,7 +20,7 @@ func RenderSettings(cron *cron.Cron, err error) func(ctx contexts.Context, w htt
 			notifications.NotificationUrls = append(notifications.NotificationUrls, "None Configured")
 		}
 
-		return load(ctx, "settings").Execute(w, SettingsPage{
+		return loadAndExecute(ctx, "settings", w, SettingsPage{
 			Cron: cronData(cron),
 			Global: GlobalSettings{
 				DryRun:    ctx.DryRun,

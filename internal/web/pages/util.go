@@ -3,6 +3,7 @@ package pages
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
@@ -36,6 +38,12 @@ func cronData(cron *cron.Cron) Cron {
 		NextRotate:     nextRotate,
 		RotateSchedule: rotateSchedule,
 	}
+}
+
+func loadAndExecute(ctx contexts.Context, name string, wr io.Writer, data any) *errors.Error {
+	loaded := load(ctx, name)
+	err := loaded.Execute(wr, data)
+	return errors.Wrap(err, "error executing template "+name)
 }
 
 func load(ctx contexts.Context, name string) *template.Template {

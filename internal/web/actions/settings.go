@@ -1,17 +1,16 @@
 package actions
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/web/pages"
 )
 
-func SettingsActionsHandler(cron *cron.Cron) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func SettingsActionsHandler(cron *cron.Cron) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 		if form, err := readForm(r); err != nil {
 			return pages.RenderIndex(cron, err)(ctx, w, r)
 		} else {
@@ -19,7 +18,7 @@ func SettingsActionsHandler(cron *cron.Cron) func(ctx contexts.Context, w http.R
 			if action == "cron" {
 				err = errors.New("unimplemented")
 			} else {
-				err = fmt.Errorf("unknown action %v", form["action"])
+				err = errors.Errorf("unknown action %v", form["action"])
 			}
 			return pages.RenderSettings(cron, err)(ctx, w, r)
 		}

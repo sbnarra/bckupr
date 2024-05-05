@@ -1,10 +1,9 @@
 package metrics
 
 import (
-	"fmt"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
 var (
@@ -80,14 +79,14 @@ func Restore(id string, volume string) Metrics {
 	}
 }
 
-func (m Metrics) OnComplete(err error) {
+func (m Metrics) OnComplete(err *errors.Error) {
 	m.timer.ObserveDuration()
 
 	if err != nil {
 		m.errorTotal.WithLabelValues(m.jobLabels...).Inc()
-		fmt.Printf("Error: %s (id=%s, volume=%s, err=%s)", m.action, m.id, m.volume, err)
+		// fmt.Printf("Error: %s (id=%s, volume=%s, err=%s)", m.action, m.id, m.volume, err)
 	} else {
 		m.successTotal.WithLabelValues(m.jobLabels...).Inc()
-		fmt.Printf("Success: %s (id=%s, volume=%s)", m.action, m.id, m.volume)
+		// fmt.Printf("Success: %s (id=%s, volume=%s)", m.action, m.id, m.volume)
 	}
 }
