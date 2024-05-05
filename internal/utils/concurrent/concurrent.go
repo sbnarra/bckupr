@@ -58,14 +58,18 @@ func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) error) {
 
 		ctx := c.ctx
 		if name == "" {
-			name := c.ctx.Name
-			ctx.Name = fmt.Sprintf("%v-%v", name, len(c.limiter))
+			ctx.Name = fmt.Sprintf("%v-%v", c.ctx.Name, len(c.limiter))
 		} else {
 			ctx.Name = name
 		}
 
-		err := exec(ctx)
-		logging.CheckError(ctx, err)
+		var err error
+		if c.ctx.Cancelled() {
+			err = fmt.Errorf("context cancelled: not running '%v'", ctx.Name)
+		} else {
+			err = exec(ctx)
+			logging.CheckError(ctx, err)
+		}
 
 		if c.limit > 0 {
 			<-c.limiter

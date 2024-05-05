@@ -53,7 +53,7 @@ func (c *Client) send(method string, path string, request any) error {
 
 func (c *Client) sendRequest(method string, path string, payload []byte, conn net.Conn) error {
 	url := c.protocol + "://" + c.reqAddr + path
-	if req, err := http.NewRequest(method, url, bytes.NewBuffer(payload)); err != nil {
+	if req, err := http.NewRequestWithContext(c.ctx, method, url, bytes.NewBuffer(payload)); err != nil {
 		return err
 	} else {
 		req.Header.Set("Content-Type", "application/json")
