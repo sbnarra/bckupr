@@ -2,7 +2,7 @@ package contexts
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	cobraKeys "github.com/sbnarra/bckupr/internal/config/cobra"
 	"github.com/sbnarra/bckupr/internal/config/keys"
@@ -52,18 +52,7 @@ func Create(context context.Context, name string, concurrency int, containerBack
 }
 
 func (c Context) Cancelled() bool {
-	select {
-	case <-c.Context.Done():
-		switch c.Context.Err() {
-		case context.DeadlineExceeded:
-			fmt.Println("context timeout exceeded")
-			return true
-		case context.Canceled:
-			fmt.Println("context cancelled by force. whole process is complete")
-			return true
-		}
-	}
-	return false
+	return errors.Is(c.Context.Err(), context.Canceled)
 }
 
 func (c Context) Feedback(data any) {
