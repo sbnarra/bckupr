@@ -1,0 +1,5 @@
+api/openapi.yaml
+internal/openapi/README.md
+Dockerfile
+go.mod
+main.go
