@@ -70,27 +70,23 @@ func (c *Cron) Start(ctx contexts.Context,
 }
 
 func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *types.CreateBackupRequest, containers types.ContainerTemplates) *errors.Error {
-	triggerNotifyNextBackup := func() *errors.Error {
-		return nil
-	}
+	triggerNotifyNextBackup := func() {}
 	logging.Info(ctx, "backup schedule", schedule)
 	if id, err := c.I.AddFunc(schedule, func() {
 		if id, err := backups.CreateBackup(ctx, input, containers); err != nil {
 			logging.CheckError(ctx, err, "Backup Failure", id)
 		}
-		if err := triggerNotifyNextBackup(); err != nil {
-			logging.CheckError(ctx, err, "Notify Failure")
-		}
+		triggerNotifyNextBackup()
 	}); err != nil {
 		return errors.Wrap(err, "error adding backup cron job")
 	} else {
 		c.BackupId = id
 		c.BackupSchedule = schedule
-		triggerNotifyNextBackup = func() *errors.Error {
-			if notify, err := notifications.New("cron", input.NotificationSettings); err != nil {
-				return err
+		triggerNotifyNextBackup = func() {
+			if notify, err := notifications.New("cron", input.NotificationSettings); err == nil {
+				notify.NextBackupSchedule(ctx, c.I.Entry(c.BackupId).Next)
 			} else {
-				return notify.NextBackupSchedule(ctx, c.I.Entry(c.BackupId).Next)
+				logging.CheckError(ctx, err, "failed to create notifier")
 			}
 		}
 		triggerNotifyNextBackup()

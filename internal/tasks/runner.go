@@ -1,6 +1,8 @@
 package tasks
 
 import (
+	"time"
+
 	"github.com/sbnarra/bckupr/internal/docker"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/filters"
@@ -39,15 +41,12 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 			backupVolumes = append(backupVolumes, task.Volume)
 		}
 
-		ctx.RespondJson(eventBase(ctx, action, args.BackupId, "starting", backupVolumes))
-		defer ctx.RespondJson(eventBase(ctx, action, args.BackupId, "completed", backupVolumes))
-
 		var notify *notifications.Notifier
 		if notify, err = notifications.New(action, notificationSettings); err != nil {
 			return err
-		} else if err := notify.JobStarted(ctx, args.BackupId, backupVolumes); err != nil {
-			logging.CheckError(ctx, err, "failed to send job started notification")
 		}
+		notify.JobStarted(ctx, action, args.BackupId, backupVolumes)
+		jobStarted := time.Now()
 
 		taskCh := make(chan *task)
 		completedTaskListener := startupListener(ctx, docker, taskCh)
@@ -55,25 +54,18 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 		actionTask := concurrent.Default(ctx, action)
 		for name, task := range tasks {
 			actionTask.Run(func(ctx contexts.Context) *errors.Error {
+				taskStarted := time.Now()
+				notify.TaskStarted(ctx, args.BackupId, task.Volume)
 
 				var runErr *errors.Error
 				if runErr = stopContainers(ctx, docker, task); runErr == nil {
-
-					if err := notify.TaskStarted(ctx, args.BackupId, task.Volume); err != nil {
-						logging.CheckError(ctx, err, "failed to send task started notification")
-					}
-
 					runErr = exec(ctx, docker, args.BackupId, name, task.Volume)
-
-					feedbackOnComplete(ctx, action, args.BackupId, task.Volume, runErr)
-					if err := notify.TaskCompleted(ctx, args.BackupId, task.Volume, runErr); err != nil {
-						logging.CheckError(ctx, err, "failed to send task completed notification")
-					}
 					task.Completed = true
 				} else {
-					logging.Error(ctx, "failed to stop the containers")
+					logging.CheckError(ctx, runErr, "failed to stop the containers")
 				}
 
+				notify.TaskCompleted(ctx, action, args.BackupId, task.Volume, taskStarted, runErr)
 				taskCh <- task
 				return runErr
 			})
@@ -81,9 +73,7 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 
 		err := actionTask.Wait()
 		taskCh <- nil
-		if err := notify.JobCompleted(ctx, args.BackupId, backupVolumes, err); err != nil {
-			logging.CheckError(ctx, err, "failed to send job completed notification")
-		}
+		notify.JobCompleted(ctx, action, args.BackupId, backupVolumes, jobStarted, err)
 		return completedTaskListener.Wait()
 	}
 }
@@ -117,23 +107,4 @@ func stopContainers(ctx contexts.Context, docker docker.Docker, task *task) *err
 		})
 	}
 	return stopper.Wait()
-}
-
-func eventBase(ctx contexts.Context, action string, backupId string, status string, volumes []string) map[string]any {
-	return map[string]any{
-		"action":    action,
-		"dry-run":   ctx.DryRun,
-		"backup-id": backupId,
-		"status":    status,
-		"volumes":   volumes,
-	}
-}
-
-func feedbackOnComplete(ctx contexts.Context, action string, backupId string, volume string, execErr *errors.Error) {
-	data := eventBase(ctx, action, backupId, "successful", []string{volume})
-	if execErr != nil {
-		data["status"] = "error"
-		data["error"] = execErr.Error()
-	}
-	ctx.RespondJson(data)
 }

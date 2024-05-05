@@ -81,12 +81,9 @@ func Restore(id string, volume string) Metrics {
 
 func (m Metrics) OnComplete(err *errors.Error) {
 	m.timer.ObserveDuration()
-
 	if err != nil {
 		m.errorTotal.WithLabelValues(m.jobLabels...).Inc()
-		// fmt.Printf("Error: %s (id=%s, volume=%s, err=%s)", m.action, m.id, m.volume, err)
 	} else {
 		m.successTotal.WithLabelValues(m.jobLabels...).Inc()
-		// fmt.Printf("Success: %s (id=%s, volume=%s)", m.action, m.id, m.volume)
 	}
 }
