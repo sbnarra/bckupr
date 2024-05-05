@@ -5,6 +5,7 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/web/actions"
 	"github.com/sbnarra/bckupr/internal/web/dispatcher"
 	"github.com/sbnarra/bckupr/internal/web/pages"
@@ -12,7 +13,7 @@ import (
 )
 
 func Register(d *dispatcher.Dispatcher, cron *cron.Cron, containers types.ContainerTemplates) {
-	d.GET("/", func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+	d.GET("/", func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 		http.Redirect(w, r, "/ui", http.StatusPermanentRedirect)
 		return nil
 	})

@@ -5,12 +5,13 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func backupSchedule(cron *cron.Cron) func(contexts.Context, http.ResponseWriter, *http.Request) error {
-	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func backupSchedule(cron *cron.Cron) func(contexts.Context, http.ResponseWriter, *http.Request) *errors.Error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 		entry := cron.I.Entry(cron.BackupId)
-		ctx.FeedbackJson(map[string]any{
+		ctx.RespondJson(map[string]any{
 			"next":      entry.Next,
 			"afterNext": entry.Schedule.Next(entry.Next),
 			"schedule":  cron.BackupSchedule,

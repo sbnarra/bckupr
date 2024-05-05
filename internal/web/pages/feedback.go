@@ -5,13 +5,14 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func RenderFeedback(cron *cron.Cron, action string, exec func() error) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func RenderFeedback(cron *cron.Cron, action string, exec func() *errors.Error) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 		w.Header().Set("Content-Type", "text/html")
 
-		if err := load(ctx, "feedback-pre_exec").Execute(w, FeedbackPage{
+		if err := loadAndExecute(ctx, "feedback-pre_exec", w, FeedbackPage{
 			Action: action,
 			Cron:   cronData(cron),
 		}); err != nil {
@@ -20,7 +21,7 @@ func RenderFeedback(cron *cron.Cron, action string, exec func() error) func(ctx 
 
 		execErr := exec()
 
-		return load(ctx, "feedback-post_exec").Execute(w, FeedbackPage{
+		return loadAndExecute(ctx, "feedback-post_exec", w, FeedbackPage{
 			Action: action,
 			Cron:   cronData(cron),
 			Error:  execErr,

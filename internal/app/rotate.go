@@ -2,7 +2,6 @@ package app
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/meta"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/types"
 	"github.com/xhit/go-str2duration/v2"
@@ -31,11 +31,11 @@ type RotatePolicies struct {
 	Policies []RotatePolicy `json:"policies"`
 }
 
-func Rotate(ctx contexts.Context, input *types.RotateBackupsRequest) error {
+func Rotate(ctx contexts.Context, input *types.RotateBackupsRequest) *errors.Error {
 	policies := &RotatePolicies{}
 	if _, err := os.Stat(input.PoliciesPath); err == nil {
 		if handle, err := os.Open(input.PoliciesPath); err != nil {
-			return err
+			return errors.Wrap(err, "failed to read: "+input.PoliciesPath)
 		} else if err := encodings.FromYaml(bufio.NewReader(handle), policies); err != nil {
 			return err
 		}
@@ -55,7 +55,7 @@ func Rotate(ctx contexts.Context, input *types.RotateBackupsRequest) error {
 	}
 }
 
-func sortAndValidate(policies []RotatePolicy) error {
+func sortAndValidate(policies []RotatePolicy) *errors.Error {
 	sort.Slice(policies, func(i, j int) bool {
 		return policies[i].Period.From < policies[j].Period.From
 	})
@@ -72,7 +72,7 @@ func sortAndValidate(policies []RotatePolicy) error {
 			} else if policyStart, _, err := parsePeriod(policy.Period); err != nil {
 				return err
 			} else if policyStart.After(lastPolicyEnd) {
-				return fmt.Errorf("invalid policy periods: last policy to: %v < policy from: %v", lastPolicy.Period.To, policy.Period.From)
+				return errors.Errorf("invalid policy periods: last policy to: %v < policy from: %v", lastPolicy.Period.To, policy.Period.From)
 			}
 		}
 		lastPolicy = &policy
@@ -80,13 +80,13 @@ func sortAndValidate(policies []RotatePolicy) error {
 	return nil
 }
 
-func parsePeriod(period Period) (time.Time, time.Time, error) {
+func parsePeriod(period Period) (time.Time, time.Time, *errors.Error) {
 	policyStart := time.Now()
 	policyEnd := time.Now()
 	if fromDuration, err := str2duration.ParseDuration(period.From); err != nil {
-		return policyStart, policyEnd, err
+		return policyStart, policyEnd, errors.Wrap(err, "failed to parse: "+period.From)
 	} else if toDuration, err := str2duration.ParseDuration(period.To); err != nil {
-		return policyStart, policyEnd, err
+		return policyStart, policyEnd, errors.Wrap(err, "failed to parse: "+period.To)
 	} else {
 		policyStart = policyStart.Add(fromDuration)
 		policyEnd = policyEnd.Add(toDuration)
@@ -94,12 +94,12 @@ func parsePeriod(period Period) (time.Time, time.Time, error) {
 	}
 }
 
-func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy, reader meta.Reader) error {
+func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy, reader meta.Reader) *errors.Error {
 	if policyStart, policyEnd, err := parsePeriod(policy.Period); err != nil {
 		return err
 	} else {
 		backups := []*types.Backup{}
-		reader.ForEach(func(b *types.Backup) error {
+		reader.ForEach(func(b *types.Backup) *errors.Error {
 			if b.Created.After(policyStart) && b.Created.Before(policyEnd) {
 				backups = append(backups, b)
 			}
@@ -146,19 +146,20 @@ func rotateBackups(ctx contexts.Context, destroyBackups bool, backups []*types.B
 	}
 }
 
-func rotateBackup(ctx contexts.Context, destroyBackups bool, backupPath string, binPath string) error {
+func rotateBackup(ctx contexts.Context, destroyBackups bool, backupPath string, binPath string) *errors.Error {
 	if !destroyBackups {
 		logging.Info(ctx, "ln", backupPath, binPath)
 		if !ctx.DryRun {
 			if err := os.Link(backupPath, binPath); err != nil {
-				return err
+				return errors.Wrap(err, "failed to link "+backupPath+" to "+binPath)
 			}
 		}
 	}
 
 	logging.Info(ctx, "rm -rf", backupPath)
 	if !ctx.DryRun {
-		return os.RemoveAll(backupPath)
+		err := os.RemoveAll(backupPath)
+		return errors.Wrap(err, "failed to remove "+backupPath)
 	}
 	return nil
 }

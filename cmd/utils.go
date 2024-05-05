@@ -6,6 +6,7 @@ import (
 	cobraKeys "github.com/sbnarra/bckupr/internal/config/cobra"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/api"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +16,7 @@ func feedbackViaLogs(ctx contexts.Context, data any) {
 	fmt.Println(data)
 }
 
-func createClient(ctx contexts.Context, cmd *cobra.Command) (*api.Client, error) {
+func createClient(ctx contexts.Context, cmd *cobra.Command) (*api.Client, *errors.Error) {
 	if network, err := cobraKeys.String(keys.DaemonNet, cmd.Flags()); err != nil {
 		return nil, err
 	} else if protocol, err := cobraKeys.String(keys.DaemonProtocol, cmd.Flags()); err != nil {

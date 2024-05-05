@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
 type Client struct {
@@ -40,21 +41,21 @@ func New(ctx contexts.Context, network string, protocol string, conAddr string, 
 	}
 }
 
-func (c *Client) send(method string, path string, request any) error {
+func (c *Client) send(method string, path string, request any) *errors.Error {
 	if payload, err := json.Marshal(request); err != nil {
-		return err
+		return errors.Wrap(err, "error marshalling request")
 	} else if conn, err := net.Dial(c.network, c.conAddr); err != nil {
-		return err
+		return errors.Wrap(err, "error dailing "+c.network+" "+c.conAddr)
 	} else {
 		defer conn.Close()
 		return c.sendRequest(method, path, payload, conn)
 	}
 }
 
-func (c *Client) sendRequest(method string, path string, payload []byte, conn net.Conn) error {
+func (c *Client) sendRequest(method string, path string, payload []byte, conn net.Conn) *errors.Error {
 	url := c.protocol + "://" + c.reqAddr + path
 	if req, err := http.NewRequestWithContext(c.ctx, method, url, bytes.NewBuffer(payload)); err != nil {
-		return err
+		return errors.Wrap(err, "error creating new request")
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 
@@ -70,18 +71,18 @@ func (c *Client) sendRequest(method string, path string, payload []byte, conn ne
 		}
 
 		if resp, err := client.Do(req); err != nil {
-			return err
+			return errors.Wrap(err, "error sending request")
 		} else {
 			err := c.logResponse(resp)
 			if (resp.StatusCode / 100) != 2 {
-				return fmt.Errorf("error %v", resp.StatusCode)
+				return errors.Errorf("error %v", resp.StatusCode)
 			}
 			return err
 		}
 	}
 }
 
-func (c *Client) logResponse(resp *http.Response) error {
+func (c *Client) logResponse(resp *http.Response) *errors.Error {
 	reader := bufio.NewReader(resp.Body)
 	counter := 0
 	for {
@@ -94,7 +95,7 @@ func (c *Client) logResponse(resp *http.Response) error {
 			if err == io.EOF {
 				break
 			}
-			return err
+			return errors.Wrap(err, "error reading response")
 		}
 	}
 	return nil

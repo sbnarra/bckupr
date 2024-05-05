@@ -13,7 +13,7 @@ func TestFeedback(t *testing.T) {
 		data = a
 	})
 
-	context.Feedback("hello")
+	context.Respond("hello")
 	if data != "hello" {
 		t.Errorf("expect data to be 'hello': %v", data)
 	}
@@ -25,7 +25,7 @@ func TestFeedbackData(t *testing.T) {
 		data = a
 	})
 
-	context.FeedbackJson("hello")
+	context.RespondJson("hello")
 	if data != "\"hello\"" {
 		t.Errorf("expect data to be '\"hello\"': %v", data)
 	}

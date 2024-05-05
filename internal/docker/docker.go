@@ -8,6 +8,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/docker/stop"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
@@ -16,10 +17,10 @@ type docker struct {
 }
 
 type Docker interface {
-	Run(contexts.Context, run.CommonEnv, publicTypes.ContainerTemplate) error
-	Start(contexts.Context, *dockerTypes.Container) error
-	Stop(contexts.Context, *dockerTypes.Container) (bool, error)
-	List(labelPrefix string) (map[string]*dockerTypes.Container, error)
+	Run(contexts.Context, run.CommonEnv, publicTypes.ContainerTemplate) *errors.Error
+	Start(contexts.Context, *dockerTypes.Container) *errors.Error
+	Stop(contexts.Context, *dockerTypes.Container) (bool, *errors.Error)
+	List(contexts.Context, string) (map[string]*dockerTypes.Container, *errors.Error)
 }
 
 func New(client client.DockerClient) Docker {
@@ -28,19 +29,19 @@ func New(client client.DockerClient) Docker {
 	}
 }
 
-func (d docker) Run(ctx contexts.Context, meta run.CommonEnv, template publicTypes.ContainerTemplate) error {
+func (d docker) Run(ctx contexts.Context, meta run.CommonEnv, template publicTypes.ContainerTemplate) *errors.Error {
 	_, err := run.RunContainer(ctx, d.Client, meta, template, true)
 	return err
 }
 
-func (d docker) Start(ctx contexts.Context, containers *dockerTypes.Container) error {
+func (d docker) Start(ctx contexts.Context, containers *dockerTypes.Container) *errors.Error {
 	return start.StartContainer(ctx, d.Client, containers)
 }
 
-func (d docker) Stop(ctx contexts.Context, container *dockerTypes.Container) (bool, error) {
+func (d docker) Stop(ctx contexts.Context, container *dockerTypes.Container) (bool, *errors.Error) {
 	return stop.StopContainer(ctx, d.Client, container)
 }
 
-func (d docker) List(labelPrefix string) (map[string]*dockerTypes.Container, error) {
-	return list.ListContainers(d.Client, labelPrefix)
+func (d docker) List(ctx contexts.Context, labelPrefix string) (map[string]*dockerTypes.Container, *errors.Error) {
+	return list.ListContainers(ctx, d.Client, labelPrefix)
 }

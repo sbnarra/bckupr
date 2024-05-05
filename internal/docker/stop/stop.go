@@ -5,17 +5,18 @@ import (
 	"github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func StopContainer(ctx contexts.Context, client client.DockerClient, container *types.Container) (bool, error) {
+func StopContainer(ctx contexts.Context, client client.DockerClient, container *types.Container) (bool, *errors.Error) {
 	if !container.Running {
 		return false, nil
 	}
 
 	linkedStopper := concurrent.Default(ctx, "linked-stopper")
 	for _, linked := range container.Linked {
-		linkedStopper.Run(func(ctx contexts.Context) error {
+		linkedStopper.Run(func(ctx contexts.Context) *errors.Error {
 			_, err := StopContainer(ctx, client, linked)
 			return err
 		})
@@ -41,7 +42,7 @@ func StopContainer(ctx contexts.Context, client client.DockerClient, container *
 
 	if ctx.DryRun {
 		logging.Info(ctx, "Dry-Run! Stopped", container.Name)
-	} else if err := client.StopContainer(container.Id); err != nil {
+	} else if err := client.StopContainer(ctx, container.Id); err != nil {
 		return true, err
 	} else {
 		logging.Debug(ctx, "Stopped", container.Name)

@@ -14,12 +14,8 @@ func TestRestoreMissingBackupId(t *testing.T) {
 	ctx := prepareIntegrationTest(t)
 
 	daemonInput := types.DefaultDaemonInput()
-	_, dispatchers := daemon.Start(ctx, daemonInput, nil, types.ContainerTemplates{})
-	defer func() {
-		for _, dispatcher := range dispatchers {
-			dispatcher.Close()
-		}
-	}()
+	_, close := daemon.Start(ctx, daemonInput, nil, types.ContainerTemplates{})
+	defer close()
 
 	time.Sleep(2 * time.Second)
 

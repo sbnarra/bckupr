@@ -5,12 +5,13 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/app"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/web/dispatcher"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func createBackup(containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func createBackup(containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 		input := types.DefaultCreateBackupRequest()
 		if err := dispatcher.ParsePayload(ctx, input, w, r); err != nil {
 			return err
@@ -20,11 +21,11 @@ func createBackup(containers types.ContainerTemplates) func(ctx contexts.Context
 	}
 }
 
-func listBackups(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func listBackups(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 	return app.ListBackups(ctx)
 }
 
-func deleteBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func deleteBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 	input := types.DefaultDeleteBackupRequest()
 	if err := dispatcher.ParsePayload(ctx, input, w, r); err != nil {
 		return err
@@ -32,8 +33,8 @@ func deleteBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) 
 	return app.DeleteBackup(ctx, input)
 }
 
-func restoreBackup(containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
-	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) error {
+func restoreBackup(containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
+	return func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
 		input := types.DefaultRestoreBackupRequest()
 		if err := dispatcher.ParsePayload(ctx, input, w, r); err != nil {
 			return err

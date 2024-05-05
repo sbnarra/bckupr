@@ -4,23 +4,24 @@ import (
 	"fmt"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func CheckError(ctx contexts.Context, err error, msg ...any) bool {
+func CheckError(ctx contexts.Context, err *errors.Error, msg ...any) bool {
 	if err == nil {
 		return false
 	}
-
-	handleLogMsgs(ctx, "WARN", append(msg, fmt.Sprintf("%T: %+v", err, err))...)
+	origin := err.Origin()
+	handleLogMsgs(ctx, "WARN", append(msg, fmt.Sprintf("%T: %+v", origin, origin))...)
 	return true
 }
 
-func CheckWarn(ctx contexts.Context, err error, msg ...any) bool {
+func CheckWarn(ctx contexts.Context, err *errors.Error, msg ...any) bool {
 	if err == nil {
 		return false
 	}
-
-	handleLogMsgs(ctx, "WARN", append(msg, fmt.Sprintf("%T: %+v", err, err))...)
+	origin := err.Origin()
+	handleLogMsgs(ctx, "WARN", append(msg, fmt.Sprintf("%T: %+v", origin, origin))...)
 	return true
 }
 

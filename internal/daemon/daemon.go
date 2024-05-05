@@ -5,6 +5,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/internal/web"
 	"github.com/sbnarra/bckupr/internal/web/dispatcher"
@@ -12,17 +13,23 @@ import (
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func Start(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates) (*concurrent.Concurrent, []*dispatcher.Dispatcher) {
+func Start(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates) (*concurrent.Concurrent, func()) {
 	runner := concurrent.New(ctx, "daemon", 2)
-	dispatchers := []*dispatcher.Dispatcher{}
-	dispatchers = append(dispatchers, unixDispatcher(ctx, input, cron, containers, runner))
+	unix := runUnixDispatcher(ctx, input, cron, containers, runner)
+	var tcp *dispatcher.Dispatcher
 	if enableTcp(input) {
-		dispatchers = append(dispatchers, tcpDispatcher(ctx, input, cron, containers, runner))
+		tcp = runTcpDispatcher(ctx, input, cron, containers, runner)
 	}
-	return runner, dispatchers
+
+	return runner, func() {
+		unix.Close()
+		if tcp != nil {
+			tcp.Close()
+		}
+	}
 }
 
-func unixDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
+func runUnixDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
 	d := dispatcher.New(ctx, "unix")
 	endpoints.Register(d, cron, input.UnixSocket, containers)
 	if ctx.Debug {
@@ -30,14 +37,14 @@ func unixDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cr
 		d.EnableDebug()
 	}
 
-	dispatchers.RunN("unix", func(ctx contexts.Context) error {
+	dispatchers.RunN("unix", func(ctx contexts.Context) *errors.Error {
 		logging.Info(ctx, "using socket", input.UnixSocket)
 		return d.Start("unix", input.UnixSocket)
 	})
 	return d
 }
 
-func tcpDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
+func runTcpDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
 	d := dispatcher.New(ctx, "tcp")
 	if input.UI {
 		logging.Debug(ctx, "ui enabled")
@@ -52,7 +59,7 @@ func tcpDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cro
 		d.Handle("/metrics", promhttp.Handler())
 	}
 
-	dispatchers.RunN("tcp", func(ctx contexts.Context) error {
+	dispatchers.RunN("tcp", func(ctx contexts.Context) *errors.Error {
 		logging.Info(ctx, "listening on", input.TcpAddr)
 		return d.Start("tcp", input.TcpAddr)
 	})

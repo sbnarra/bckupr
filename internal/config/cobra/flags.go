@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sbnarra/bckupr/internal/config/keys"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -48,34 +49,34 @@ func required(key *keys.Key, cmd *cobra.Command) {
 	}
 }
 
-func String(key *keys.Key, flags *pflag.FlagSet) (string, error) {
+func String(key *keys.Key, flags *pflag.FlagSet) (string, *errors.Error) {
 	val, err := flags.GetString(key.CliId)
 	if err == nil && len(val) != 0 {
 		os.Setenv(key.EnvId(), val)
 	}
-	return val, err
+	return val, errors.Wrap(err, "error reading string --"+key.CliId)
 }
 
-func Int(key *keys.Key, flags *pflag.FlagSet) (int, error) {
+func Int(key *keys.Key, flags *pflag.FlagSet) (int, *errors.Error) {
 	val, err := flags.GetInt(key.CliId)
 	if err == nil {
 		os.Setenv(key.EnvId(), strconv.Itoa(val))
 	}
-	return val, err
+	return val, errors.Wrap(err, "error reading int --"+key.CliId)
 }
 
-func StringSlice(key *keys.Key, flags *pflag.FlagSet) ([]string, error) {
+func StringSlice(key *keys.Key, flags *pflag.FlagSet) ([]string, *errors.Error) {
 	val, err := flags.GetStringSlice(key.CliId)
 	if err == nil && len(val) != 0 {
 		os.Setenv(key.EnvId(), strings.Join(val, ","))
 	}
-	return val, err
+	return val, errors.Wrap(err, "error reading []string --"+key.CliId)
 }
 
-func Bool(key *keys.Key, flags *pflag.FlagSet) (bool, error) {
+func Bool(key *keys.Key, flags *pflag.FlagSet) (bool, *errors.Error) {
 	val, err := flags.GetBool(key.CliId)
 	if err == nil {
 		os.Setenv(key.EnvId(), strconv.FormatBool(val))
 	}
-	return val, err
+	return val, errors.Wrap(err, "error reading bool --"+key.CliId)
 }

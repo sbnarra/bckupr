@@ -1,8 +1,6 @@
 package app
 
 import (
-	"errors"
-	"fmt"
 	"os"
 
 	"github.com/sbnarra/bckupr/internal/docker"
@@ -10,10 +8,11 @@ import (
 	"github.com/sbnarra/bckupr/internal/metrics"
 	"github.com/sbnarra/bckupr/internal/tasks"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest, containers publicTypes.ContainerTemplates) error {
+func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest, containers publicTypes.ContainerTemplates) *errors.Error {
 	if input.Args.BackupId == "" {
 		return errors.New("missing backup id")
 	}
@@ -29,7 +28,7 @@ func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest
 }
 
 func newRestoreBackupTask(containers publicTypes.ContainerTemplates) tasks.Exec {
-	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string) error {
+	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string) *errors.Error {
 		m := metrics.Restore(backupId, name)
 		err := restoreBackup(ctx, docker, backupId, name, path, containers)
 		m.OnComplete(err)
@@ -37,7 +36,7 @@ func newRestoreBackupTask(containers publicTypes.ContainerTemplates) tasks.Exec 
 	}
 }
 
-func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string, containers publicTypes.ContainerTemplates) error {
+func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string, containers publicTypes.ContainerTemplates) *errors.Error {
 	meta := run.CommonEnv{
 		BackupId:   backupId,
 		VolumeName: name,
@@ -51,8 +50,8 @@ func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, 
 			offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, ctx.HostBackupDir+":/backup:rw")
 
 			if err := docker.Run(ctx, meta, offsite.OffsitePull); err != nil {
-				if errors.Is(err, &run.MisconfiguredTemplate{}) {
-					return fmt.Errorf("backup doesn't exist(no offsite pull template available): %v", containerBackupDir)
+				if errors.Is(err, run.MisconfiguredTemplate) {
+					return errors.Errorf("backup doesn't exist(no offsite pull template available): %v", containerBackupDir)
 				}
 				return err
 			}

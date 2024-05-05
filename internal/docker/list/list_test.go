@@ -11,7 +11,7 @@ func TestList(t *testing.T) {
 
 	docker := tests_test.Docker(types.Container{})
 
-	containers, err := ListContainers(docker, "bckupr")
+	containers, err := ListContainers(tests_test.Context, docker, "bckupr")
 	if err != nil {
 		t.Fatalf("error listing containers: %v", err)
 	}

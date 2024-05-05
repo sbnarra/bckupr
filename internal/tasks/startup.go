@@ -6,11 +6,15 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
 func startupListener(ctx contexts.Context, docker docker.Docker, taskCh chan *task) *concurrent.Concurrent {
-	return concurrent.Single(ctx, "startup", func(ctx contexts.Context) error {
+	// startup listener shouldn't stop working if context is cancelled
+	// so using new context isn't of one passed through from cmd
+	// meaning it should process all before shutdown on nil task which should still happen in runner
+	return concurrent.Single(contexts.NonCancallable(ctx), "startup", func(ctx contexts.Context) *errors.Error {
 		for {
 			task := <-taskCh
 

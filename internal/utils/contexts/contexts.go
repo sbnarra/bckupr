@@ -2,11 +2,11 @@ package contexts
 
 import (
 	"context"
-	"errors"
 
 	cobraKeys "github.com/sbnarra/bckupr/internal/config/cobra"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ type Context struct {
 	feedback           func(Context, any)
 }
 
-func Cobra(cmd *cobra.Command, feedback func(Context, any)) (Context, error) {
+func Cobra(cmd *cobra.Command, feedback func(Context, any)) (Context, *errors.Error) {
 	if dryrun, err := cobraKeys.Bool(keys.DryRun, cmd.Flags()); err != nil {
 		return Context{}, err
 	} else if debug, err := cobraKeys.Bool(keys.Debug, cmd.Flags()); err != nil {
@@ -51,19 +51,35 @@ func Create(context context.Context, name string, concurrency int, containerBack
 	}
 }
 
+func NonCancallable(ctx Context) Context {
+	return Copy(context.Background(), ctx)
+}
+
+func Copy(base context.Context, ctx Context) Context {
+	return Create(base,
+		ctx.Name,
+		ctx.Concurrency,
+		ctx.ContainerBackupDir,
+		ctx.HostBackupDir,
+		ctx.DockerHosts,
+		Debug(ctx.Debug),
+		DryRun(ctx.DryRun),
+		ctx.feedback)
+}
+
 func (c Context) Cancelled() bool {
 	return errors.Is(c.Context.Err(), context.Canceled)
 }
 
-func (c Context) Feedback(data any) {
+func (c Context) Respond(data any) {
 	c.feedback(c, data)
 }
 
-func (c Context) FeedbackJson(data any) error {
+func (c Context) RespondJson(data any) *errors.Error {
 	if j, err := encodings.ToJson(data); err != nil {
 		return err
 	} else {
-		c.Feedback(j)
+		c.Respond(j)
 		return nil
 	}
 }

@@ -5,7 +5,7 @@ import (
 )
 
 func Version(ctx contexts.Context) {
-	ctx.FeedbackJson(map[string]any{
+	ctx.RespondJson(map[string]any{
 		"version": "-0.0.0",
 	})
 }

@@ -1,14 +1,13 @@
 package tasks
 
 import (
-	"fmt"
-
 	"github.com/sbnarra/bckupr/internal/docker"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/filters"
 	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
@@ -18,19 +17,19 @@ type Exec func(
 	docker docker.Docker,
 	backupId string,
 	name string,
-	path string) error
+	path string) *errors.Error
 
-func RunOnEachDockerHost(ctx contexts.Context, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
+func RunOnEachDockerHost(ctx contexts.Context, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) *errors.Error {
 	action := ctx.Name
-	return docker.ExecPerHost(ctx, func(d docker.Docker) error {
+	return docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
 		return run(ctx, d, action, args, notificationSettings, exec)
 	})
 }
 
-func run(ctx contexts.Context, docker docker.Docker, action string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) error {
-	ctx.FeedbackJson(args)
+func run(ctx contexts.Context, docker docker.Docker, action string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) *errors.Error {
+	ctx.RespondJson(args)
 
-	if allContainers, err := docker.List(args.LabelPrefix); err != nil {
+	if allContainers, err := docker.List(ctx, args.LabelPrefix); err != nil {
 		return err
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args.Filters); err != nil {
 		return err
@@ -40,8 +39,8 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 			backupVolumes = append(backupVolumes, task.Volume)
 		}
 
-		ctx.FeedbackJson(eventBase(ctx, action, args.BackupId, "starting", backupVolumes))
-		defer ctx.FeedbackJson(eventBase(ctx, action, args.BackupId, "completed", backupVolumes))
+		ctx.RespondJson(eventBase(ctx, action, args.BackupId, "starting", backupVolumes))
+		defer ctx.RespondJson(eventBase(ctx, action, args.BackupId, "completed", backupVolumes))
 
 		var notify *notifications.Notifier
 		if notify, err = notifications.New(action, notificationSettings); err != nil {
@@ -55,9 +54,9 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 
 		actionTask := concurrent.Default(ctx, action)
 		for name, task := range tasks {
-			actionTask.Run(func(ctx contexts.Context) error {
+			actionTask.Run(func(ctx contexts.Context) *errors.Error {
 
-				var runErr error
+				var runErr *errors.Error
 				if runErr = stopContainers(ctx, docker, task); runErr == nil {
 
 					if err := notify.TaskStarted(ctx, args.BackupId, task.Volume); err != nil {
@@ -89,9 +88,9 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 	}
 }
 
-func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, inputFilters publicTypes.Filters) (map[string]*task, error) {
+func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, inputFilters publicTypes.Filters) (map[string]*task, *errors.Error) {
 	if len(containerMap) == 0 {
-		return nil, fmt.Errorf("no containers found")
+		return nil, errors.Errorf("no containers found")
 	}
 	logging.Debug(ctx, "Found", len(containerMap), "containers")
 
@@ -102,17 +101,17 @@ func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerT
 
 		tasks := convertToTasks(filtered, inputFilters)
 		if len(tasks) == 0 {
-			return nil, fmt.Errorf("nothing to " + ctx.Name + " from filtered containers")
+			return nil, errors.Errorf("nothing to " + ctx.Name + " from filtered containers")
 		}
 		logging.Debug(ctx, len(tasks), ctx.Name, "(s) to execute")
 		return tasks, nil
 	}
 }
 
-func stopContainers(ctx contexts.Context, docker docker.Docker, task *task) error {
+func stopContainers(ctx contexts.Context, docker docker.Docker, task *task) *errors.Error {
 	stopper := concurrent.Default(ctx, "stopper")
 	for _, container := range task.Containers {
-		stopper.Run(func(ctx contexts.Context) error {
+		stopper.Run(func(ctx contexts.Context) *errors.Error {
 			_, err := docker.Stop(ctx, container)
 			return err
 		})
@@ -130,11 +129,11 @@ func eventBase(ctx contexts.Context, action string, backupId string, status stri
 	}
 }
 
-func feedbackOnComplete(ctx contexts.Context, action string, backupId string, volume string, execErr error) {
+func feedbackOnComplete(ctx contexts.Context, action string, backupId string, volume string, execErr *errors.Error) {
 	data := eventBase(ctx, action, backupId, "successful", []string{volume})
 	if execErr != nil {
 		data["status"] = "error"
 		data["error"] = execErr.Error()
 	}
-	ctx.FeedbackJson(data)
+	ctx.RespondJson(data)
 }

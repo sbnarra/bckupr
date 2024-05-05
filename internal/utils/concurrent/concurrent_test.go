@@ -1,18 +1,18 @@
 package concurrent
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/sbnarra/bckupr/internal/tests"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
 func TestRunExecutes(t *testing.T) {
 	c := New(tests.Context, "test", 1)
 	completed := false
 
-	c.Run(func(ctx contexts.Context) error {
+	c.Run(func(ctx contexts.Context) *errors.Error {
 		completed = true
 		return nil
 	})
@@ -29,13 +29,13 @@ func TestMultipleRunExecutes(t *testing.T) {
 	c := New(tests.Context, "test", 1)
 
 	completed1 := false
-	c.Run(func(ctx contexts.Context) error {
+	c.Run(func(ctx contexts.Context) *errors.Error {
 		completed1 = true
 		return nil
 	})
 
 	completed2 := false
-	c.Run(func(ctx contexts.Context) error {
+	c.Run(func(ctx contexts.Context) *errors.Error {
 		completed2 = true
 		return nil
 	})
@@ -53,7 +53,7 @@ func TestMultipleRunExecutes(t *testing.T) {
 
 func TestRunError(t *testing.T) {
 	c := New(tests.Context, "test", 1)
-	c.Run(func(ctx contexts.Context) error {
+	c.Run(func(ctx contexts.Context) *errors.Error {
 		return errors.New("testing")
 	})
 
