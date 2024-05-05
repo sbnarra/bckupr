@@ -15,7 +15,6 @@ func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonE
 	}
 
 	copy := template
-
 	copy.Env = append(copy.Env,
 		"VOLUME_NAME="+meta.VolumeName,
 		"BACKUP_ID="+meta.BackupId,
@@ -23,6 +22,14 @@ func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonE
 		"BACKUP_DIR=/backup",
 		"DATA_DIR=/data",
 	)
+
+	if copy.Labels == nil {
+		copy.Labels = map[string]string{}
+	}
+	copy.Labels["managedby"] = "bckupr"
+	copy.Labels["bckupr.backupid"] = meta.BackupId
+	copy.Labels["bckupr.volume"] = meta.VolumeName
+
 	return runContainer(ctx, client, copy, waitLogCleanup)
 }
 
