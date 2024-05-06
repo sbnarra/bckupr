@@ -8,10 +8,6 @@ type CreateBackupRequest struct {
 	NotificationSettings *NotificationSettings `json:"notification-settings"`
 }
 
-type DeleteBackupRequest struct {
-	Args TaskArgs `json:"args"`
-}
-
 type RotateBackupsRequest struct {
 	Destroy      bool   `json:"destroy"`
 	PoliciesPath string `json:"policies-path"`

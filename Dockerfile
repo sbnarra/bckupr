@@ -18,6 +18,7 @@ LABEL org.opencontainers.image.source "https://github.com/sbnarra/bckupr"
 LABEL org.opencontainers.image.documentation "https://sbnarra.github.io/bckupr"
 
 ARG CREATED
+ENV CREATED ${CREATED:-unset}
 LABEL org.opencontainers.image.created ${CREATED:-unset}
 ARG VERSION
 ENV VERSION ${VERSION:-unset}

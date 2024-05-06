@@ -1,5 +1,14 @@
+# server
 api/openapi.yaml
-internal/openapi/README.md
+internal/openapi/generated/README.md
 Dockerfile
 go.mod
 main.go
+
+# client
+README.md
+docs/*
+test/*
+.gitignore
+.travis.yaml
+git_push.sh

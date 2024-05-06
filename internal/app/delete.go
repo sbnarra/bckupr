@@ -6,14 +6,13 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func DeleteBackup(ctx contexts.Context, input *types.DeleteBackupRequest) *errors.Error {
-	if input.Args.BackupId == "" {
+func DeleteBackup(ctx contexts.Context, id string) *errors.Error {
+	if id == "" {
 		return errors.New("missing backup id")
 	}
-	path := ctx.ContainerBackupDir + "/" + input.Args.BackupId
+	path := ctx.ContainerBackupDir + "/" + id
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return errors.Wrap(err, path+" does not exist")
