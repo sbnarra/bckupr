@@ -93,7 +93,7 @@ func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerT
 		if len(tasks) == 0 {
 			return nil, errors.Errorf("nothing to " + ctx.Name + " from filtered containers")
 		}
-		logging.Debug(ctx, len(tasks), ctx.Name, "(s) to execute")
+		logging.Debug(ctx, len(tasks), ctx.Name+"(s) to execute")
 		return tasks, nil
 	}
 }

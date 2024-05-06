@@ -9,7 +9,11 @@
 
 package spec
 
-type CreateBackup struct {
+type Task struct {
 
-	Id string `json:"id,omitempty"`
+	LabelPrefix string `json:"label_prefix"`
+
+	StopModes []string `json:"stop_modes"`
+
+	Other []string `json:"other"`
 }

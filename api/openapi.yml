@@ -129,12 +129,42 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
     RestoreBackup:
       type: object
       properties:
         id:
           type: integer
+    Task:
+      type: object
+      required:
+        - label_prefix
+        - stop_modes
+        - other
+      properties:
+        label_prefix:
+          type: string
+          default: bckupr
+        stop_modes:
+          type: array
+          default: 
+            - "jks"
+          items:
+            type: string
+        other:
+          type: array
+          items:
+            type: string
+          default: 
+            - "rfewfew"
+    # StopModes:
+    #   type: string
+    #   enum:
+    #     - all
+    #     - labelled
+    #     - writer
+    #     - attached
+    #     - linked
     Backup:
       type: object
       properties:

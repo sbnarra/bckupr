@@ -1,6 +1,8 @@
+set -e
+
 # https://openapi-generator.tech/docs/generators/go-gin-server/
 
-rm -rf internal/openapi/generated
+rm -rf internal/openapi/spec
 docker run --rm -u $(id -u):$(id -g)  \
   -v ./:/bckupr openapitools/openapi-generator-cli generate \
   -i /bckupr/api/openapi.yml \
@@ -11,10 +13,12 @@ docker run --rm -u $(id -u):$(id -g)  \
 
 # https://openapi-generator.tech/docs/generators/go/
 
-rm -rf pkg/api2
-docker run --rm \
+rm -rf pkg/client
+mkdir -p pkg/client
+cp .openapi-generator-ignore pkg/client/.openapi-generator-ignore
+docker run --rm -u $(id -u):$(id -g)  \
   -v ./:/bckupr openapitools/openapi-generator-cli generate \
   -i /bckupr/api/openapi.yml \
   -g go \
-  --additional-properties=isGoSubmodule=true,withGoMod=false,packageName=client \
-  -o /bckupr/pkg/api2
+  --additional-properties=isGoSubmodule=true,withGoMod=false,packageName=client,generateInterfaces=true \
+  -o /bckupr/pkg/client

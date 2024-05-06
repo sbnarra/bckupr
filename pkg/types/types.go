@@ -3,7 +3,6 @@ package types
 import "time"
 
 type CreateBackupRequest struct {
-	DryRun               bool                  `json:"dry-run"`
 	Args                 TaskArgs              `json:"args"`
 	NotificationSettings *NotificationSettings `json:"notification-settings"`
 }
@@ -14,7 +13,6 @@ type RotateBackupsRequest struct {
 }
 
 type RestoreBackupRequest struct {
-	DryRun               bool                  `json:"dry-run"`
 	Args                 TaskArgs              `json:"args"`
 	NotificationSettings *NotificationSettings `json:"notification-settings"`
 }
