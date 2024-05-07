@@ -9,12 +9,6 @@ func DefaultCreateBackupRequest() *CreateBackupRequest {
 	}
 }
 
-func DefaultDeleteBackupRequest() *DeleteBackupRequest {
-	return &DeleteBackupRequest{
-		Args: DefaultTaskArgs(keys.BackupStopModes),
-	}
-}
-
 func DefaultRestoreBackupRequest() *RestoreBackupRequest {
 	return &RestoreBackupRequest{
 		Args:                 DefaultTaskArgs(keys.RestoreStopModes),

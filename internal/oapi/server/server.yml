@@ -1,0 +1,8 @@
+package: oapi
+output: internal/oapi/server.go
+generate:
+  gin-server: true
+  embedded-spec: true
+  strict-server: true
+output-options:
+  skip-prune: true

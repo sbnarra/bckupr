@@ -27,10 +27,8 @@ func BackupActionHandler(cron *cron.Cron, containers types.ContainerTemplates) f
 
 			var exec func() *errors.Error
 			if action == "delete" {
-				input := types.DefaultDeleteBackupRequest()
-				input.Args.BackupId = form["id"][0]
 				exec = func() *errors.Error {
-					return app.DeleteBackup(ctx, input)
+					return app.DeleteBackup(ctx, form["id"][0])
 				}
 			} else if action == "restore" {
 				input := types.DefaultRestoreBackupRequest()

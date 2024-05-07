@@ -37,9 +37,7 @@ func TestE2EWithoutDaemon(t *testing.T) {
 			return app.RestoreBackup(ctx, restoreBackup, containers)
 		},
 		func() *errors.Error {
-			deleteBackup := types.DefaultDeleteBackupRequest()
-			deleteBackup.Args.BackupId = id
-			return app.DeleteBackup(ctx, deleteBackup)
+			return app.DeleteBackup(ctx, id)
 		})
 }
 
@@ -72,8 +70,6 @@ func TestE2EWithDaemon(t *testing.T) {
 			return client.RestoreBackup(restoreBackup)
 		},
 		func() *errors.Error {
-			deleteBackup := types.DefaultDeleteBackupRequest()
-			deleteBackup.Args.BackupId = id
-			return client.DeleteBackup(deleteBackup)
+			return client.DeleteBackup(id)
 		})
 }

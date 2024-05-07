@@ -1,0 +1,6 @@
+package: oapi
+output: internal/oapi/client.go
+generate:
+  client: true
+output-options:
+  skip-prune: true

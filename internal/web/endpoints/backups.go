@@ -26,11 +26,7 @@ func listBackups(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *
 }
 
 func deleteBackup(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {
-	input := types.DefaultDeleteBackupRequest()
-	if err := dispatcher.ParsePayload(ctx, input, w, r); err != nil {
-		return err
-	}
-	return app.DeleteBackup(ctx, input)
+	return app.DeleteBackup(ctx, "input")
 }
 
 func restoreBackup(containers types.ContainerTemplates) func(ctx contexts.Context, w http.ResponseWriter, r *http.Request) *errors.Error {

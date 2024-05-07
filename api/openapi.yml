@@ -18,39 +18,39 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/Version'
-  /backups:
-    post:
-      operationId: createBackup
-      summary: Creates new backup
-      tags:
-        - backup
-      requestBody:
-        $ref: '#/components/requestBodies/CreateBackup'
-      responses:
-        '200':
-          $ref: '#/components/responses/Backup'
+  # /backups:
+  #   post:
+  #     operationId: createBackup
+  #     summary: Creates new backup
+  #     tags:
+  #       - backup
+  #     requestBody:
+  #       $ref: '#/components/requestBodies/CreateBackup'
+  #     responses:
+  #       '200':
+  #         $ref: '#/components/responses/Backup'
   #   get:
   #     operationId: listBackups
   #     tags:
   #       - backup
-  /backups/{id}:
-    parameters:
-        - name: id
-          in: path
-          description: backup id
-          required: true
-          schema:
-            type: string
-    get:
-      operationId: getBackup
-      summary: Gets backup by id
-      tags:
-        - backup
-      responses:
-        '200':
-          $ref: '#/components/responses/Backup'
-        '404':
-          $ref: '#/components/responses/NotFound'
+  # /backups/{id}:
+  #   parameters:
+  #       - name: id
+  #         in: path
+  #         description: backup id
+  #         required: true
+  #         schema:
+  #           type: string
+  #   get:
+  #     operationId: getBackup
+  #     summary: Gets backup by id
+  #     tags:
+  #       - backup
+  #     responses:
+  #       '200':
+  #         $ref: '#/components/responses/Backup'
+  #       '404':
+  #         $ref: '#/components/responses/NotFound'
 
   #   put:
   #     operationId: createBackupWithId
@@ -63,48 +63,48 @@ paths:
   #           application/json:
   #             schema:
   #               $ref: '#/components/schemas/Backup'
-    delete:
-      operationId: deleteBackup
-      summary: Deletes backup
-      tags:
-        - backup
-      responses:
-        '200':
-          description: found backup
-  /backups/{id}/restore:
-    parameters:
-        - name: id
-          in: path
-          description: backup id
-          required: true
-          schema:
-            type: string
-    post:
-      operationId: restoreBackup
-      tags:
-        - backup
-      requestBody:
-        $ref: '#/components/requestBodies/RestoreBackup'
-      responses:
-        '200':
-          description: restore created
+  #   delete:
+  #     operationId: deleteBackup
+  #     summary: Deletes backup
+  #     tags:
+  #       - backup
+  #     responses:
+  #       '200':
+  #         description: found backup
+  # /backups/{id}/restore:
+  #   parameters:
+  #       - name: id
+  #         in: path
+  #         description: backup id
+  #         required: true
+  #         schema:
+  #           type: string
+  #   post:
+  #     operationId: restoreBackup
+  #     tags:
+  #       - backup
+  #     requestBody:
+  #       $ref: '#/components/requestBodies/RestoreBackup'
+  #     responses:
+  #       '200':
+  #         description: restore created
   # /metrics:
 components:
-  requestBodies:
-    CreateBackup:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CreateBackup'
-      description: Backup to be created
-      required: true
-    RestoreBackup:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/RestoreBackup'
-      description: Backup to be created
-      required: true
+  # requestBodies:
+  #   CreateBackup:
+  #     content:
+  #       application/json:
+  #         schema:
+  #           $ref: '#/components/schemas/CreateBackup'
+  #     description: Backup to be created
+  #     required: true
+  #   RestoreBackup:
+  #     content:
+  #       application/json:
+  #         schema:
+  #           $ref: '#/components/schemas/RestoreBackup'
+  #     description: Backup to be created
+  #     required: true
   responses:
     Version:
       content:
@@ -112,51 +112,45 @@ components:
           schema:
             $ref: '#/components/schemas/Version'
       description: Application Version
-    Backup:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Backup'
-      description: A Backup
-    NotFound:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      description: Entity not found
+    # Backup:
+    #   content:
+    #     application/json:
+    #       schema:
+    #         $ref: '#/components/schemas/Backup'
+    #   description: A Backup
+    # NotFound:
+    #   content:
+    #     application/json:
+    #       schema:
+    #         $ref: '#/components/schemas/Error'
+    #   description: Entity not found
   schemas:
-    CreateBackup:
-      type: object
-      properties:
-        id:
-          type: string
-    RestoreBackup:
-      type: object
-      properties:
-        id:
-          type: integer
-    Task:
-      type: object
-      required:
-        - label_prefix
-        - stop_modes
-        - other
-      properties:
-        label_prefix:
-          type: string
-          default: bckupr
-        stop_modes:
-          type: array
-          default: 
-            - "jks"
-          items:
-            type: string
-        other:
-          type: array
-          items:
-            type: string
-          default: 
-            - "rfewfew"
+    # CreateBackup:
+    #   type: object
+    #   properties:
+    #     id:
+    #       type: string
+    # RestoreBackup:
+    #   type: object
+    #   properties:
+    #     id:
+    #       type: integer
+    # Task:
+    #   type: object
+    #   required:
+    #     - label_prefix
+    #     - stop_modes
+    #     - other
+    #   properties:
+    #     label_prefix:
+    #       type: string
+    #       default: bckupr
+    #     stop_modes:
+    #       type: array
+    #       default: 
+    #         - "jks"
+    #       items:
+    #         type: string
     # StopModes:
     #   type: string
     #   enum:
@@ -165,20 +159,20 @@ components:
     #     - writer
     #     - attached
     #     - linked
-    Backup:
-      type: object
-      properties:
-        id:
-          type: integer
-        created:
-          type: string
-          format: date-time
-        status:
-          type: string
-          enum:
-            - pending
-            - completed
-            - error
+    # Backup:
+    #   type: object
+    #   properties:
+    #     id:
+    #       type: integer
+    #     created:
+    #       type: string
+    #       format: date-time
+    #     status:
+    #       type: string
+    #       enum:
+    #         - pending
+    #         - completed
+    #         - error
     Version:
       type: object
       properties:

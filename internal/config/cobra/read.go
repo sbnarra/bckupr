@@ -76,16 +76,6 @@ func createNotificationSettings(cmd *cobra.Command) (*types.NotificationSettings
 	}, nil
 }
 
-func DeleteRequest(cmd *cobra.Command) (*types.DeleteBackupRequest, *errors.Error) {
-	if backupArgs, err := createTaskArgs(keys.BackupStopModes, cmd); err != nil {
-		return nil, err
-	} else {
-		return &types.DeleteBackupRequest{
-			Args: *backupArgs,
-		}, nil
-	}
-}
-
 func CreateBackupRequest(cmd *cobra.Command) (*types.CreateBackupRequest, *errors.Error) {
 	var err *errors.Error
 
