@@ -20,11 +20,11 @@ paths:
 components:
   responses:
     Version:
+      description: Application Version
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Version'
-      description: Application Version
   schemas:
     Version:
       type: object
