@@ -1,0 +1,36 @@
+openapi: 3.0.0
+servers:
+  - url: 'http://localhost:8000'
+info:
+  title: Bckupr System
+  description: Bckupr System
+  version: latest
+tags:
+  - name: system
+paths:
+  /version:
+    get:
+      operationId: getVersion
+      summary: Retrieves application version
+      tags:
+        - system
+      responses:
+        '200':
+          $ref: '#/components/responses/Version'
+components:
+  responses:
+    Version:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Version'
+      description: Application Version
+  schemas:
+    Version:
+      type: object
+      properties:
+        version:
+          type: string
+        created:
+          type: string
+          format: date-time
