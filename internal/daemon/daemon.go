@@ -21,11 +21,7 @@ func Start(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, conta
 		tcp = runTcpDispatcher(ctx, input, cron, containers, runner)
 	}
 
-	// srv := openapi.Serve(ctx, containers)
-
 	return runner, func() {
-		// srv.Close()
-
 		unix.Close()
 		if tcp != nil {
 			tcp.Close()
