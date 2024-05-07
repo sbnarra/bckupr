@@ -18,8 +18,6 @@ func Register(d *dispatcher.Dispatcher, cron *cron.Cron, containers types.Contai
 		return nil
 	})
 	d.GET("/ui", pages.RenderIndex(cron, nil))
-	d.POST("/ui", actions.BackupActionHandler(cron, containers))
-
 	d.GET("/ui/settings", pages.RenderSettings(cron, nil))
 	d.POST("/ui/settings", actions.SettingsActionsHandler(cron))
 }

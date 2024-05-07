@@ -4,10 +4,10 @@ import (
 	"slices"
 
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
-	publicTypes "github.com/sbnarra/bckupr/pkg/types"
+	"github.com/sbnarra/bckupr/internal/oapi/server"
 )
 
-func applyExcludeFilters(unfiltered map[string]*dockerTypes.Container, filters publicTypes.Filters) map[string]*dockerTypes.Container {
+func applyExcludeFilters(unfiltered map[string]*dockerTypes.Container, filters server.Filters) map[string]*dockerTypes.Container {
 	if len(filters.ExcludeNames) == 0 && len(filters.ExcludeVolumes) == 0 {
 		return unfiltered
 	}

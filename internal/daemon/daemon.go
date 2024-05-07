@@ -9,7 +9,6 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/internal/web"
 	"github.com/sbnarra/bckupr/internal/web/dispatcher"
-	"github.com/sbnarra/bckupr/internal/web/endpoints"
 	"github.com/sbnarra/bckupr/pkg/types"
 )
 
@@ -31,7 +30,6 @@ func Start(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, conta
 
 func runUnixDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.Cron, containers types.ContainerTemplates, dispatchers *concurrent.Concurrent) *dispatcher.Dispatcher {
 	d := dispatcher.New(ctx, "unix")
-	endpoints.Register(d, cron, input.UnixSocket, containers)
 	if ctx.Debug {
 		logging.Info(ctx, "debug endpoints enabled")
 		d.EnableDebug()
@@ -49,10 +47,6 @@ func runTcpDispatcher(ctx contexts.Context, input types.DaemonInput, cron *cron.
 	if input.UI {
 		logging.Debug(ctx, "ui enabled")
 		web.Register(d, cron, containers)
-	}
-	if input.TcpApi {
-		logging.Warn(ctx, "tcp api enabled")
-		endpoints.Register(d, cron, input.UnixSocket, containers)
 	}
 	if input.Metrics {
 		logging.Info(ctx, "metrics enabled")

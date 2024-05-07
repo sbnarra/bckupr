@@ -10,6 +10,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/interrupt"
 	"github.com/sbnarra/bckupr/internal/notifications"
+	"github.com/sbnarra/bckupr/internal/oapi/server"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -44,13 +45,13 @@ func (c *Cron) Stop() {
 }
 
 func (c *Cron) Start(ctx contexts.Context,
-	backupSchedule string, backupInput *types.CreateBackupRequest,
+	backupSchedule string,
 	rotateSchedule string, rotateInput *types.RotateBackupsRequest,
 	containers types.ContainerTemplates,
 ) *errors.Error {
 	c.I.Start()
 	if backupSchedule != "" {
-		if err := c.scheduleBackup(ctx, backupSchedule, backupInput, containers); err != nil {
+		if err := c.scheduleBackup(ctx, backupSchedule, containers); err != nil {
 			return err
 		}
 	} else {
@@ -69,11 +70,12 @@ func (c *Cron) Start(ctx contexts.Context,
 	return nil
 }
 
-func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *types.CreateBackupRequest, containers types.ContainerTemplates) *errors.Error {
+func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, containers types.ContainerTemplates) *errors.Error {
 	triggerNotifyNextBackup := func() {}
 	logging.Info(ctx, "backup schedule", schedule)
 	if id, err := c.I.AddFunc(schedule, func() {
-		if id, err := backups.CreateBackup(ctx, input, containers); err != nil {
+		input := server.NewTriggerBackup()
+		if id, err := backups.CreateBackup(ctx, "", input, containers); err != nil {
 			logging.CheckError(ctx, err, "Backup Failure", id)
 		}
 		triggerNotifyNextBackup()
@@ -83,7 +85,7 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, input *type
 		c.BackupId = id
 		c.BackupSchedule = schedule
 		triggerNotifyNextBackup = func() {
-			if notify, err := notifications.New("cron", input.NotificationSettings); err == nil {
+			if notify, err := notifications.New("cron"); err == nil {
 				notify.NextBackupSchedule(ctx, c.I.Entry(c.BackupId).Next)
 			} else {
 				logging.CheckError(ctx, err, "failed to create notifier")

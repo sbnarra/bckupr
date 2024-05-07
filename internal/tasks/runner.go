@@ -7,11 +7,11 @@ import (
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/filters"
 	"github.com/sbnarra/bckupr/internal/notifications"
+	"github.com/sbnarra/bckupr/internal/oapi/server"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
 type Exec func(
@@ -21,19 +21,20 @@ type Exec func(
 	name string,
 	path string) *errors.Error
 
-func RunOnEachDockerHost(ctx contexts.Context, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) *errors.Error {
+func RunOnEachDockerHost(ctx contexts.Context, backupId string, args server.Task, exec Exec) *errors.Error {
+
 	action := ctx.Name
 	return docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
-		return run(ctx, d, action, args, notificationSettings, exec)
+		return run(ctx, d, action, backupId, args, exec)
 	})
 }
 
-func run(ctx contexts.Context, docker docker.Docker, action string, args publicTypes.TaskArgs, notificationSettings *publicTypes.NotificationSettings, exec Exec) *errors.Error {
+func run(ctx contexts.Context, docker docker.Docker, action string, backupId string, args server.Task, exec Exec) *errors.Error {
 	ctx.RespondJson(args)
 
 	if allContainers, err := docker.List(ctx, args.LabelPrefix); err != nil {
 		return err
-	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args.Filters); err != nil {
+	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args); err != nil {
 		return err
 	} else {
 		backupVolumes := []string{}
@@ -42,10 +43,10 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 		}
 
 		var notify *notifications.Notifier
-		if notify, err = notifications.New(action, notificationSettings); err != nil {
+		if notify, err = notifications.New(action); err != nil {
 			return err
 		}
-		notify.JobStarted(ctx, action, args.BackupId, backupVolumes)
+		notify.JobStarted(ctx, action, backupId, backupVolumes)
 		jobStarted := time.Now()
 
 		taskCh := make(chan *task)
@@ -55,17 +56,17 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 		for name, task := range tasks {
 			actionTask.Run(func(ctx contexts.Context) *errors.Error {
 				taskStarted := time.Now()
-				notify.TaskStarted(ctx, args.BackupId, task.Volume)
+				notify.TaskStarted(ctx, backupId, task.Volume)
 
 				var runErr *errors.Error
 				if runErr = stopContainers(ctx, docker, task); runErr == nil {
-					runErr = exec(ctx, docker, args.BackupId, name, task.Volume)
+					runErr = exec(ctx, docker, backupId, name, task.Volume)
 					task.Completed = true
 				} else {
 					logging.CheckError(ctx, runErr, "failed to stop the containers")
 				}
 
-				notify.TaskCompleted(ctx, action, args.BackupId, task.Volume, taskStarted, runErr)
+				notify.TaskCompleted(ctx, action, backupId, task.Volume, taskStarted, runErr)
 				taskCh <- task
 				return runErr
 			})
@@ -73,23 +74,23 @@ func run(ctx contexts.Context, docker docker.Docker, action string, args publicT
 
 		err := actionTask.Wait()
 		taskCh <- nil
-		notify.JobCompleted(ctx, action, args.BackupId, backupVolumes, jobStarted, err)
+		notify.JobCompleted(ctx, action, backupId, backupVolumes, jobStarted, err)
 		return completedTaskListener.Wait()
 	}
 }
 
-func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, inputFilters publicTypes.Filters) (map[string]*task, *errors.Error) {
+func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, task server.Task) (map[string]*task, *errors.Error) {
 	if len(containerMap) == 0 {
 		return nil, errors.Errorf("no containers found")
 	}
 	logging.Debug(ctx, "Found", len(containerMap), "containers")
 
-	if filtered, err := filters.Apply(ctx, containerMap, inputFilters); err != nil {
+	if filtered, err := filters.Apply(ctx, containerMap, task.Filters, task.StopModes); err != nil {
 		return nil, err
 	} else {
 		logging.Debug(ctx, len(filtered), "containers left after filtering")
 
-		tasks := convertToTasks(filtered, inputFilters)
+		tasks := convertToTasks(filtered, task.Filters)
 		if len(tasks) == 0 {
 			return nil, errors.Errorf("nothing to " + ctx.Name + " from filtered containers")
 		}

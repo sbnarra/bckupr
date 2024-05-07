@@ -8,6 +8,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/daemon"
+	"github.com/sbnarra/bckupr/internal/oapi/server"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/api"
 	"github.com/sbnarra/bckupr/pkg/types"
@@ -26,15 +27,14 @@ func TestE2EWithoutDaemon(t *testing.T) {
 
 	e2e(t,
 		func() *errors.Error {
-			createBackup := types.DefaultCreateBackupRequest()
-			createdId, err := app.CreateBackup(ctx, createBackup, containers)
-			id = createdId
+			createBackup := server.NewTriggerBackup()
+			backup, err := app.CreateBackup(ctx, "", createBackup, containers)
+			id = backup.Id
 			return err
 		},
 		func() *errors.Error {
-			restoreBackup := types.DefaultRestoreBackupRequest()
-			restoreBackup.Args.BackupId = id
-			return app.RestoreBackup(ctx, restoreBackup, containers)
+			restoreBackup := server.NewTriggerRestore()
+			return app.RestoreBackup(ctx, id, restoreBackup, containers)
 		},
 		func() *errors.Error {
 			return app.DeleteBackup(ctx, id)

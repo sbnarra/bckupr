@@ -19,7 +19,8 @@ type Notifier struct {
 	settings *types.NotificationSettings
 }
 
-func New(action string, notificationSettings *types.NotificationSettings) (*Notifier, *errors.Error) {
+func New(action string) (*Notifier, *errors.Error) {
+	notificationSettings := types.DefaultNotificationSettings()
 	notifier := &Notifier{
 		action:   action,
 		settings: notificationSettings,

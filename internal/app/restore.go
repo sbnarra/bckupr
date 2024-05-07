@@ -6,25 +6,30 @@ import (
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/run"
 	"github.com/sbnarra/bckupr/internal/metrics"
+	"github.com/sbnarra/bckupr/internal/oapi/server"
 	"github.com/sbnarra/bckupr/internal/tasks"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	publicTypes "github.com/sbnarra/bckupr/pkg/types"
 )
 
-func RestoreBackup(ctx contexts.Context, input *publicTypes.RestoreBackupRequest, containers publicTypes.ContainerTemplates) *errors.Error {
-	if input.Args.BackupId == "" {
+func RestoreBackup(ctx contexts.Context, backupId string, input server.TriggerRestore, containers publicTypes.ContainerTemplates) *errors.Error {
+	if backupId == "" {
 		return errors.New("missing backup id")
 	}
 
 	restoreCtx := ctx
 	restoreCtx.Name = "restore"
 
-	return tasks.RunOnEachDockerHost(
-		restoreCtx,
-		input.Args,
-		input.NotificationSettings,
-		newRestoreBackupTask(containers))
+	if task, err := input.AsTask(); err != nil {
+		return errors.Wrap(err, "failed to build task input")
+	} else {
+		return tasks.RunOnEachDockerHost(
+			restoreCtx,
+			backupId,
+			task,
+			newRestoreBackupTask(containers))
+	}
 }
 
 func newRestoreBackupTask(containers publicTypes.ContainerTemplates) tasks.Exec {

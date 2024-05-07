@@ -2,13 +2,84 @@ openapi: 3.0.0
 servers:
   - url: 'http://localhost:8000'
 info:
-  description: Bckupr API Specification
+  description: Bckupr API
   version: latest
   title: Bckupr
 tags:
   - name: backup
   - name: system
 paths:
+  /backups:
+    post:
+      operationId: triggerBackup
+      summary: Creates new backup
+      tags:
+        - backup
+      requestBody:
+        $ref: '#/components/requestBodies/CreateBackup'
+      responses:
+        '200':
+          $ref: '#/components/responses/Backup'
+    get:
+      operationId: listBackups
+      tags:
+        - backup
+  /backups/{id}:
+    parameters:
+        - name: id
+          in: path
+          description: backup id
+          required: true
+          schema:
+            type: string
+    get:
+      operationId: getBackup
+      summary: Gets backup by id
+      tags:
+        - backup
+      responses:
+        '200':
+          $ref: '#/components/responses/Backup'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      operationId: triggerBackupWithId
+      tags:
+        - backup
+      responses:
+        '200':
+          description: created b
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Backup'
+    delete:
+      operationId: deleteBackup
+      summary: Deletes backup
+      tags:
+        - backup
+      responses:
+        '200':
+          description: found backup
+  /backups/{id}/restore:
+    parameters:
+        - name: id
+          in: path
+          description: backup id
+          required: true
+          schema:
+            type: string
+    post:
+      operationId: triggerRestore
+      tags:
+        - backup
+      requestBody:
+        $ref: '#/components/requestBodies/RestoreBackup'
+      responses:
+        '200':
+          description: restore created
+  # /metrics:
   /version:
     get:
       operationId: getVersion
@@ -17,173 +88,142 @@ paths:
         - system
       responses:
         '200':
-          $ref: '#/components/responses/Version'
-  # /backups:
-  #   post:
-  #     operationId: createBackup
-  #     summary: Creates new backup
-  #     tags:
-  #       - backup
-  #     requestBody:
-  #       $ref: '#/components/requestBodies/CreateBackup'
-  #     responses:
-  #       '200':
-  #         $ref: '#/components/responses/Backup'
-  #   get:
-  #     operationId: listBackups
-  #     tags:
-  #       - backup
-  # /backups/{id}:
-  #   parameters:
-  #       - name: id
-  #         in: path
-  #         description: backup id
-  #         required: true
-  #         schema:
-  #           type: string
-  #   get:
-  #     operationId: getBackup
-  #     summary: Gets backup by id
-  #     tags:
-  #       - backup
-  #     responses:
-  #       '200':
-  #         $ref: '#/components/responses/Backup'
-  #       '404':
-  #         $ref: '#/components/responses/NotFound'
-
-  #   put:
-  #     operationId: createBackupWithId
-  #     tags:
-  #       - backup
-  #     responses:
-  #       '200':
-  #         description: created b
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: '#/components/schemas/Backup'
-  #   delete:
-  #     operationId: deleteBackup
-  #     summary: Deletes backup
-  #     tags:
-  #       - backup
-  #     responses:
-  #       '200':
-  #         description: found backup
-  # /backups/{id}/restore:
-  #   parameters:
-  #       - name: id
-  #         in: path
-  #         description: backup id
-  #         required: true
-  #         schema:
-  #           type: string
-  #   post:
-  #     operationId: restoreBackup
-  #     tags:
-  #       - backup
-  #     requestBody:
-  #       $ref: '#/components/requestBodies/RestoreBackup'
-  #     responses:
-  #       '200':
-  #         description: restore created
-  # /metrics:
+          description: Application Version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
 components:
-  # requestBodies:
-  #   CreateBackup:
-  #     content:
-  #       application/json:
-  #         schema:
-  #           $ref: '#/components/schemas/CreateBackup'
-  #     description: Backup to be created
-  #     required: true
-  #   RestoreBackup:
-  #     content:
-  #       application/json:
-  #         schema:
-  #           $ref: '#/components/schemas/RestoreBackup'
-  #     description: Backup to be created
-  #     required: true
-  responses:
-    Version:
+  requestBodies:
+    CreateBackup:
+      description: Backup to be created
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Version'
-      description: Application Version
-    # Backup:
-    #   content:
-    #     application/json:
-    #       schema:
-    #         $ref: '#/components/schemas/Backup'
-    #   description: A Backup
-    # NotFound:
-    #   content:
-    #     application/json:
-    #       schema:
-    #         $ref: '#/components/schemas/Error'
-    #   description: Entity not found
+            $ref: '#/components/schemas/TriggerBackup'
+      required: true
+    RestoreBackup:
+      description: Backup to be created
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TriggerRestore'
+      required: true
+  responses:
+    Backup:
+      description: A Backup
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Backup'
+    NotFound:
+      description: Entity not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
-    # CreateBackup:
-    #   type: object
-    #   properties:
-    #     id:
-    #       type: string
-    # RestoreBackup:
-    #   type: object
-    #   properties:
-    #     id:
-    #       type: integer
-    # Task:
-    #   type: object
-    #   required:
-    #     - label_prefix
-    #     - stop_modes
-    #     - other
-    #   properties:
-    #     label_prefix:
-    #       type: string
-    #       default: bckupr
-    #     stop_modes:
-    #       type: array
-    #       default: 
-    #         - "jks"
-    #       items:
-    #         type: string
-    # StopModes:
-    #   type: string
-    #   enum:
-    #     - all
-    #     - labelled
-    #     - writer
-    #     - attached
-    #     - linked
-    # Backup:
-    #   type: object
-    #   properties:
-    #     id:
-    #       type: integer
-    #     created:
-    #       type: string
-    #       format: date-time
-    #     status:
-    #       type: string
-    #       enum:
-    #         - pending
-    #         - completed
-    #         - error
-    Version:
+    Backup:
       type: object
+      required:
+        - id
+        - created
+        - status
       properties:
-        version:
+        id:
           type: string
         created:
           type: string
           format: date-time
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+            - error
+    TriggerBackup:
+      anyOf:
+        - $ref: '#/components/schemas/Task'
+      type: object
+      properties:
+        id:
+          type: string
+    TriggerRestore:
+      anyOf:
+        - $ref: '#/components/schemas/Task'
+      type: object
+      properties:
+        id:
+          type: integer
+    Task:
+      type: object
+      required:
+        - label_prefix
+        - stop_modes
+        - filters
+      properties:
+        label_prefix:
+          type: string
+          default: bckupr
+        stop_modes:
+          type: array
+          items:
+            $ref: '#/components/schemas/StopModes'
+        filters:
+          $ref: '#/components/schemas/Filters'
+    StopModes:
+      type: string
+      enum:
+        - all
+        - labelled
+        - writers
+        - attached
+        - linked
+    Filters:
+      type: object
+      required:
+        - include_names
+        - include_volumes
+        - exclude_names
+        - exclude_volumes
+      properties:
+        include_names:
+          type: array
+          items:
+            type: string
+          default: []
+        include_volumes:
+          type: array
+          items:
+            type: string
+          default: []
+        exclude_names:
+          type: array
+          items:
+            type: string
+          default: []
+        exclude_volumes:
+          type: array
+          items:
+            type: string
+          default: []
     Error:
       type: object
+      required:
+        - error
       properties:
         error:
           type: string
+    Version:
+      type: object
+      required:
+        - version
+        - created
+      properties:
+        version:
+          type: string
+          default: 0.0.0
+        created:
+          type: string
+          format: date-time
          

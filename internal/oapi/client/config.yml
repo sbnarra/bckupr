@@ -1,7 +1,8 @@
-package: oapi
+# yaml-language-server: $schema=https://raw.githubusercontent.com/deepmap/oapi-codegen/HEAD/configuration-schema.json
+package: client
 output: client.go
 generate:
   client: true
   models: true
-output-options:
-  skip-prune: true
+# output-options:
+#   skip-prune: true
