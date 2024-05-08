@@ -64,10 +64,14 @@ func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) *errors.E
 
 		var err *errors.Error
 		if c.ctx.Cancelled() {
-			err = errors.Errorf("context cancelled: not running '%v'", ctx.Name)
+			err = errors.Errorf("cancelled: skipping concurrent '%v'", ctx.Name)
 		} else {
 			err = exec(ctx)
-			logging.CheckError(ctx, err)
+		}
+
+		if ctx.Debug {
+			// TODO: remove this line once errors issue of not stacking different error stacks is resolved, essentially the need to implement supressed errors
+			logging.CheckError(ctx, err, "concurrent failure")
 		}
 
 		if c.limit > 0 {
@@ -90,6 +94,7 @@ func (c *Concurrent) Wait() *errors.Error {
 			if err == nil {
 				err = chErr
 			} else {
+				// ISSUE: this joining creates a new error stack loosing the previous stacks, currently have debug logging above to complete this missing data but long term fix to try capture all the stacks in a single error
 				err = errors.Join(err, chErr)
 			}
 		}

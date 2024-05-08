@@ -5,16 +5,16 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
 )
 
 type Reader interface {
-	Get(id string) *types.Backup
-	ForEach(forEach func(*types.Backup) *errors.Error) *errors.Error
+	Get(id string) *spec.Backup
+	ForEach(forEach func(*spec.Backup) *errors.Error) *errors.Error
 }
 
 func NewReader(ctx contexts.Context) (Reader, *errors.Error) {
@@ -27,11 +27,11 @@ func NewReader(ctx contexts.Context) (Reader, *errors.Error) {
 	}
 }
 
-func (s storage) Get(id string) *types.Backup {
+func (s storage) Get(id string) *spec.Backup {
 	return s.data[id]
 }
 
-func (s storage) ForEach(forEach func(*types.Backup) *errors.Error) *errors.Error {
+func (s storage) ForEach(forEach func(*spec.Backup) *errors.Error) *errors.Error {
 	var err *errors.Error
 	for _, backup := range s.data {
 		errors.Join(err, forEach(backup))
@@ -39,8 +39,8 @@ func (s storage) ForEach(forEach func(*types.Backup) *errors.Error) *errors.Erro
 	return err
 }
 
-func loadData(ctx contexts.Context) (map[string]*types.Backup, *errors.Error) {
-	backups := map[string]*types.Backup{}
+func loadData(ctx contexts.Context) (map[string]*spec.Backup, *errors.Error) {
+	backups := map[string]*spec.Backup{}
 	err := filepath.Walk(ctx.HostBackupDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			logging.CheckError(ctx, errors.Wrap(err, "error walking "+path))
@@ -53,7 +53,7 @@ func loadData(ctx contexts.Context) (map[string]*types.Backup, *errors.Error) {
 			if handle, err := os.Open(metaFilepath); err != nil {
 				return err
 			} else {
-				backup := &types.Backup{}
+				backup := &spec.Backup{}
 				encodings.FromYaml(bufio.NewReader(handle), backup)
 				backups[backup.Id] = backup
 			}

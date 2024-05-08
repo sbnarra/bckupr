@@ -10,8 +10,6 @@ import (
 )
 
 func (n *Notifier) JobStarted(ctx contexts.Context, action string, id string, volumes []string) {
-	ctx.RespondJson(eventBase(ctx, action, id, "starting", volumes))
-
 	msg := fmt.Sprintf("Started Job '%v': id=%v, volumes=%v", n.action, id, volumes)
 	logging.Info(ctx, msg)
 	if n.settings.NotifyJobStarted {
@@ -28,15 +26,6 @@ func (n *Notifier) TaskStarted(ctx contexts.Context, id string, volume string) {
 }
 
 func (n *Notifier) TaskCompleted(ctx contexts.Context, action string, id string, volume string, started time.Time, err *errors.Error) {
-	event := eventBase(ctx, action, id, "successful", []string{volume})
-	if err != nil {
-		event["status"] = "error"
-		event["error"] = err.Error()
-	}
-	duration := time.Since(started)
-	event["duration"] = duration.String()
-	ctx.RespondJson(event)
-
 	var msg string
 	if err != nil {
 		msg = fmt.Sprintf("Completed Task '%v': id=%v, volume=%v, err=%v", n.action, id, volume, err)
@@ -53,11 +42,6 @@ func (n *Notifier) TaskCompleted(ctx contexts.Context, action string, id string,
 }
 
 func (n *Notifier) JobCompleted(ctx contexts.Context, action string, id string, volumes []string, started time.Time, err *errors.Error) {
-	event := eventBase(ctx, action, id, "completed", volumes)
-	duration := time.Since(started)
-	event["duration"] = duration.String()
-	ctx.RespondJson(event)
-
 	var msg string
 	if err != nil {
 		msg = fmt.Sprintf("Completed Job %v: id=%v, volumes=%v, err=%v", n.action, id, volumes, err)

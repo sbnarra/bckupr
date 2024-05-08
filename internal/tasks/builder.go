@@ -3,11 +3,11 @@ package tasks
 import (
 	"slices"
 
+	"github.com/sbnarra/bckupr/internal/api/spec"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
-	"github.com/sbnarra/bckupr/internal/oapi/server"
 )
 
-func convertToTasks(containerList map[string]*dockerTypes.Container, filters server.Filters) map[string]*task {
+func convertToTasks(containerList map[string]*dockerTypes.Container, filters spec.Filters) map[string]*task {
 	tasks := make(map[string]*task)
 	for _, container := range containerList {
 		for name, path := range container.Backup.Volumes {
@@ -26,7 +26,7 @@ func convertToTasks(containerList map[string]*dockerTypes.Container, filters ser
 	return tasks
 }
 
-func addTask(conName string, volName string, filters server.Filters) bool {
+func addTask(conName string, volName string, filters spec.Filters) bool {
 	if len(filters.IncludeNames) != 0 || len(filters.IncludeVolumes) != 0 || len(filters.ExcludeNames) != 0 || len(filters.ExcludeVolumes) != 0 {
 
 		in := len(filters.IncludeNames) != 0 && slices.Contains(filters.IncludeNames, conName)

@@ -5,13 +5,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/docker/client"
 	"github.com/sbnarra/bckupr/internal/docker/run"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
 )
 
 func volumes() []string {
@@ -22,7 +22,7 @@ func volumes() []string {
 }
 
 func startDummyService(t *testing.T, ctx contexts.Context, dClient client.DockerClient) string {
-	return startService(t, ctx, dClient, types.ContainerTemplate{
+	return startService(t, ctx, dClient, containers.Template{
 		Image:   "busybox",
 		Cmd:     []string{"sleep", "120"},
 		Volumes: volumes(),
@@ -39,7 +39,7 @@ func writeAllData(t *testing.T, ctx contexts.Context, dClient client.DockerClien
 }
 
 func writeData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, file string, data string) {
-	startService(t, ctx, dClient, types.ContainerTemplate{
+	startService(t, ctx, dClient, containers.Template{
 		Image: "busybox",
 		Cmd: []string{
 			"sh", "-c", "echo -n " + data + " | tee " + file,
@@ -72,7 +72,7 @@ func assertAllData(t *testing.T, ctx contexts.Context, dClient client.DockerClie
 }
 
 func readData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, file string) string {
-	id := startService(t, ctx, dClient, types.ContainerTemplate{
+	id := startService(t, ctx, dClient, containers.Template{
 		Image:   "busybox",
 		Cmd:     []string{"cat", file},
 		Volumes: volumes(),
@@ -90,7 +90,7 @@ func readData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, f
 	}
 }
 
-func startService(t *testing.T, ctx contexts.Context, dClient client.DockerClient, template types.ContainerTemplate, waitLogCleanup bool) string {
+func startService(t *testing.T, ctx contexts.Context, dClient client.DockerClient, template containers.Template, waitLogCleanup bool) string {
 	if exampleContainerId, err := run.RunContainer(ctx, dClient, run.CommonEnv{}, template, waitLogCleanup); err != nil {
 		t.Fatalf("failed to start example service: %v", err)
 		return "" // unreachable

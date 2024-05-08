@@ -1,7 +1,9 @@
 package meta
 
-import "github.com/sbnarra/bckupr/pkg/types"
+import (
+	"github.com/sbnarra/bckupr/internal/api/spec"
+)
 
 type storage struct {
-	data map[string]*types.Backup
+	data map[string]*spec.Backup
 }

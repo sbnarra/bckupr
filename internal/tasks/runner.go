@@ -3,11 +3,11 @@ package tasks
 import (
 	"time"
 
+	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/docker"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
 	"github.com/sbnarra/bckupr/internal/filters"
 	"github.com/sbnarra/bckupr/internal/notifications"
-	"github.com/sbnarra/bckupr/internal/oapi/server"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
@@ -21,17 +21,25 @@ type Exec func(
 	name string,
 	path string) *errors.Error
 
-func RunOnEachDockerHost(ctx contexts.Context, backupId string, args server.Task, exec Exec) *errors.Error {
-
+func RunOnEachDockerHost(ctx contexts.Context, backupId string, args spec.TaskTrigger, exec Exec) (*spec.Task, *errors.Error) {
 	action := ctx.Name
-	return docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
+	err := docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
 		return run(ctx, d, action, backupId, args, exec)
 	})
+	var status spec.TaskStatus
+	if err != nil {
+		status = spec.TaskStatusCompleted
+	} else {
+		status = spec.TaskStatusError
+	}
+	task := spec.Task{
+		Created: time.Now(),
+		Status:  status,
+	}
+	return &task, err
 }
 
-func run(ctx contexts.Context, docker docker.Docker, action string, backupId string, args server.Task, exec Exec) *errors.Error {
-	ctx.RespondJson(args)
-
+func run(ctx contexts.Context, docker docker.Docker, action string, backupId string, args spec.TaskTrigger, exec Exec) *errors.Error {
 	if allContainers, err := docker.List(ctx, args.LabelPrefix); err != nil {
 		return err
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args); err != nil {
@@ -79,7 +87,7 @@ func run(ctx contexts.Context, docker docker.Docker, action string, backupId str
 	}
 }
 
-func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, task server.Task) (map[string]*task, *errors.Error) {
+func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, task spec.TaskTrigger) (map[string]*task, *errors.Error) {
 	if len(containerMap) == 0 {
 		return nil, errors.Errorf("no containers found")
 	}

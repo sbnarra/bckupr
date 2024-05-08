@@ -10,17 +10,16 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
 )
 
 type Notifier struct {
 	action   string
 	shoutrrr *router.ServiceRouter
-	settings *types.NotificationSettings
+	settings *NotificationSettings
 }
 
 func New(action string) (*Notifier, *errors.Error) {
-	notificationSettings := types.DefaultNotificationSettings()
+	notificationSettings := settings()
 	notifier := &Notifier{
 		action:   action,
 		settings: notificationSettings,

@@ -4,13 +4,13 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/sbnarra/bckupr/internal/api/spec"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
-	"github.com/sbnarra/bckupr/internal/oapi/server"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func Apply(ctx contexts.Context, unfiltered map[string]*dockerTypes.Container, filters server.Filters, stopModes []server.StopModes) (map[string]*dockerTypes.Container, *errors.Error) {
+func Apply(ctx contexts.Context, unfiltered map[string]*dockerTypes.Container, filters spec.Filters, stopModes []spec.StopModes) (map[string]*dockerTypes.Container, *errors.Error) {
 	filtered := applyIncludeFilters(unfiltered, filters)
 	if len(filtered) == 0 {
 		return nil, errors.New("nothing to " + ctx.Name + " after applying include filters: names=" + strings.Join(filters.IncludeNames, ",") + ",volumes=" + strings.Join(filters.IncludeVolumes, ","))

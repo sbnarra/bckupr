@@ -16,7 +16,12 @@ paths:
       tags:
         - backup
       requestBody:
-        $ref: '#/components/requestBodies/CreateBackup'
+        description: Backup to be created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackupTrigger'
+        required: true
       responses:
         '200':
           $ref: '#/components/responses/Backup'
@@ -24,6 +29,9 @@ paths:
       operationId: listBackups
       tags:
         - backup
+      responses:
+        '200':
+          $ref: '#/components/responses/Backups'
   /backups/{id}:
     parameters:
         - name: id
@@ -42,7 +50,6 @@ paths:
           $ref: '#/components/responses/Backup'
         '404':
           $ref: '#/components/responses/NotFound'
-
     put:
       operationId: triggerBackupWithId
       tags:
@@ -75,11 +82,30 @@ paths:
       tags:
         - backup
       requestBody:
-        $ref: '#/components/requestBodies/RestoreBackup'
+        description: Backup to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestoreTrigger'
       responses:
         '200':
-          description: restore created
-  # /metrics:
+          $ref: '#/components/responses/Task'
+  /rotate:
+    post:
+      operationId: rotateBackups
+      summary: Retrieves application version
+      tags:
+        - system
+      requestBody:
+        description: Backup to be created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RotateTrigger'
+      responses:
+        '200':
+          $ref: '#/components/responses/Task'
   /version:
     get:
       operationId: getVersion
@@ -94,28 +120,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/Version'
 components:
-  requestBodies:
-    CreateBackup:
-      description: Backup to be created
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/TriggerBackup'
-      required: true
-    RestoreBackup:
-      description: Backup to be created
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/TriggerRestore'
-      required: true
   responses:
     Backup:
-      description: A Backup
+      description: Backup
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Backup'
+    Backups:
+      description: Backups
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Backup'
+    Task:
+      description: Task
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Task'
     NotFound:
       description: Entity not found
       content:
@@ -125,13 +150,55 @@ components:
   schemas:
     Backup:
       type: object
+      anyOf:
+        - $ref: '#/components/schemas/Task'
       required:
         - id
         - created
-        - status
+        - type
+        - volumes
       properties:
         id:
           type: string
+        created:
+          type: string
+          format: date-time
+        type:
+          type: string
+        volumes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume'
+    Volume:
+      type: object
+      required:
+        - name
+        - ext
+        - mount
+        - created
+        - size
+        - error
+      properties:
+        name:
+          type: string
+        ext:
+          type: string
+        mount:
+          type: string
+        created:
+          type: string
+          format: date-time
+        size:
+          type: integer
+          format: int64
+        error:
+          type: string
+    Task:
+      type: object
+      required:
+        - created
+        - status
+      properties:
         created:
           type: string
           format: date-time
@@ -141,21 +208,29 @@ components:
             - pending
             - completed
             - error
-    TriggerBackup:
-      anyOf:
-        - $ref: '#/components/schemas/Task'
+    BackupTrigger:
       type: object
+      anyOf:
+        - $ref: '#/components/schemas/TaskTrigger'
       properties:
-        id:
+    RestoreTrigger:
+      type: object
+      anyOf:
+        - $ref: '#/components/schemas/TaskTrigger'
+      properties:
+        dummy:
           type: string
-    TriggerRestore:
-      anyOf:
-        - $ref: '#/components/schemas/Task'
+    RotateTrigger:
       type: object
+      required:
+        - policies_path
+        - destroy
       properties:
-        id:
-          type: integer
-    Task:
+        policies_path:
+          type: string
+        destroy:
+          type: boolean
+    TaskTrigger:
       type: object
       required:
         - label_prefix
@@ -225,5 +300,4 @@ components:
           default: 0.0.0
         created:
           type: string
-          format: date-time
          

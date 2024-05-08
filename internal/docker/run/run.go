@@ -1,15 +1,15 @@
 package run
 
 import (
+	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/docker/client"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonEnv, template types.ContainerTemplate, waitLogCleanup bool) (string, *errors.Error) {
+func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonEnv, template containers.Template, waitLogCleanup bool) (string, *errors.Error) {
 	if len(template.Image) == 0 || len(template.Cmd) == 0 {
 		return "", errors.Wrap(MisconfiguredTemplate, encodings.ToJsonIE(template))
 	}
@@ -33,7 +33,7 @@ func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonE
 	return runContainer(ctx, client, copy, waitLogCleanup)
 }
 
-func runContainer(ctx contexts.Context, client client.DockerClient, template types.ContainerTemplate, waitLogCleanup bool) (string, *errors.Error) {
+func runContainer(ctx contexts.Context, client client.DockerClient, template containers.Template, waitLogCleanup bool) (string, *errors.Error) {
 	if ctx.DryRun {
 		logging.Info(ctx, "Dry Run!", encodings.ToJsonIE(template))
 		return "", nil

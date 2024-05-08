@@ -8,33 +8,32 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
-	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func ContainerTemplates(local string, offsite string) (types.ContainerTemplates, *errors.Error) {
+func ContainerTemplates(local string, offsite string) (Templates, *errors.Error) {
 	if local, err := LocalContainerTemplates(local); err != nil {
-		return types.ContainerTemplates{}, err
+		return Templates{}, err
 	} else if offsite, err := OffsiteContainerTemplates(offsite); err != nil {
-		return types.ContainerTemplates{}, err
+		return Templates{}, err
 	} else {
-		return types.ContainerTemplates{
+		return Templates{
 			Local:   local,
 			Offsite: offsite,
 		}, nil
 	}
 }
 
-func LocalContainerTemplates(location string) (types.LocalContainerTemplates, *errors.Error) {
-	config := types.LocalContainerTemplates{}
+func LocalContainerTemplates(location string) (LocalTemplates, *errors.Error) {
+	config := LocalTemplates{}
 	err := loadContainerTemplates(location, "local", &config)
 	return config, err
 }
 
-func OffsiteContainerTemplates(location string) (*types.OffsiteContainerTemplates, *errors.Error) {
+func OffsiteContainerTemplates(location string) (*OffsiteTemplates, *errors.Error) {
 	if location == "" {
 		return nil, nil
 	}
-	config := &types.OffsiteContainerTemplates{}
+	config := &OffsiteTemplates{}
 	err := loadContainerTemplates(location, "offsite", config)
 	return config, err
 }

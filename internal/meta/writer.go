@@ -5,21 +5,21 @@ import (
 	"os"
 	"time"
 
+	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
 )
 
 type Writer struct {
-	data      types.Backup
+	data      spec.Backup
 	backupDir string
 }
 
 func NewWriter(ctx contexts.Context, backupId string, backupType string) *Writer {
 	return &Writer{
-		data: types.Backup{
+		data: spec.Backup{
 			Id:      backupId,
 			Created: time.Now(),
 			Type:    backupType,
@@ -44,7 +44,7 @@ func (mw *Writer) AddVolume(ctx contexts.Context, backupId string, name string, 
 		errMsg = err.Error()
 	}
 
-	mw.data.Volumes = append(mw.data.Volumes, types.Volume{
+	mw.data.Volumes = append(mw.data.Volumes, spec.Volume{
 		Name:    name,
 		Ext:     ext,
 		Mount:   volume,
