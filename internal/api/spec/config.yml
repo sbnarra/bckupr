@@ -1,0 +1,9 @@
+package: spec
+output: server.go
+generate:
+  gin-server: true
+  models: true
+  embedded-spec: true
+  # strict-server: true
+output-options:
+  skip-prune: true
