@@ -23,6 +23,13 @@ func new(err error) *Error {
 	return &Error{err}
 }
 
+func NewWrap(err error, msg string) *Error {
+	if err == nil {
+		return new(fmt.Errorf("%v", msg))
+	}
+	return new(fmt.Errorf("%v: %w", msg, err))
+}
+
 func Wrap(err error, msg string) *Error {
 	if err == nil {
 		return nil

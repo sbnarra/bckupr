@@ -54,6 +54,12 @@ paths:
       operationId: triggerBackupWithId
       tags:
         - backup
+      requestBody:
+        description: Backup to be created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackupTrigger'
       responses:
         '200':
           description: created b
@@ -233,8 +239,6 @@ components:
     TaskTrigger:
       type: object
       required:
-        - label_prefix
-        - stop_modes
         - filters
       properties:
         label_prefix:

@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -19,6 +18,7 @@ import (
 	clientSpec "github.com/sbnarra/bckupr/pkg/api/spec"
 )
 
+// move into internal/app package
 func TestE2EInternal(t *testing.T) {
 
 	ctx := prepareIntegrationTest(t)
@@ -32,23 +32,31 @@ func TestE2EInternal(t *testing.T) {
 
 	e2e(t,
 		func() *errors.Error {
-			createBackup := serverSpec.NewTriggerBackup()
-			task, backup, err := backup.CreateBackup(ctx, "", createBackup, containers)
-			fmt.Println(task)
-			id = backup.Id
-			return err
+			payload := serverSpec.BackupTrigger{}
+			if err := payload.WithDefaults(); err != nil {
+				return err
+			} else {
+				backup, err := backup.CreateBackup(ctx, "", payload, containers)
+				id = backup.Id
+				return err
+			}
 		},
 		func() *errors.Error {
-			restoreBackup := serverSpec.NewTriggerRestore()
-			task, err := restore.RestoreBackup(ctx, id, restoreBackup, containers)
-			logging.Info(ctx, task)
-			return err
+			payload := serverSpec.RestoreTrigger{}
+			if err := payload.WithDefaults(); err != nil {
+				return err
+			} else {
+				task, err := restore.RestoreBackup(ctx, id, payload, containers)
+				logging.Info(ctx, task)
+				return err
+			}
 		},
 		func() *errors.Error {
 			return delete.DeleteBackup(ctx, id)
 		})
 }
 
+// move into pkg/client package
 func TestE2EExternal(t *testing.T) {
 	ctx := prepareIntegrationTest(t)
 
@@ -56,24 +64,28 @@ func TestE2EExternal(t *testing.T) {
 	if containers, err := containers.ContainerTemplates(config.LocalContainersConfig, config.OffsiteContainersConfig); err != nil {
 		t.Fatalf("failed to load container templates: %v", err)
 	} else {
-		if err := server.Start(ctx, config, nil, containers); err != nil {
-			t.Fatalf("failed to start", err)
-		}
+		s := server.New(ctx, config, containers)
+		go func() {
+			if err := s.Listen(ctx); err != nil {
+				logging.CheckWarn(ctx, err)
+			}
+		}()
+		defer s.Server.Close()
 	}
 
 	time.Sleep(2 * time.Second)
 
-	client, err := client.New(keys.DaemonAddr.Default.(string))
+	client, err := client.New(ctx, keys.DaemonProtocol.Default.(string), keys.DaemonAddr.Default.(string))
 	if err != nil {
-		t.Fatalf("error creating client: %w", err)
+		t.Fatalf("error creating client: %v", err)
 	}
 	id := time.Now().Format("20060102_1504") + "-client"
 
 	e2e(t,
 		func() *errors.Error {
 			req := clientSpec.BackupTrigger{}
-			task, backup, err := client.TriggerBackupUsingId(ctx, id, req)
-			logging.Info(ctx, task, backup, err)
+			backup, err := client.TriggerBackupUsingId(ctx, id, req)
+			logging.Info(ctx, backup, err)
 			return err
 		},
 		func() *errors.Error {

@@ -26,13 +26,15 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
+	flags.Register(keys.DockerHosts, Cmd.Flags())
+	flags.Register(keys.LocalContainersConfig, Cmd.Flags())
+	flags.Register(keys.OffsiteContainersConfig, Cmd.Flags())
+
 	flags.Register(keys.ContainerBackupDir, Cmd.Flags())
 	flags.Register(keys.HostBackupDir, Cmd.Flags())
-	flags.Register(keys.UnixSocket, Cmd.Flags())
+
+	// flags.Register(keys.UnixSocket, Cmd.Flags())
 	flags.Register(keys.TcpAddr, Cmd.Flags())
-	flags.Register(keys.TcpApi, Cmd.Flags())
-	flags.Register(keys.UI, Cmd.Flags())
-	flags.Register(keys.Metrics, Cmd.Flags())
 
 	flags.Register(keys.NotificationUrls, Cmd.Flags())
 	flags.Register(keys.NotifyJobStarted, Cmd.Flags())
@@ -55,8 +57,10 @@ func run(cmd *cobra.Command, args []string) error {
 		daemon.RunN("cron", func(ctx contexts.Context) *errors.Error {
 			return startCron(ctx, cmd, containers)
 		})
+
 		daemon.RunN("api", func(ctx contexts.Context) *errors.Error {
-			err := server.Start(ctx, *input, instance, containers)
+			s := server.New(ctx, *input, containers)
+			err := s.Listen(ctx)
 			if errors.Is(err, http.ErrServerClosed) {
 				return nil
 			}
@@ -86,51 +90,43 @@ func createDaemonContextAndInput(cmd *cobra.Command) (contexts.Context, *config.
 	}
 	ctx.ContainerBackupDir = containerBackupDir
 
-	if config.BackupDir == "" {
+	if config.HostBackupDir == "" {
 		if backupDir, err := discover.MountedBackupDir(ctx, config.DockerHosts); err != nil {
 			return ctx, config, err
 		} else if backupDir != "" {
-			config.BackupDir = backupDir
+			config.HostBackupDir = backupDir
 		} else {
 			return ctx, config, errors.New("unable to detect backup dir, supply --" + keys.HostBackupDir.CliId)
 		}
 	}
-	ctx.HostBackupDir = config.BackupDir
+	ctx.HostBackupDir = config.HostBackupDir
 
 	return ctx, config, err
 }
 
 func readConfig(cmd *cobra.Command) (*config.Config, *errors.Error) {
-	if backupDir, err := flags.String(keys.HostBackupDir, cmd.Flags()); err != nil {
+	if hostBackupDir, err := flags.String(keys.HostBackupDir, cmd.Flags()); err != nil {
 		return nil, err
 	} else if localContainersConfig, err := flags.String(keys.LocalContainersConfig, cmd.Flags()); err != nil {
 		return nil, err
 	} else if offsiteContainersConfig, err := flags.String(keys.OffsiteContainersConfig, cmd.Flags()); err != nil {
 		return nil, err
-	} else if unixSocket, err := flags.String(keys.UnixSocket, cmd.Flags()); err != nil {
-		return nil, err
+		// } else if unixSocket, err := flags.String(keys.UnixSocket, cmd.Flags()); err != nil {
+		// return nil, err
 	} else if tcpAddr, err := flags.String(keys.TcpAddr, cmd.Flags()); err != nil {
-		return nil, err
-	} else if tcpApi, err := flags.Bool(keys.TcpApi, cmd.Flags()); err != nil {
-		return nil, err
-	} else if ui, err := flags.Bool(keys.UI, cmd.Flags()); err != nil {
-		return nil, err
-	} else if metrics, err := flags.Bool(keys.Metrics, cmd.Flags()); err != nil {
 		return nil, err
 	} else if dockerHosts, err := flags.StringSlice(keys.DockerHosts, cmd.Flags()); err != nil {
 		return nil, err
 	} else {
 		return &config.Config{
-			BackupDir:               backupDir,
-			DockerHosts:             dockerHosts,
+			HostBackupDir: hostBackupDir,
+			DockerHosts:   dockerHosts,
+
 			LocalContainersConfig:   localContainersConfig,
 			OffsiteContainersConfig: offsiteContainersConfig,
 
-			UnixSocket: unixSocket,
-			TcpAddr:    tcpAddr,
-			TcpApi:     tcpApi,
-			UI:         ui,
-			Metrics:    metrics,
+			// UnixSocket: unixSocket,
+			TcpAddr: tcpAddr,
 		}, nil
 	}
 }

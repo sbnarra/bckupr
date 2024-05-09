@@ -4,6 +4,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/cmd/config"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/keys"
+	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
@@ -33,10 +34,10 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if client, err := util.NewClient(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if task, backup, err := client.TriggerBackupUsingId(ctx, id, *input); err != nil {
+	} else if backup, err := client.TriggerBackupUsingId(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
-		logging.Info(ctx, "Backup Complete", task, backup)
+		logging.Info(ctx, "Backup Complete", encodings.ToJsonIE(backup))
 	}
 	return nil
 }

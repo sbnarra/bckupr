@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func initFilters(cmd *cobra.Command, stopModes *keys.Key) {
+func initFilters(cmd *cobra.Command) {
 	flags.Register(keys.IncludeNames, cmd.Flags())
 	flags.Register(keys.IncludeVolumes, cmd.Flags())
 	flags.Register(keys.ExcludeName, cmd.Flags())
@@ -16,32 +16,20 @@ func initFilters(cmd *cobra.Command, stopModes *keys.Key) {
 }
 
 func readFilters(cmd *cobra.Command) (*spec.Filters, *errors.Error) {
-	var err *errors.Error
-
-	var includeNames []string
-	if includeNames, err = flags.StringSlice(keys.IncludeNames, cmd.Flags()); err != nil {
+	if includeNames, err := flags.StringSlice(keys.IncludeNames, cmd.Flags()); err != nil {
 		return nil, err
-	}
-
-	var includeVolumes []string
-	if includeVolumes, err = flags.StringSlice(keys.IncludeVolumes, cmd.Flags()); err != nil {
+	} else if includeVolumes, err := flags.StringSlice(keys.IncludeVolumes, cmd.Flags()); err != nil {
 		return nil, err
-	}
-
-	var excludeNames []string
-	if excludeNames, err = flags.StringSlice(keys.ExcludeName, cmd.Flags()); err != nil {
+	} else if excludeNames, err := flags.StringSlice(keys.ExcludeName, cmd.Flags()); err != nil {
 		return nil, err
-	}
-
-	var excludeVolumes []string
-	if excludeVolumes, err = flags.StringSlice(keys.ExcludeVolumes, cmd.Flags()); err != nil {
+	} else if excludeVolumes, err := flags.StringSlice(keys.ExcludeVolumes, cmd.Flags()); err != nil {
 		return nil, err
+	} else {
+		return &spec.Filters{
+			IncludeNames:   includeNames,
+			IncludeVolumes: includeVolumes,
+			ExcludeNames:   excludeNames,
+			ExcludeVolumes: excludeVolumes,
+		}, nil
 	}
-
-	return &spec.Filters{
-		ExcludeNames:   includeNames,
-		ExcludeVolumes: includeVolumes,
-		IncludeNames:   excludeNames,
-		IncludeVolumes: excludeVolumes,
-	}, nil
 }

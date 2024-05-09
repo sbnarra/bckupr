@@ -32,7 +32,7 @@ func run(cmd *cobra.Command, args []string) error {
 		} else if serverVersion, err := client.Version(ctx); err != nil {
 			return err
 		} else {
-			logging.Info(ctx, "Server:", serverVersion)
+			logging.Info(ctx, "Server:", encodings.ToJsonIE(serverVersion))
 			return nil
 		}
 	}

@@ -9,38 +9,42 @@ import (
 	"github.com/sbnarra/bckupr/internal/api/config"
 	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/config/containers"
-	"github.com/sbnarra/bckupr/internal/cron"
 	"github.com/sbnarra/bckupr/internal/interrupt"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func Start(ctx contexts.Context, config config.Config, cron *cron.Cron, containers containers.Templates) *errors.Error {
-	server := newServer(ctx, containers)
-	return startListening(ctx, server, "tcp", config.TcpAddr)
+type Server struct {
+	*http.Server
+	contexts.Context
+	config.Config
 }
 
-func newServer(ctx contexts.Context, containers containers.Templates) *http.Server {
+func New(ctx contexts.Context, config config.Config, containers containers.Templates) *Server {
 	router := gin.Default()
 
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	router.Static("/ui", "./ui")
 
 	spec.RegisterHandlers(router, handler{ctx, containers})
-	return &http.Server{
+	httpServer := &http.Server{
 		Handler: router,
-		Addr:    "0.0.0.0:8000",
 	}
+
+	return &Server{httpServer, ctx, config}
 }
 
-func startListening(ctx contexts.Context, server *http.Server, network string, addr string) *errors.Error {
+func (s Server) Listen(ctx contexts.Context) *errors.Error {
+	network := "tcp"
+	addr := s.Config.TcpAddr
+
 	if ln, err := net.Listen(network, addr); err != nil {
 		return errors.Wrap(err, "failed to start listening on "+network+" "+addr)
 	} else {
 		interrupt.Handle(ctx.Name, func() {
-			server.Shutdown(ctx)
+			s.Server.Shutdown(ctx)
 		})
-		err := server.Serve(ln)
+		err := s.Server.Serve(ln)
 		return errors.Wrap(err, "error on "+network+"/"+addr)
 	}
 }

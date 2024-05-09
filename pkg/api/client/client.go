@@ -1,7 +1,14 @@
 package client
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
 )
@@ -10,65 +17,100 @@ type Client struct {
 	client *spec.ClientWithResponses
 }
 
-func New(server string) (*Client, *errors.Error) {
-	if http, err := spec.NewClientWithResponses(server); err != nil {
+func New(ctx contexts.Context, protocol string, server string) (*Client, *errors.Error) {
+	url := protocol + "://" + server
+	if http, err := spec.NewClientWithResponses(url, func(c *spec.Client) error {
+		c.RequestEditors = []spec.RequestEditorFn{
+			func(ct context.Context, req *http.Request) error {
+				req.Header.Add("User-Agent", "bckupr-sdk/"+os.Getenv("VERSION"))
+				req.Header.Add("Dry-Run", strconv.FormatBool(ctx.DryRun))
+				req.Header.Add("Debug", strconv.FormatBool(ctx.Debug))
+				return nil
+			},
+		}
+		return nil
+	}); err != nil {
 		return nil, errors.Wrap(err, "failed to create api client")
 	} else {
 		return &Client{http}, nil
 	}
 }
 
-func (c *Client) TriggerBackup(ctx contexts.Context, req spec.BackupTrigger) (*spec.Task, *spec.Backup, *errors.Error) {
-	return c.TriggerBackupUsingId(ctx, "", req)
+func (c *Client) TriggerBackup(ctx contexts.Context, req spec.BackupTrigger) (*spec.Backup, *errors.Error) {
+	res, err := c.client.TriggerBackupWithResponse(ctx, req)
+	if checkSuccess(res.HTTPResponse, err) {
+		backup := res.JSON200
+		return backup, nil
+	} else {
+		return nil, errors.NewWrap(err, "error triggering backup")
+	}
 }
 
-func (c *Client) TriggerBackupUsingId(ctx contexts.Context, id string, req spec.BackupTrigger) (*spec.Task, *spec.Backup, *errors.Error) {
-	res, err := c.client.TriggerBackupWithResponse(ctx, req)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "error triggering backup")
+func (c *Client) TriggerBackupUsingId(ctx contexts.Context, id string, req spec.BackupTrigger) (*spec.Backup, *errors.Error) {
+	fmt.Println(id, encodings.ToJsonIE(req))
+	res, err := c.client.TriggerBackupWithIdWithResponse(ctx, id, req)
+	if checkSuccess(res.HTTPResponse, err) {
+		backup := res.JSON200
+		return backup, nil
+	} else {
+		return nil, errors.NewWrap(err, "error triggering backup")
 	}
-	backup := res.JSON200
-	task, err := backup.AsTask()
-	return &task, backup, errors.Wrap(err, "error reading task")
 }
 
 func (c *Client) TriggerRestore(ctx contexts.Context, backupId string, req spec.RestoreTrigger) (*spec.Task, *errors.Error) {
 	res, err := c.client.TriggerRestoreWithResponse(ctx, backupId, req)
-	if err != nil {
-		return nil, errors.Wrap(err, "error triggering restore")
+	if checkSuccess(res.HTTPResponse, err) {
+		restore := res.JSON200
+		return restore, nil
+	} else {
+		return nil, errors.NewWrap(err, "error triggering restore")
 	}
-	restore := res.JSON200
-	return restore, nil
 }
 
 func (c *Client) DeleteBackup(ctx contexts.Context, id string) *errors.Error {
-	_, err := c.client.DeleteBackupWithResponse(ctx, id)
-	return errors.Wrap(err, "error triggering backup")
+	res, err := c.client.DeleteBackupWithResponse(ctx, id)
+	if checkSuccess(res.HTTPResponse, err) {
+		return nil
+	} else {
+		return errors.NewWrap(err, "error triggering backup")
+	}
 }
 
 func (c *Client) ListBackups(ctx contexts.Context) ([]spec.Backup, *errors.Error) {
 	res, err := c.client.ListBackupsWithResponse(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "error listing backups")
+	if checkSuccess(res.HTTPResponse, err) {
+		backups := res.JSON200
+		return *backups, nil
+	} else {
+		return nil, errors.NewWrap(err, "error listing backups")
 	}
-	backups := res.JSON200
-	return *backups, nil
 }
 
 func (c *Client) RotateBackups(ctx contexts.Context, req spec.RotateTrigger) (*spec.Task, *errors.Error) {
 	res, err := c.client.RotateBackupsWithResponse(ctx, req)
-	if err != nil {
-		return nil, errors.Wrap(err, "error triggering rotate")
+	if checkSuccess(res.HTTPResponse, err) {
+		task := res.JSON200
+		return task, nil
+	} else {
+		return nil, errors.NewWrap(err, "error triggering rotate")
 	}
-	task := res.JSON200
-	return task, nil
 }
 
 func (c *Client) Version(ctx contexts.Context) (*spec.Version, *errors.Error) {
 	res, err := c.client.GetVersionWithResponse(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "error getting version")
+	if checkSuccess(res.HTTPResponse, err) {
+		task := res.JSON200
+		return task, nil
+	} else {
+		return nil, errors.NewWrap(err, "error getting version")
 	}
-	task := res.JSON200
-	return task, nil
+}
+
+func checkSuccess(res *http.Response, err error) bool {
+	if err != nil {
+		return false
+	} else if (res.StatusCode / 100) != 2 {
+		return false
+	}
+	return true
 }

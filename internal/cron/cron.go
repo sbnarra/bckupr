@@ -75,8 +75,10 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, containers 
 	triggerNotifyNextBackup := func() {}
 	logging.Info(ctx, "backup schedule", schedule)
 	if id, err := c.I.AddFunc(schedule, func() {
-		input := spec.NewTriggerBackup()
-		if _, backup, err := backup.CreateBackup(ctx, "", input, containers); err != nil {
+		req := spec.BackupTrigger{}
+		if err := req.WithDefaults(); err != nil {
+			logging.CheckError(ctx, err, "failed to build input")
+		} else if backup, err := backup.CreateBackup(ctx, "", req, containers); err != nil {
 			logging.CheckError(ctx, err, "Backup Failure", backup.Id)
 		}
 		triggerNotifyNextBackup()

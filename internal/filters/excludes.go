@@ -1,6 +1,7 @@
 package filters
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/sbnarra/bckupr/internal/api/spec"
@@ -11,6 +12,8 @@ func applyExcludeFilters(unfiltered map[string]*dockerTypes.Container, filters s
 	if len(filters.ExcludeNames) == 0 && len(filters.ExcludeVolumes) == 0 {
 		return unfiltered
 	}
+	fmt.Println(filters.ExcludeNames)
+	fmt.Println(filters.ExcludeVolumes)
 
 	filtered := make(map[string]*dockerTypes.Container)
 	for id, container := range filtered {

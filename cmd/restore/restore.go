@@ -6,6 +6,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
@@ -39,7 +40,7 @@ func run(cmd *cobra.Command, args []string) error {
 	} else if task, err := client.TriggerRestore(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
-		logging.Info(ctx, "Restore Complete", task)
+		logging.Info(ctx, "Restore Complete", encodings.ToJsonIE(task))
 	}
 	return nil
 }

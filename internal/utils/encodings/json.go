@@ -18,3 +18,8 @@ func ToJson(data any) (string, *errors.Error) {
 		return string(b), nil
 	}
 }
+
+func FromJson(data []byte, v any) *errors.Error {
+	err := json.Unmarshal(data, v)
+	return errors.Wrap(err, "error encoding to json")
+}

@@ -1,8 +1,6 @@
 package util
 
 import (
-	"fmt"
-
 	"github.com/sbnarra/bckupr/internal/cmd/flags"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
@@ -20,8 +18,8 @@ func NewClient(ctx contexts.Context, cmd *cobra.Command) (*client.Client, *error
 		return nil, err
 	} else {
 		if network == "unix" {
-			return client.New(fmt.Sprintf("broken://%v://%v", protocol, addr))
+			return client.New(ctx, protocol, addr)
 		}
-		return client.New(fmt.Sprintf("%v://%v", protocol, addr))
+		return client.New(ctx, protocol, addr)
 	}
 }

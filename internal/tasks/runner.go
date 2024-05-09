@@ -27,7 +27,7 @@ func RunOnEachDockerHost(ctx contexts.Context, backupId string, args spec.TaskTr
 		return run(ctx, d, action, backupId, args, exec)
 	})
 	var status spec.TaskStatus
-	if err != nil {
+	if err == nil {
 		status = spec.TaskStatusCompleted
 	} else {
 		status = spec.TaskStatusError
@@ -40,7 +40,7 @@ func RunOnEachDockerHost(ctx contexts.Context, backupId string, args spec.TaskTr
 }
 
 func run(ctx contexts.Context, docker docker.Docker, action string, backupId string, args spec.TaskTrigger, exec Exec) *errors.Error {
-	if allContainers, err := docker.List(ctx, args.LabelPrefix); err != nil {
+	if allContainers, err := docker.List(ctx, *args.LabelPrefix); err != nil {
 		return err
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args); err != nil {
 		return err
@@ -100,7 +100,7 @@ func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerT
 
 		tasks := convertToTasks(filtered, task.Filters)
 		if len(tasks) == 0 {
-			return nil, errors.Errorf("nothing to " + ctx.Name + " from filtered containers")
+			return nil, errors.Errorf("0 " + ctx.Name + " tasks to execute, check containers are labelled")
 		}
 		logging.Debug(ctx, len(tasks), ctx.Name+"(s) to execute")
 		return tasks, nil

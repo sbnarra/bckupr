@@ -86,9 +86,9 @@ type TaskStatus string
 
 // TaskTrigger defines model for TaskTrigger.
 type TaskTrigger struct {
-	Filters     Filters     `json:"filters"`
-	LabelPrefix string      `json:"label_prefix"`
-	StopModes   []StopModes `json:"stop_modes"`
+	Filters     Filters      `json:"filters"`
+	LabelPrefix *string      `json:"label_prefix,omitempty"`
+	StopModes   *[]StopModes `json:"stop_modes,omitempty"`
 }
 
 // Version defines model for Version.
@@ -115,6 +115,9 @@ type NotFound = Error
 
 // TriggerBackupJSONRequestBody defines body for TriggerBackup for application/json ContentType.
 type TriggerBackupJSONRequestBody = BackupTrigger
+
+// TriggerBackupWithIdJSONRequestBody defines body for TriggerBackupWithId for application/json ContentType.
+type TriggerBackupWithIdJSONRequestBody = BackupTrigger
 
 // TriggerRestoreJSONRequestBody defines body for TriggerRestore for application/json ContentType.
 type TriggerRestoreJSONRequestBody = RestoreTrigger
@@ -420,8 +423,10 @@ type ClientInterface interface {
 	// GetBackup request
 	GetBackup(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// TriggerBackupWithId request
-	TriggerBackupWithId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// TriggerBackupWithIdWithBody request with any body
+	TriggerBackupWithIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	TriggerBackupWithId(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// TriggerRestoreWithBody request with any body
 	TriggerRestoreWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -497,8 +502,20 @@ func (c *Client) GetBackup(ctx context.Context, id string, reqEditors ...Request
 	return c.Client.Do(req)
 }
 
-func (c *Client) TriggerBackupWithId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTriggerBackupWithIdRequest(c.Server, id)
+func (c *Client) TriggerBackupWithIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTriggerBackupWithIdRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TriggerBackupWithId(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTriggerBackupWithIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -704,8 +721,19 @@ func NewGetBackupRequest(server string, id string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewTriggerBackupWithIdRequest generates requests for TriggerBackupWithId
-func NewTriggerBackupWithIdRequest(server string, id string) (*http.Request, error) {
+// NewTriggerBackupWithIdRequest calls the generic TriggerBackupWithId builder with application/json body
+func NewTriggerBackupWithIdRequest(server string, id string, body TriggerBackupWithIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewTriggerBackupWithIdRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewTriggerBackupWithIdRequestWithBody generates requests for TriggerBackupWithId with any type of body
+func NewTriggerBackupWithIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -730,10 +758,12 @@ func NewTriggerBackupWithIdRequest(server string, id string) (*http.Request, err
 		return nil, err
 	}
 
-	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -909,8 +939,10 @@ type ClientWithResponsesInterface interface {
 	// GetBackupWithResponse request
 	GetBackupWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetBackupResponse, error)
 
-	// TriggerBackupWithIdWithResponse request
-	TriggerBackupWithIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error)
+	// TriggerBackupWithIdWithBodyWithResponse request with any body
+	TriggerBackupWithIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error)
+
+	TriggerBackupWithIdWithResponse(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error)
 
 	// TriggerRestoreWithBodyWithResponse request with any body
 	TriggerRestoreWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerRestoreResponse, error)
@@ -1146,9 +1178,17 @@ func (c *ClientWithResponses) GetBackupWithResponse(ctx context.Context, id stri
 	return ParseGetBackupResponse(rsp)
 }
 
-// TriggerBackupWithIdWithResponse request returning *TriggerBackupWithIdResponse
-func (c *ClientWithResponses) TriggerBackupWithIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error) {
-	rsp, err := c.TriggerBackupWithId(ctx, id, reqEditors...)
+// TriggerBackupWithIdWithBodyWithResponse request with arbitrary body returning *TriggerBackupWithIdResponse
+func (c *ClientWithResponses) TriggerBackupWithIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error) {
+	rsp, err := c.TriggerBackupWithIdWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTriggerBackupWithIdResponse(rsp)
+}
+
+func (c *ClientWithResponses) TriggerBackupWithIdWithResponse(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error) {
+	rsp, err := c.TriggerBackupWithId(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

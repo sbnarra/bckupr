@@ -16,7 +16,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func CreateBackup(ctx contexts.Context, backupId string, input spec.BackupTrigger, containers containers.Templates) (*spec.Task, *spec.Backup, *errors.Error) {
+func CreateBackup(ctx contexts.Context, backupId string, input spec.BackupTrigger, containers containers.Templates) (*spec.Backup, *errors.Error) {
 	backupCtx := ctx
 	backupCtx.Name = "backup"
 	backupId = getBackupId(ctx, backupId)
@@ -25,7 +25,7 @@ func CreateBackup(ctx contexts.Context, backupId string, input spec.BackupTrigge
 	containerBackupDir := ctx.ContainerBackupDir + "/" + backupId
 	if !ctx.DryRun {
 		if err := os.MkdirAll(containerBackupDir, os.ModePerm); err != nil {
-			return nil, nil, errors.Errorf("failed to create backup dir: %v: %w", containerBackupDir, err)
+			return nil, errors.Errorf("failed to create backup dir: %v: %w", containerBackupDir, err)
 		}
 	}
 
@@ -35,18 +35,19 @@ func CreateBackup(ctx contexts.Context, backupId string, input spec.BackupTrigge
 	}
 
 	if task, err := input.AsTaskTrigger(); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to build task input")
+		return nil, errors.Wrap(err, "failed to build task input")
+	} else if task, err := tasks.RunOnEachDockerHost(
+		backupCtx,
+		backupId,
+		task,
+		newBackupVolumeTask(containers, mw)); err != nil {
+		return nil, err
 	} else {
-		task, err := tasks.RunOnEachDockerHost(
-			backupCtx,
-			backupId,
-			task,
-			newBackupVolumeTask(containers, mw))
-
 		backup := spec.Backup{
 			Id: backupId,
 		}
-		return task, &backup, err
+		backup.FromTask(*task)
+		return &backup, err
 	}
 }
 

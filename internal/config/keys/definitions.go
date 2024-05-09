@@ -11,9 +11,9 @@ var BackupId = newKey("backup-id", "backup id to use (backup tasks will autogene
 var DockerHosts = newKey("docker-hosts", "docker host uri's to manage backups on", []string{"unix:///var/run/docker.sock"})
 var LabelPrefix = newKey("label-prefix", "label prefix used to scan containers for configuration", "bckupr")
 
-var DaemonNet = newKey("daemon-net", "network connection type for bckupr daemon, unix or tcp", "unix")
+var DaemonNet = newKey("daemon-net", "network connection type for bckupr daemon, unix or tcp", "tcp")
 var DaemonProtocol = newKey("daemon-protocol", "protocol for bckupr daemon (don't recommend changing)", "http")
-var DaemonAddr = newKey("daemon-addr", "bind address for bckupr daemon, should use unix:///tmp/.bckupr or tcp binding like 0.0.0.0:8000", UnixSocket.Default)
+var DaemonAddr = newKey("daemon-addr", "bind address for bckupr daemon, should use unix:///tmp/.bckupr or tcp binding like 0.0.0.0:8000", TcpAddr.Default)
 
 var LocalContainersConfig = newKey("local-containers-config", "yaml config for managing local backups", "./configs/local/tar.yml")
 var OffsiteContainersConfig = newKey("offsite-containers-config", "yaml config for managing offsite backups", "")
@@ -44,11 +44,9 @@ var RotateSchedule = newKey("rotate-schedule", "cron expression for rotations sc
 // daemon
 var ContainerBackupDir = newKey("container-backup-dir", "backups archieve directory", "/backups")
 var HostBackupDir = newKey("host-backup-dir", "backups archieve directory", "")
-var UnixSocket = newKey("unix-socket", "unix socket to bind daemon", "/tmp/.bckupr.sock")
+
+// var UnixSocket = newKey("unix-socket", "unix socket to bind daemon", "/tmp/.bckupr.sock")
 var TcpAddr = newKey("tcp-addr", "tcp address to bind ui/api", "0.0.0.0:8000")
-var TcpApi = newKey("tcp-api", "exposes api via tcp (by default only unix for local connections)", false)
-var UI = newKey("ui-enabled", "exposes gui", true)
-var Metrics = newKey("metrics", "enables /metrics endpoint", false)
 
 // rotate
 var DestroyBackups = newKey("destroy-backups", "destroy backups instead of moving to bin directory", false)

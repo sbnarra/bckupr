@@ -9,8 +9,9 @@ import (
 )
 
 func InitTaskTrigger(cmd *cobra.Command, stopModes *keys.Key) {
-	initFilters(cmd, stopModes)
+	initFilters(cmd)
 
+	flags.Register(stopModes, cmd.Flags())
 	flags.Register(keys.LabelPrefix, cmd.Flags())
 	flags.Register(keys.BackupId, cmd.Flags())
 }
@@ -34,8 +35,8 @@ func ReadTaskTrigger(cmd *cobra.Command, stopModesKey *keys.Key) (string, *spec.
 	} else {
 		return backupId, &spec.TaskTrigger{
 			Filters:     *filters,
-			LabelPrefix: labelPrefix,
-			StopModes:   stopModes,
+			LabelPrefix: &labelPrefix,
+			StopModes:   &stopModes,
 		}, nil
 	}
 }
