@@ -33,6 +33,11 @@ func Create(context context.Context, name string, concurrency int, containerBack
 	}
 }
 
+func (c Context) WithCancel() (Context, func()) {
+	ctx, cancel := context.WithCancel(c)
+	return Copy(ctx, c), cancel
+}
+
 func NonCancallable(ctx Context) Context {
 	return Copy(context.Background(), ctx)
 }

@@ -1,12 +1,12 @@
 package defaults
 
 import (
-	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/sbnarra/bckupr/internal/api/spec"
 )
 
 func New(specPath string) (*Defaults, error) {
-	loader := openapi3.NewLoader()
-	spec, err := loader.LoadFromFile(specPath)
+	spec, err := spec.GetSwagger()
+
 	return &Defaults{
 		spec:         spec,
 		typeMappings: basicTypeMappings,

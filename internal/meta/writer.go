@@ -55,7 +55,9 @@ func (mw *Writer) AddVolume(ctx contexts.Context, backupId string, name string, 
 }
 
 func (mw *Writer) Write(ctx contexts.Context) *errors.Error {
-	if yaml, err := encodings.ToYaml(mw.data); err != nil {
+	if ctx.DryRun {
+		return nil
+	} else if yaml, err := encodings.ToYaml(mw.data); err != nil {
 		return err
 	} else {
 		content := bytes.NewBufferString("# DO NOT DELETE OR EDIT BY HAND\n" + yaml).Bytes()

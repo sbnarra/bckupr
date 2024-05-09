@@ -8,7 +8,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func ExecPerHost(ctx contexts.Context, exec func(Docker) *errors.Error) *errors.Error {
+func ExecPerHost(ctx contexts.Context, exec func(Docker) *errors.Error) *concurrent.Concurrent {
 	runner := concurrent.Default(ctx, ctx.Name)
 
 	for _, dockerHost := range ctx.DockerHosts {
@@ -24,5 +24,5 @@ func ExecPerHost(ctx contexts.Context, exec func(Docker) *errors.Error) *errors.
 			return err
 		})
 	}
-	return runner.Wait()
+	return runner
 }

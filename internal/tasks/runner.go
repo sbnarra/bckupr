@@ -23,20 +23,11 @@ type Exec func(
 
 func RunOnEachDockerHost(ctx contexts.Context, backupId string, args spec.TaskTrigger, exec Exec) (*spec.Task, *errors.Error) {
 	action := ctx.Name
-	err := docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
-		return run(ctx, d, action, backupId, args, exec)
+	return start(ctx, backupId, func(ctx contexts.Context) *errors.Error {
+		return docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
+			return run(ctx, d, action, backupId, args, exec)
+		}).Wait()
 	})
-	var status spec.TaskStatus
-	if err == nil {
-		status = spec.TaskStatusCompleted
-	} else {
-		status = spec.TaskStatusError
-	}
-	task := spec.Task{
-		Created: time.Now(),
-		Status:  status,
-	}
-	return &task, err
 }
 
 func run(ctx contexts.Context, docker docker.Docker, action string, backupId string, args spec.TaskTrigger, exec Exec) *errors.Error {
@@ -49,6 +40,8 @@ func run(ctx contexts.Context, docker docker.Docker, action string, backupId str
 		for _, task := range tasks {
 			backupVolumes = append(backupVolumes, task.Volume)
 		}
+
+		// TODO: callback for writing initial meta state?
 
 		var notify *notifications.Notifier
 		if notify, err = notifications.New(action); err != nil {

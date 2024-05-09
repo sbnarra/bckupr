@@ -48,25 +48,37 @@ func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, 
 		FileExt:    containers.Local.FileExt,
 	}
 
-	containerBackupDir := ctx.ContainerBackupDir + "/" + backupId
-	if _, err := os.Stat(containerBackupDir); errors.Is(err, os.ErrNotExist) {
-		if containers.Offsite != nil {
-			offsite := *containers.Offsite
-			offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, ctx.HostBackupDir+":/backup:rw")
-
-			if err := docker.Run(ctx, meta, offsite.OffsitePull); err != nil {
-				if errors.Is(err, run.MisconfiguredTemplate) {
-					return errors.Errorf("backup doesn't exist(no offsite pull template available): %v", containerBackupDir)
-				}
-				return err
-			}
-		}
+	if err := checkLocalBackup(ctx, docker, backupId, meta, containers); err != nil {
+		return err
 	}
 
 	containers.Local.Restore.Volumes = append(containers.Local.Restore.Volumes,
 		ctx.HostBackupDir+":/backup:ro",
 		path+":/data:rw")
-	if err := docker.Run(ctx, meta, containers.Local.Restore); err != nil {
+	return docker.Run(ctx, meta, containers.Local.Restore)
+}
+
+func checkLocalBackup(ctx contexts.Context, docker docker.Docker, backupId string, meta run.CommonEnv, containers containers.Templates) *errors.Error {
+	containerBackupDir := ctx.ContainerBackupDir + "/" + backupId
+	if _, err := os.Stat(containerBackupDir); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return errors.Wrap(err, "error checking local backup: "+containerBackupDir)
+		}
+	} else {
+		return nil
+	}
+
+	if containers.Offsite == nil {
+		return errors.Errorf("backup not found: no offsite config to pull: %v", containerBackupDir)
+	}
+
+	offsite := *containers.Offsite
+	offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, ctx.HostBackupDir+":/backup:rw")
+
+	if err := docker.Run(ctx, meta, offsite.OffsitePull); err != nil {
+		if errors.Is(err, run.MisconfiguredTemplate) {
+			return errors.Errorf("offsite containers misconfigured: %v", containerBackupDir)
+		}
 		return err
 	}
 	return nil

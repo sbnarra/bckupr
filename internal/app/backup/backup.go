@@ -19,7 +19,7 @@ import (
 func CreateBackup(ctx contexts.Context, backupId string, input spec.BackupTrigger, containers containers.Templates) (*spec.Backup, *errors.Error) {
 	backupCtx := ctx
 	backupCtx.Name = "backup"
-	backupId = getBackupId(ctx, backupId)
+	backupId = getBackupId(backupId)
 	logging.Info(ctx, "Using backup id", backupId)
 
 	containerBackupDir := ctx.ContainerBackupDir + "/" + backupId
@@ -30,9 +30,7 @@ func CreateBackup(ctx contexts.Context, backupId string, input spec.BackupTrigge
 	}
 
 	mw := meta.NewWriter(ctx, backupId, "full")
-	if !ctx.DryRun {
-		defer mw.Write(ctx)
-	}
+	defer mw.Write(ctx)
 
 	if task, err := input.AsTaskTrigger(); err != nil {
 		return nil, errors.Wrap(err, "failed to build task input")
@@ -51,7 +49,7 @@ func CreateBackup(ctx contexts.Context, backupId string, input spec.BackupTrigge
 	}
 }
 
-func getBackupId(ctx contexts.Context, backupId string) string {
+func getBackupId(backupId string) string {
 	if backupId == "" {
 		return time.Now().Format("20060102_1504")
 	}
