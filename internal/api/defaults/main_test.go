@@ -1,30 +1,23 @@
 package defaults_test
 
-import (
-	"testing"
-	"time"
+// func TestXxx(t *testing.T) {
+// 	specPath := "../../../api/openapi-system.yml"
+// 	d, err := defaults.New(specPath)
+// 	if err != nil {
+// 		t.Fatalf("failed to load spec from %v: %+v", specPath, err)
+// 	}
 
-	"github.com/sbnarra/bckupr/internal/oapi/defaults"
-)
+// 	d.AddType("time.Time", func() any {
+// 		t := time.Now()
+// 		return &t
+// 	})
+// d.AddType("client.Other", func() any { return &client.Other{} })
 
-func TestXxx(t *testing.T) {
-	specPath := "../../../api/openapi-system.yml"
-	d, err := defaults.New(specPath)
-	if err != nil {
-		t.Fatalf("failed to load spec from %v: %+v", specPath, err)
-	}
-
-	d.AddType("time.Time", func() any {
-		t := time.Now()
-		return &t
-	})
-	// d.AddType("client.Other", func() any { return &client.Other{} })
-
-	// v := client.Version{}
-	// if err := defaults.Fill(&v, d); err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println(v)
-	// fmt.Println("Created:", v.Created)
-	// fmt.Println("OtherField:", v.Other.OtherField)
-}
+// v := client.Version{}
+// if err := defaults.Fill(&v, d); err != nil {
+// 	panic(err)
+// }
+// fmt.Println(v)
+// fmt.Println("Created:", v.Created)
+// fmt.Println("OtherField:", v.Other.OtherField)
+// }

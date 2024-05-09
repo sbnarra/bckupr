@@ -16,8 +16,7 @@ import (
 func TestRestoreMissingBackupId(t *testing.T) {
 	ctx := prepareIntegrationTest(t)
 
-	daemonInput := config.Config{}
-	s := server.New(ctx, daemonInput, containers.Templates{})
+	s := server.New(ctx, config.New(), containers.Templates{})
 	go func() {
 		if err := s.Listen(ctx); err != nil {
 			panic(err)
