@@ -50,10 +50,11 @@ func (c *Cron) Start(ctx contexts.Context,
 	rotateSchedule string,
 	rotateInput spec.RotateInput,
 	containers containers.Templates,
+	notificationSettings *notifications.NotificationSettings,
 ) *errors.Error {
 	c.I.Start()
 	if backupSchedule != "" {
-		if err := c.scheduleBackup(ctx, backupSchedule, containers); err != nil {
+		if err := c.scheduleBackup(ctx, backupSchedule, containers, notificationSettings); err != nil {
 			return err
 		}
 	} else {
@@ -72,14 +73,19 @@ func (c *Cron) Start(ctx contexts.Context,
 	return errors.New("cron stopped")
 }
 
-func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, containers containers.Templates) *errors.Error {
+func (c *Cron) scheduleBackup(
+	ctx contexts.Context,
+	schedule string,
+	containers containers.Templates,
+	notificationSettings *notifications.NotificationSettings,
+) *errors.Error {
 	triggerNotifyNextBackup := func() {}
 	logging.Info(ctx, "backup schedule", schedule)
 	if id, err := c.I.AddFunc(schedule, func() {
 		req := spec.ContainersConfig{}
 		if err := req.WithDefaults(spec.BackupStopModes); err != nil {
 			logging.CheckError(ctx, err, "failed to build input")
-		} else if backup, err := backup.Start(ctx, "", req, containers); err != nil {
+		} else if backup, err := backup.Start(ctx, "", req, containers, notificationSettings); err != nil {
 			logging.CheckError(ctx, err, "Backup Failure", backup.Id)
 		}
 		triggerNotifyNextBackup()
@@ -89,7 +95,7 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, containers 
 		c.BackupId = id
 		c.BackupSchedule = schedule
 		triggerNotifyNextBackup = func() {
-			if notify, err := notifications.New("cron"); err == nil {
+			if notify, err := notifications.New("cron", notificationSettings); err == nil {
 				notify.NextBackupSchedule(ctx, c.I.Entry(c.BackupId).Next)
 			} else {
 				logging.CheckError(ctx, err, "failed to create notifier")

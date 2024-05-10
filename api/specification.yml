@@ -209,6 +209,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Volume'
+    Restore:
+      type: object
+      required:
+        - id
+        - started
+        - status
+        - volumes
+      properties:
+        id:
+          type: string
+        started:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/Status'
+        volumes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume'
+        error:
+          type: string
     Volume:
       type: object
       required:
@@ -232,19 +253,6 @@ components:
         size:
           type: integer
           format: int64
-        error:
-          type: string
-    Restore:
-      type: object
-      required:
-        - started
-        - status
-      properties:
-        started:
-          type: string
-          format: date-time
-        status:
-          $ref: '#/components/schemas/Status'
         error:
           type: string
     RotateInput:

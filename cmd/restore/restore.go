@@ -1,7 +1,6 @@
 package restore
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/sbnarra/bckupr/internal/cmd/config"
@@ -43,11 +42,12 @@ func run(cmd *cobra.Command, args []string) error {
 	} else if restore, err := client.StartRestore(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
-		logging.Info(ctx, "Restore Complete", encodings.ToJsonIE(restore))
+		util.TermClear()
+		logging.Info(ctx, "Restore Started", encodings.ToJsonIE(restore))
 
 		ctx, _ = ctx.WithDeadline(time.Now().Add(time.Minute * 1))
-
 		for ctx.Err() == nil {
+			util.TermClear()
 			restore, err := client.GetRestore(ctx, id)
 			if err != nil {
 				logging.CheckError(ctx, err)
@@ -63,9 +63,7 @@ func run(cmd *cobra.Command, args []string) error {
 				logging.Warn(ctx, "Restore Status Unknown", encodings.ToJsonIE(restore))
 			}
 			time.Sleep(time.Second)
-			fmt.Print("\033[H\033[2J")
 		}
-
 		logging.CheckError(ctx, errors.Wrap(ctx.Err(), "ctx error"))
 	}
 	return nil

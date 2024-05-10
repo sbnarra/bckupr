@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/sbnarra/bckupr/internal/api/config"
 	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/config/containers"
+	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/interrupt"
@@ -17,16 +17,16 @@ import (
 type Server struct {
 	*http.Server
 	contexts.Context
-	config.Config
+	Config
 }
 
-func New(ctx contexts.Context, config config.Config, containers containers.Templates) *Server {
+func New(ctx contexts.Context, config Config, containers containers.Templates, notificationSettings *notifications.NotificationSettings) *Server {
 	router := gin.Default()
 
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	router.Static("/ui", "./ui")
 
-	spec.RegisterHandlers(router, handler{ctx, containers})
+	spec.RegisterHandlers(router, handler{ctx, containers, notificationSettings})
 	httpServer := &http.Server{
 		Handler: router,
 	}

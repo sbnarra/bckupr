@@ -18,15 +18,14 @@ type Notifier struct {
 	settings *NotificationSettings
 }
 
-func New(action string) (*Notifier, *errors.Error) {
-	notificationSettings := settings()
+func New(action string, settings *NotificationSettings) (*Notifier, *errors.Error) {
 	notifier := &Notifier{
 		action:   action,
-		settings: notificationSettings,
+		settings: settings,
 	}
-	if len(notificationSettings.NotificationUrls) == 0 {
+	if len(settings.NotificationUrls) == 0 {
 		return notifier, nil
-	} else if shoutrrr, err := shoutrrr.CreateSender(notificationSettings.NotificationUrls...); err != nil {
+	} else if shoutrrr, err := shoutrrr.CreateSender(settings.NotificationUrls...); err != nil {
 		return notifier, errors.Wrap(err, "failed to create shoutrrr sender")
 	} else {
 		notifier.shoutrrr = shoutrrr

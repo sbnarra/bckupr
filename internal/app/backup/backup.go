@@ -9,6 +9,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/run"
 	"github.com/sbnarra/bckupr/internal/metrics"
+	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/tasks/runner"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
@@ -21,6 +22,7 @@ func Start(
 	id string,
 	input spec.ContainersConfig,
 	containers containers.Templates,
+	notificationSettings *notifications.NotificationSettings,
 ) (*spec.Backup, *errors.Error) {
 	if id == "" {
 		id = time.Now().Format("20060102_1504")
@@ -35,7 +37,8 @@ func Start(
 	}
 
 	hooks := NewHooks(ctx, id, containers.Local)
-	err := runner.RunOnEachDockerHost(ctx, id, input, hooks, newBackupVolumeTask(containers))
+	backupTask := newBackupVolumeTask(containers)
+	err := runner.RunOnEachDockerHost(ctx, id, input, hooks, backupTask, notificationSettings)
 	return hooks.Writer.Data, err
 }
 

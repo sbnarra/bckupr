@@ -1,15 +1,15 @@
-package e2e
+package client_test
 
 import (
 	"testing"
 
 	"github.com/sbnarra/bckupr/internal/config/keys"
+	"github.com/sbnarra/bckupr/internal/tests/e2e"
 	"github.com/sbnarra/bckupr/pkg/api/client"
 )
 
-// move into pkg/api/client
 func TestNoDaemonRunning(t *testing.T) {
-	ctx := prepareIntegrationTest(t)
+	ctx := e2e.PrepareIntegrationTest(t)
 	if client, err := client.New(ctx, keys.DaemonProtocol.Default.(string), keys.DaemonAddr.Default.(string)); err != nil {
 		t.Fatalf("unexpected error creating client: %v", err)
 	} else {

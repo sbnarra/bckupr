@@ -8,6 +8,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/cron"
+	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/spf13/cobra"
@@ -34,14 +35,14 @@ func buildCron(cmd *cobra.Command) *errors.Error {
 	}
 }
 
-func startCron(ctx contexts.Context, cmd *cobra.Command, containers containers.Templates) *errors.Error {
+func startCron(ctx contexts.Context, cmd *cobra.Command, containers containers.Templates, notificationSettings *notifications.NotificationSettings) *errors.Error {
 	if backupSchedule, err := flags.String(keys.BackupSchedule, cmd.Flags()); err != nil {
 		return err
 	} else if input, err := newRequest(ctx, cmd); err != nil {
 		return err
 	} else if rotateSchedule, err := flags.String(keys.RotateSchedule, cmd.Flags()); err != nil {
 		return err
-	} else if err := instance.Start(ctx, backupSchedule, rotateSchedule, input, containers); err != nil {
+	} else if err := instance.Start(ctx, backupSchedule, rotateSchedule, input, containers, notificationSettings); err != nil {
 		return err
 	}
 	return nil

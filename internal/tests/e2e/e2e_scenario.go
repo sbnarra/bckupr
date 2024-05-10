@@ -8,12 +8,12 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func e2e(t *testing.T,
+func RunE2E(t *testing.T,
 	backup func() *errors.Error,
 	restore func() *errors.Error,
 	delete func() *errors.Error,
 ) {
-	ctx := prepareIntegrationTest(t)
+	ctx := PrepareIntegrationTest(t)
 
 	dClient := dockerClient(t, ctx)
 	defer dClient.Close()
@@ -43,7 +43,7 @@ func e2e(t *testing.T,
 	}
 }
 
-func prepareIntegrationTest(t *testing.T) contexts.Context {
+func PrepareIntegrationTest(t *testing.T) contexts.Context {
 	toProjectRoot(t)
 	return createContext(t)
 }

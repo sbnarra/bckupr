@@ -3,13 +3,13 @@ package daemon
 import (
 	"net/http"
 
-	"github.com/sbnarra/bckupr/internal/api/config"
 	"github.com/sbnarra/bckupr/internal/api/server"
 	"github.com/sbnarra/bckupr/internal/cmd/flags"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/docker/discover"
+	"github.com/sbnarra/bckupr/internal/notifications"
 
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
@@ -52,14 +52,16 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if containers, err := containers.ContainerTemplates(input.LocalContainersConfig, input.OffsiteContainersConfig); err != nil {
 		return err
+	} else if notificationSettings, err := notificationSettings(cmd); err != nil {
+		return err
 	} else {
 		daemon := concurrent.New(ctx, "daemon", 2)
 		daemon.RunN("cron", func(ctx contexts.Context) *errors.Error {
-			return startCron(ctx, cmd, containers)
+			return startCron(ctx, cmd, containers, notificationSettings)
 		})
 
 		daemon.RunN("api", func(ctx contexts.Context) *errors.Error {
-			s := server.New(ctx, *input, containers)
+			s := server.New(ctx, *input, containers, notificationSettings)
 			err := s.Listen(ctx)
 			if errors.Is(err, http.ErrServerClosed) {
 				return nil
@@ -72,9 +74,9 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func createDaemonContextAndInput(cmd *cobra.Command) (contexts.Context, *config.Config, *errors.Error) {
+func createDaemonContextAndInput(cmd *cobra.Command) (contexts.Context, *server.Config, *errors.Error) {
 	var ctx contexts.Context
-	var config *config.Config
+	var config *server.Config
 	var err *errors.Error
 
 	if ctx, err = util.NewContext(cmd); err != nil {
@@ -104,7 +106,7 @@ func createDaemonContextAndInput(cmd *cobra.Command) (contexts.Context, *config.
 	return ctx, config, err
 }
 
-func readConfig(cmd *cobra.Command) (*config.Config, *errors.Error) {
+func readConfig(cmd *cobra.Command) (*server.Config, *errors.Error) {
 	if hostBackupDir, err := flags.String(keys.HostBackupDir, cmd.Flags()); err != nil {
 		return nil, err
 	} else if localContainersConfig, err := flags.String(keys.LocalContainersConfig, cmd.Flags()); err != nil {
@@ -118,7 +120,7 @@ func readConfig(cmd *cobra.Command) (*config.Config, *errors.Error) {
 	} else if dockerHosts, err := flags.StringSlice(keys.DockerHosts, cmd.Flags()); err != nil {
 		return nil, err
 	} else {
-		return &config.Config{
+		return &server.Config{
 			HostBackupDir: hostBackupDir,
 			DockerHosts:   dockerHosts,
 
@@ -129,4 +131,54 @@ func readConfig(cmd *cobra.Command) (*config.Config, *errors.Error) {
 			TcpAddr: tcpAddr,
 		}, nil
 	}
+}
+
+func notificationSettings(cmd *cobra.Command) (*notifications.NotificationSettings, *errors.Error) {
+	var err *errors.Error
+
+	var notificationUrls []string
+	if notificationUrls, err = flags.StringSlice(keys.NotificationUrls, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var notifyJobStarted bool
+	if notifyJobStarted, err = flags.Bool(keys.NotifyJobStarted, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var notifyJobCompleted bool
+	if notifyJobCompleted, err = flags.Bool(keys.NotifyJobCompleted, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var notifyJobError bool
+	if notifyJobError, err = flags.Bool(keys.NotifyJobError, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var notifyTaskStarted bool
+	if notifyTaskStarted, err = flags.Bool(keys.NotifyTaskStarted, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var notifyTaskCompleted bool
+	if notifyTaskCompleted, err = flags.Bool(keys.NotifyTaskCompleted, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	var notifyTaskError bool
+	if notifyTaskError, err = flags.Bool(keys.NotifyTaskError, cmd.Flags()); err != nil {
+		return nil, err
+	}
+
+	return &notifications.NotificationSettings{
+		NotificationUrls: notificationUrls,
+
+		NotifyJobStarted:    notifyJobStarted,
+		NotifyJobCompleted:  notifyJobCompleted,
+		NotifyJobError:      notifyJobError,
+		NotifyTaskStarted:   notifyTaskStarted,
+		NotifyTaskCompleted: notifyTaskCompleted,
+		NotifyTaskError:     notifyTaskError,
+	}, nil
 }

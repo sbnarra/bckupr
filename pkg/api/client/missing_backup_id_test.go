@@ -1,22 +1,22 @@
-package e2e
+package client_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/sbnarra/bckupr/internal/api/config"
 	"github.com/sbnarra/bckupr/internal/api/server"
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
+	"github.com/sbnarra/bckupr/internal/notifications"
+	"github.com/sbnarra/bckupr/internal/tests/e2e"
 	"github.com/sbnarra/bckupr/pkg/api/client"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
 )
 
-// move into internal/app/restore
 func TestRestoreMissingBackupId(t *testing.T) {
-	ctx := prepareIntegrationTest(t)
+	ctx := e2e.PrepareIntegrationTest(t)
 
-	s := server.New(ctx, config.New(), containers.Templates{})
+	s := server.New(ctx, e2e.NewServerConfig(), containers.Templates{}, &notifications.NotificationSettings{})
 	go func() {
 		s.Listen(ctx)
 	}()

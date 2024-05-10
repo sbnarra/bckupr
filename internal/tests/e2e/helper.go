@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/sbnarra/bckupr/internal/api/server"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 )
 
 func createContext(t *testing.T) contexts.Context {
-
 	debug := true
 	dryRun := false
 	backupDir := "/tmp/backups"
@@ -22,4 +22,14 @@ func createContext(t *testing.T) contexts.Context {
 	os.Setenv(keys.HostBackupDir.EnvId(), backupDir)
 
 	return contexts.Create(context.Background(), t.Name(), 1, backupDir, backupDir, dockerHosts, contexts.Debug(debug), contexts.DryRun(dryRun))
+}
+
+func NewServerConfig() server.Config {
+	return server.Config{
+		DockerHosts:             keys.DockerHosts.EnvStringSlice(),
+		HostBackupDir:           keys.HostBackupDir.EnvString(),
+		LocalContainersConfig:   keys.LocalContainersConfig.EnvString(),
+		OffsiteContainersConfig: keys.OffsiteContainersConfig.EnvString(),
+		TcpAddr:                 keys.TcpAddr.EnvString(),
+	}
 }

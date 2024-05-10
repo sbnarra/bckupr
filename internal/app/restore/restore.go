@@ -9,13 +9,20 @@ import (
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/run"
 	"github.com/sbnarra/bckupr/internal/metrics"
+	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/tasks/runner"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func Start(ctx contexts.Context, backupId string, input spec.ContainersConfig, containers containers.Templates) (*spec.Restore, *errors.Error) {
+func Start(
+	ctx contexts.Context,
+	backupId string,
+	input spec.ContainersConfig,
+	containers containers.Templates,
+	notificationSettings *notifications.NotificationSettings,
+) (*spec.Restore, *errors.Error) {
 	if backupId == "" {
 		return nil, errors.New("missing backup id")
 	}
@@ -25,12 +32,9 @@ func Start(ctx contexts.Context, backupId string, input spec.ContainersConfig, c
 		Status:  spec.StatusPending,
 	}
 
-	err := runner.RunOnEachDockerHost(
-		ctx,
-		backupId,
-		input,
-		NewHooks(),
-		newRestoreBackupTask(containers))
+	hooks := NewHooks()
+	restoreTask := newRestoreBackupTask(containers)
+	err := runner.RunOnEachDockerHost(ctx, backupId, input, hooks, restoreTask, notificationSettings)
 	return restore, err
 }
 

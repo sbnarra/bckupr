@@ -14,13 +14,15 @@ import (
 	"github.com/sbnarra/bckupr/internal/app/version"
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/meta/reader"
+	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
 type handler struct {
-	ctx        contexts.Context
-	containers containers.Templates
+	ctx                  contexts.Context
+	containers           containers.Templates
+	notificationSettings *notifications.NotificationSettings
 }
 
 func (s handler) newContext(c *gin.Context) contexts.Context {
@@ -56,7 +58,7 @@ func (s handler) StartBackupWithId(c *gin.Context, id string) {
 		onError(ctx, c, http.StatusBadRequest, "error parsing request:"+err.Error())
 	} else if err := payload.WithDefaults(spec.BackupStopModes); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, "failed to load defaults:"+err.Error())
-	} else if backup, err := backup.Start(ctx, id, payload, s.containers); err != nil {
+	} else if backup, err := backup.Start(ctx, id, payload, s.containers, s.notificationSettings); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, err.Error())
 	} else {
 		onSuccess(c, http.StatusOK, backup)
@@ -70,7 +72,7 @@ func (s handler) StartRestore(c *gin.Context, id string) {
 		onError(ctx, c, http.StatusBadRequest, "error parsing request:"+err.Error())
 	} else if err := payload.WithDefaults(spec.RestoreStopModes); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, "failed to load defaults:"+err.Error())
-	} else if task, err := restore.Start(ctx, id, payload, s.containers); err != nil {
+	} else if task, err := restore.Start(ctx, id, payload, s.containers, s.notificationSettings); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, err.Error())
 	} else {
 		onSuccess(c, http.StatusOK, task)

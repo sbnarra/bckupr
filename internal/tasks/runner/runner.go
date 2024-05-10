@@ -24,13 +24,18 @@ func RunOnEachDockerHost(
 	args spec.ContainersConfig,
 	hooks types.Hooks,
 	exec types.Exec,
+	notificationSettings *notifications.NotificationSettings,
 ) *errors.Error {
 	action := ctx.Name
-	return async.Start(ctx, backupId, func(ctx contexts.Context) *errors.Error {
-		return docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
-			return run(ctx, d, action, backupId, args, hooks, exec)
-		}).Wait()
-	})
+	if notifier, err := notifications.New(action, notificationSettings); err != nil {
+		return err
+	} else {
+		return async.Start(ctx, backupId, func(ctx contexts.Context) *errors.Error {
+			return docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
+				return run(ctx, d, action, backupId, args, hooks, exec, notifier)
+			}).Wait()
+		})
+	}
 }
 
 func run(
@@ -41,6 +46,7 @@ func run(
 	args spec.ContainersConfig,
 	hooks types.Hooks,
 	exec types.Exec,
+	notifier *notifications.Notifier,
 ) *errors.Error {
 	if allContainers, err := docker.List(ctx, *args.LabelPrefix); err != nil {
 		return err
@@ -49,12 +55,8 @@ func run(
 	} else {
 		hooks.JobStarted(tasks)
 
-		var notify *notifications.Notifier
-		if notify, err = notifications.New(action); err != nil {
-			return err
-		}
 		backupVolumes := backupVolumes(tasks)
-		notify.JobStarted(ctx, action, backupId, backupVolumes)
+		notifier.JobStarted(ctx, action, backupId, backupVolumes)
 		jobStarted := time.Now()
 
 		taskCh := make(chan *types.Task)
@@ -64,7 +66,7 @@ func run(
 		for name, task := range tasks {
 			actionTask.Run(func(ctx contexts.Context) *errors.Error {
 				taskStarted := time.Now()
-				notify.TaskStarted(ctx, backupId, task.Volume)
+				notifier.TaskStarted(ctx, backupId, task.Volume)
 				hooks.VolumeStarted(name, task.Volume)
 
 				var runErr *errors.Error
@@ -75,7 +77,7 @@ func run(
 					logging.CheckError(ctx, runErr, "failed to stop the containers")
 				}
 
-				notify.TaskCompleted(ctx, action, backupId, task.Volume, taskStarted, runErr)
+				notifier.TaskCompleted(ctx, action, backupId, task.Volume, taskStarted, runErr)
 				hooks.VolumeFinished(name, task.Volume, runErr)
 				taskCh <- task
 				return runErr
@@ -84,7 +86,7 @@ func run(
 
 		err := actionTask.Wait()
 		taskCh <- nil
-		notify.JobCompleted(ctx, action, backupId, backupVolumes, jobStarted, err)
+		notifier.JobCompleted(ctx, action, backupId, backupVolumes, jobStarted, err)
 		hooks.JobFinished(err)
 		return listener.Wait()
 	}

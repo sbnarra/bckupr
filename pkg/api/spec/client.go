@@ -66,8 +66,10 @@ type Filters struct {
 // Restore defines model for Restore.
 type Restore struct {
 	Error   *string   `json:"error,omitempty"`
+	Id      string    `json:"id"`
 	Started time.Time `json:"started"`
 	Status  Status    `json:"status"`
+	Volumes []Volume  `json:"volumes"`
 }
 
 // Rotate defines model for Rotate.
