@@ -32,8 +32,8 @@ func TestE2EInternal(t *testing.T) {
 
 	e2e(t,
 		func() *errors.Error {
-			payload := serverSpec.BackupTrigger{}
-			if err := payload.WithDefaults(); err != nil {
+			payload := serverSpec.ContainersConfig{}
+			if err := payload.WithDefaults(serverSpec.BackupStopModes); err != nil {
 				return err
 			} else {
 				backup, err := backup.CreateBackup(ctx, "", payload, containers)
@@ -42,8 +42,8 @@ func TestE2EInternal(t *testing.T) {
 			}
 		},
 		func() *errors.Error {
-			payload := serverSpec.RestoreTrigger{}
-			if err := payload.WithDefaults(); err != nil {
+			payload := serverSpec.ContainersConfig{}
+			if err := payload.WithDefaults(serverSpec.BackupStopModes); err != nil {
 				return err
 			} else {
 				task, err := restore.RestoreBackup(ctx, id, payload, containers)
@@ -83,13 +83,13 @@ func TestE2EExternal(t *testing.T) {
 
 	e2e(t,
 		func() *errors.Error {
-			req := clientSpec.BackupTrigger{}
+			req := clientSpec.ContainersConfig{}
 			backup, err := client.TriggerBackupUsingId(ctx, id, req)
 			logging.Info(ctx, backup, err)
 			return err
 		},
 		func() *errors.Error {
-			req := clientSpec.RestoreTrigger{}
+			req := clientSpec.ContainersConfig{}
 			task, err := client.TriggerRestore(ctx, id, req)
 			logging.Info(ctx, task, err)
 			return err

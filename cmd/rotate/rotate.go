@@ -44,13 +44,13 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newRequest(ctx contexts.Context, cmd *cobra.Command) (*spec.RotateTrigger, *errors.Error) {
+func newRequest(ctx contexts.Context, cmd *cobra.Command) (*spec.RotateInput, *errors.Error) {
 	if destroyBackups, err := flags.Bool(keys.DestroyBackups, cmd.Flags()); err != nil {
 		return nil, err
 	} else if policyPath, err := flags.String(keys.PoliciesPath, cmd.Flags()); err != nil {
 		return nil, err
 	} else {
-		return &spec.RotateTrigger{
+		return &spec.RotateInput{
 			Destroy:      destroyBackups,
 			PoliciesPath: policyPath,
 		}, nil

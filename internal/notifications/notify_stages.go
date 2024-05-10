@@ -9,7 +9,12 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func (n *Notifier) JobStarted(ctx contexts.Context, action string, id string, volumes []string) {
+func (n *Notifier) JobStarted(
+	ctx contexts.Context,
+	action string,
+	id string,
+	volumes []string,
+) {
 	msg := fmt.Sprintf("Started Job '%v': id=%v, volumes=%v", n.action, id, volumes)
 	logging.Info(ctx, msg)
 	if n.settings.NotifyJobStarted {

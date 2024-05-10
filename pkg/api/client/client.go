@@ -2,13 +2,11 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
-	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
 )
@@ -36,7 +34,7 @@ func New(ctx contexts.Context, protocol string, server string) (*Client, *errors
 	}
 }
 
-func (c *Client) TriggerBackup(ctx contexts.Context, req spec.BackupTrigger) (*spec.Backup, *errors.Error) {
+func (c *Client) TriggerBackup(ctx contexts.Context, req spec.ContainersConfig) (*spec.Backup, *errors.Error) {
 	res, err := c.client.TriggerBackupWithResponse(ctx, req)
 	if checkSuccess(res.HTTPResponse, err) {
 		backup := res.JSON200
@@ -46,24 +44,23 @@ func (c *Client) TriggerBackup(ctx contexts.Context, req spec.BackupTrigger) (*s
 	}
 }
 
-func (c *Client) TriggerBackupUsingId(ctx contexts.Context, id string, req spec.BackupTrigger) (*spec.Backup, *errors.Error) {
-	fmt.Println(id, encodings.ToJsonIE(req))
+func (c *Client) TriggerBackupUsingId(ctx contexts.Context, id string, req spec.ContainersConfig) (*spec.Backup, *errors.Error) {
 	res, err := c.client.TriggerBackupWithIdWithResponse(ctx, id, req)
 	if checkSuccess(res.HTTPResponse, err) {
 		backup := res.JSON200
 		return backup, nil
 	} else {
-		return nil, errors.NewWrap(err, "error triggering backup")
+		return nil, errors.NewWrap(err, "error triggering backup:"+id)
 	}
 }
 
-func (c *Client) TriggerRestore(ctx contexts.Context, backupId string, req spec.RestoreTrigger) (*spec.Task, *errors.Error) {
-	res, err := c.client.TriggerRestoreWithResponse(ctx, backupId, req)
+func (c *Client) GetBackup(ctx contexts.Context, id string) (*spec.Backup, *errors.Error) {
+	res, err := c.client.GetBackupWithResponse(ctx, id)
 	if checkSuccess(res.HTTPResponse, err) {
-		restore := res.JSON200
-		return restore, nil
+		backup := res.JSON200
+		return backup, nil
 	} else {
-		return nil, errors.NewWrap(err, "error triggering restore")
+		return nil, errors.NewWrap(err, "error finding backup: "+id)
 	}
 }
 
@@ -86,7 +83,27 @@ func (c *Client) ListBackups(ctx contexts.Context) ([]spec.Backup, *errors.Error
 	}
 }
 
-func (c *Client) RotateBackups(ctx contexts.Context, req spec.RotateTrigger) (*spec.Task, *errors.Error) {
+func (c *Client) TriggerRestore(ctx contexts.Context, backupId string, req spec.ContainersConfig) (*spec.Restore, *errors.Error) {
+	res, err := c.client.TriggerRestoreWithResponse(ctx, backupId, req)
+	if checkSuccess(res.HTTPResponse, err) {
+		restore := res.JSON200
+		return restore, nil
+	} else {
+		return nil, errors.NewWrap(err, "error triggering restore")
+	}
+}
+
+func (c *Client) GetRestore(ctx contexts.Context, id string) (*spec.Restore, *errors.Error) {
+	res, err := c.client.GetRestoreWithResponse(ctx, id)
+	if checkSuccess(res.HTTPResponse, err) {
+		restore := res.JSON200
+		return restore, nil
+	} else {
+		return nil, errors.NewWrap(err, "error finding restore: "+id)
+	}
+}
+
+func (c *Client) RotateBackups(ctx contexts.Context, req spec.RotateInput) (*spec.Rotate, *errors.Error) {
 	res, err := c.client.RotateBackupsWithResponse(ctx, req)
 	if checkSuccess(res.HTTPResponse, err) {
 		task := res.JSON200

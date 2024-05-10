@@ -2,6 +2,7 @@ package contexts
 
 import (
 	"context"
+	"time"
 
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
@@ -35,6 +36,11 @@ func Create(context context.Context, name string, concurrency int, containerBack
 
 func (c Context) WithCancel() (Context, func()) {
 	ctx, cancel := context.WithCancel(c)
+	return Copy(ctx, c), cancel
+}
+
+func (c Context) WithDeadline(t time.Time) (Context, func()) {
+	ctx, cancel := context.WithDeadline(c, t)
 	return Copy(ctx, c), cancel
 }
 

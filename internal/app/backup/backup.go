@@ -8,63 +8,58 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/run"
-	"github.com/sbnarra/bckupr/internal/meta"
+	"github.com/sbnarra/bckupr/internal/meta/writer"
 	"github.com/sbnarra/bckupr/internal/metrics"
-	"github.com/sbnarra/bckupr/internal/tasks"
+	"github.com/sbnarra/bckupr/internal/tasks/runner"
+	"github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func CreateBackup(ctx contexts.Context, backupId string, input spec.BackupTrigger, containers containers.Templates) (*spec.Backup, *errors.Error) {
-	backupCtx := ctx
-	backupCtx.Name = "backup"
-	backupId = getBackupId(backupId)
-	logging.Info(ctx, "Using backup id", backupId)
+func CreateBackup(
+	ctx contexts.Context,
+	id string,
+	input spec.ContainersConfig,
+	containers containers.Templates,
+) (*spec.Backup, *errors.Error) {
+	if id == "" {
+		id = time.Now().Format("20060102_1504")
+	}
+	logging.Info(ctx, "Using backup id", id)
 
-	containerBackupDir := ctx.ContainerBackupDir + "/" + backupId
+	containerBackupDir := ctx.ContainerBackupDir + "/" + id
 	if !ctx.DryRun {
 		if err := os.MkdirAll(containerBackupDir, os.ModePerm); err != nil {
 			return nil, errors.Errorf("failed to create backup dir: %v: %w", containerBackupDir, err)
 		}
 	}
 
-	mw := meta.NewWriter(ctx, backupId, "full")
-	defer mw.Write(ctx)
-
-	if task, err := input.AsTaskTrigger(); err != nil {
-		return nil, errors.Wrap(err, "failed to build task input")
-	} else if task, err := tasks.RunOnEachDockerHost(
-		backupCtx,
-		backupId,
-		task,
-		newBackupVolumeTask(containers, mw)); err != nil {
-		return nil, err
-	} else {
-		backup := spec.Backup{
-			Id: backupId,
-		}
-		backup.FromTask(*task)
-		return &backup, err
-	}
-}
-
-func getBackupId(backupId string) string {
-	if backupId == "" {
-		return time.Now().Format("20060102_1504")
-	}
-	return backupId
+	writer := writer.New(id, containers.Local)
+	err := runner.RunOnEachDockerHost(
+		ctx, id, input,
+		func(tasks types.Tasks) {
+			writer.JobInit(ctx, tasks)
+		},
+		newBackupVolumeTask(containers, writer),
+		func(err *errors.Error) {
+			writer.JobCompleted(ctx, err)
+		})
+	return writer.Data, err
 }
 
 func newBackupVolumeTask(
 	containers containers.Templates,
-	mw *meta.Writer,
-) tasks.Exec {
-	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, volume string) *errors.Error {
-		m := metrics.Backup(backupId, name)
-		err := backupVolume(ctx, docker, backupId, name, volume, containers)
-		mw.AddVolume(ctx, backupId, name, containers.Local.FileExt, volume, err)
+	writer *writer.Writer,
+) types.Exec {
+	return func(ctx contexts.Context, docker docker.Docker, id string, name string, volume string) *errors.Error {
+		writer.TaskStarted(ctx, name)
+		m := metrics.Backup(id, name)
+
+		err := backupVolume(ctx, docker, id, name, volume, containers)
+
 		m.OnComplete(err)
+		writer.TaskCompleted(ctx, name, err)
 		return err
 	}
 }
@@ -72,13 +67,13 @@ func newBackupVolumeTask(
 func backupVolume(
 	ctx contexts.Context,
 	docker docker.Docker,
-	backupId string,
+	id string,
 	name string,
 	volume string,
 	containers containers.Templates,
 ) *errors.Error {
 	meta := run.CommonEnv{
-		BackupId:   backupId,
+		BackupId:   id,
 		VolumeName: name,
 		FileExt:    containers.Local.FileExt,
 	}
@@ -90,17 +85,18 @@ func backupVolume(
 		return err
 	}
 
-	if containers.Offsite != nil {
-		offsite := *containers.Offsite
-		offsite.OffsitePush.Volumes = append(offsite.OffsitePush.Volumes,
-			ctx.HostBackupDir+":/backup:ro")
-		if err := docker.Run(ctx, meta, offsite.OffsitePush); err != nil {
-			if errors.Is(err, run.MisconfiguredTemplate) {
-				logging.CheckError(ctx, err)
-			} else {
-				return err
-			}
-		}
+	if containers.Offsite == nil {
+		return nil
 	}
-	return nil
+
+	offsite := *containers.Offsite
+	offsite.OffsitePush.Volumes = append(offsite.OffsitePush.Volumes,
+		ctx.HostBackupDir+":/backup:ro")
+
+	err := docker.Run(ctx, meta, offsite.OffsitePush)
+	if errors.Is(err, run.MisconfiguredTemplate) {
+		logging.CheckError(ctx, err)
+		return nil
+	}
+	return err
 }

@@ -1,4 +1,4 @@
-package tasks
+package runner
 
 import (
 	"time"
@@ -6,52 +6,63 @@ import (
 	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/docker"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
-	"github.com/sbnarra/bckupr/internal/filters"
 	"github.com/sbnarra/bckupr/internal/notifications"
+	"github.com/sbnarra/bckupr/internal/tasks/async"
+	"github.com/sbnarra/bckupr/internal/tasks/builder"
+	"github.com/sbnarra/bckupr/internal/tasks/filters"
+	"github.com/sbnarra/bckupr/internal/tasks/startup"
+	"github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-type Exec func(
+func RunOnEachDockerHost(
 	ctx contexts.Context,
-	docker docker.Docker,
 	backupId string,
-	name string,
-	path string) *errors.Error
-
-func RunOnEachDockerHost(ctx contexts.Context, backupId string, args spec.TaskTrigger, exec Exec) (*spec.Task, *errors.Error) {
+	args spec.ContainersConfig,
+	preRun types.JobMeta,
+	exec types.Exec,
+	onComplete func(*errors.Error),
+) *errors.Error {
 	action := ctx.Name
-	return start(ctx, backupId, func(ctx contexts.Context) *errors.Error {
-		return docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
-			return run(ctx, d, action, backupId, args, exec)
+	return async.Start(ctx, backupId, func(ctx contexts.Context) *errors.Error {
+		err := docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
+			return run(ctx, d, action, backupId, args, preRun, exec)
 		}).Wait()
+		onComplete(err)
+		return err
 	})
 }
 
-func run(ctx contexts.Context, docker docker.Docker, action string, backupId string, args spec.TaskTrigger, exec Exec) *errors.Error {
+func run(
+	ctx contexts.Context,
+	docker docker.Docker,
+	action string,
+	backupId string,
+	args spec.ContainersConfig,
+	preRun types.JobMeta,
+	exec types.Exec,
+) *errors.Error {
 	if allContainers, err := docker.List(ctx, *args.LabelPrefix); err != nil {
 		return err
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args); err != nil {
 		return err
 	} else {
-		backupVolumes := []string{}
-		for _, task := range tasks {
-			backupVolumes = append(backupVolumes, task.Volume)
-		}
-
-		// TODO: callback for writing initial meta state?
+		preRun(tasks)
 
 		var notify *notifications.Notifier
 		if notify, err = notifications.New(action); err != nil {
 			return err
 		}
+
+		backupVolumes := backupVolumes(tasks)
 		notify.JobStarted(ctx, action, backupId, backupVolumes)
 		jobStarted := time.Now()
 
-		taskCh := make(chan *task)
-		completedTaskListener := startupListener(ctx, docker, taskCh)
+		taskCh := make(chan *types.Task)
+		listener := startup.RunListener(ctx, docker, taskCh)
 
 		actionTask := concurrent.Default(ctx, action)
 		for name, task := range tasks {
@@ -76,11 +87,23 @@ func run(ctx contexts.Context, docker docker.Docker, action string, backupId str
 		err := actionTask.Wait()
 		taskCh <- nil
 		notify.JobCompleted(ctx, action, backupId, backupVolumes, jobStarted, err)
-		return completedTaskListener.Wait()
+		return listener.Wait()
 	}
 }
 
-func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerTypes.Container, task spec.TaskTrigger) (map[string]*task, *errors.Error) {
+func backupVolumes(tasks types.Tasks) []string {
+	backupVolumes := []string{}
+	for _, task := range tasks {
+		backupVolumes = append(backupVolumes, task.Volume)
+	}
+	return backupVolumes
+}
+
+func filterAndCreateTasks(
+	ctx contexts.Context,
+	containerMap map[string]*dockerTypes.Container,
+	task spec.ContainersConfig,
+) (types.Tasks, *errors.Error) {
 	if len(containerMap) == 0 {
 		return nil, errors.Errorf("no containers found")
 	}
@@ -91,7 +114,7 @@ func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerT
 	} else {
 		logging.Debug(ctx, len(filtered), "containers left after filtering")
 
-		tasks := convertToTasks(filtered, task.Filters)
+		tasks := builder.AsTasks(filtered, task.Filters)
 		if len(tasks) == 0 {
 			return nil, errors.Errorf("0 " + ctx.Name + " tasks to execute, check containers are labelled")
 		}
@@ -100,7 +123,7 @@ func filterAndCreateTasks(ctx contexts.Context, containerMap map[string]*dockerT
 	}
 }
 
-func stopContainers(ctx contexts.Context, docker docker.Docker, task *task) *errors.Error {
+func stopContainers(ctx contexts.Context, docker docker.Docker, task *types.Task) *errors.Error {
 	stopper := concurrent.Default(ctx, "stopper")
 	for _, container := range task.Containers {
 		stopper.Run(func(ctx contexts.Context) *errors.Error {

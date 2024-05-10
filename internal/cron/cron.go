@@ -11,10 +11,10 @@ import (
 	"github.com/sbnarra/bckupr/internal/app/rotate"
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
-	"github.com/sbnarra/bckupr/internal/interrupt"
 	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
+	"github.com/sbnarra/bckupr/internal/utils/interrupt"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
@@ -47,7 +47,8 @@ func (c *Cron) Stop() {
 
 func (c *Cron) Start(ctx contexts.Context,
 	backupSchedule string,
-	rotateSchedule string, rotateInput spec.RotateTrigger,
+	rotateSchedule string,
+	rotateInput spec.RotateInput,
 	containers containers.Templates,
 ) *errors.Error {
 	c.I.Start()
@@ -75,8 +76,8 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, containers 
 	triggerNotifyNextBackup := func() {}
 	logging.Info(ctx, "backup schedule", schedule)
 	if id, err := c.I.AddFunc(schedule, func() {
-		req := spec.BackupTrigger{}
-		if err := req.WithDefaults(); err != nil {
+		req := spec.ContainersConfig{}
+		if err := req.WithDefaults(spec.BackupStopModes); err != nil {
 			logging.CheckError(ctx, err, "failed to build input")
 		} else if backup, err := backup.CreateBackup(ctx, "", req, containers); err != nil {
 			logging.CheckError(ctx, err, "Backup Failure", backup.Id)
@@ -99,7 +100,7 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, containers 
 	return nil
 }
 
-func (c *Cron) scheduleRotation(ctx contexts.Context, schedule string, input spec.RotateTrigger) *errors.Error {
+func (c *Cron) scheduleRotation(ctx contexts.Context, schedule string, input spec.RotateInput) *errors.Error {
 	notifyNextRotate := func() {}
 	logging.Info(ctx, "rotation schedule", schedule)
 	if id, err := c.I.AddFunc(schedule, func() {

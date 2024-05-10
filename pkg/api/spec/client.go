@@ -17,6 +17,14 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for Status.
+const (
+	StatusCompleted Status = "completed"
+	StatusError     Status = "error"
+	StatusPending   Status = "pending"
+	StatusRunning   Status = "running"
+)
+
 // Defines values for StopModes.
 const (
 	All      StopModes = "all"
@@ -26,25 +34,20 @@ const (
 	Writers  StopModes = "writers"
 )
 
-// Defines values for TaskStatus.
-const (
-	TaskStatusCompleted TaskStatus = "completed"
-	TaskStatusError     TaskStatus = "error"
-	TaskStatusPending   TaskStatus = "pending"
-)
-
 // Backup defines model for Backup.
 type Backup struct {
 	Created time.Time `json:"created"`
 	Id      string    `json:"id"`
+	Status  Status    `json:"status"`
 	Type    string    `json:"type"`
 	Volumes []Volume  `json:"volumes"`
-	union   json.RawMessage
 }
 
-// BackupTrigger defines model for BackupTrigger.
-type BackupTrigger struct {
-	union json.RawMessage
+// ContainersConfig defines model for ContainersConfig.
+type ContainersConfig struct {
+	Filters     Filters      `json:"filters"`
+	LabelPrefix *string      `json:"label_prefix,omitempty"`
+	StopModes   *[]StopModes `json:"stop_modes,omitempty"`
 }
 
 // Error defines model for Error.
@@ -60,36 +63,31 @@ type Filters struct {
 	IncludeVolumes []string `json:"include_volumes"`
 }
 
-// RestoreTrigger defines model for RestoreTrigger.
-type RestoreTrigger struct {
-	Dummy *string `json:"dummy,omitempty"`
-	union json.RawMessage
+// Restore defines model for Restore.
+type Restore struct {
+	Error   *string   `json:"error,omitempty"`
+	Started time.Time `json:"started"`
+	Status  Status    `json:"status"`
 }
 
-// RotateTrigger defines model for RotateTrigger.
-type RotateTrigger struct {
+// Rotate defines model for Rotate.
+type Rotate struct {
+	Error   *string   `json:"error,omitempty"`
+	Started time.Time `json:"started"`
+	Status  Status    `json:"status"`
+}
+
+// RotateInput defines model for RotateInput.
+type RotateInput struct {
 	Destroy      bool   `json:"destroy"`
 	PoliciesPath string `json:"policies_path"`
 }
 
+// Status defines model for Status.
+type Status string
+
 // StopModes defines model for StopModes.
 type StopModes string
-
-// Task defines model for Task.
-type Task struct {
-	Created time.Time  `json:"created"`
-	Status  TaskStatus `json:"status"`
-}
-
-// TaskStatus defines model for Task.Status.
-type TaskStatus string
-
-// TaskTrigger defines model for TaskTrigger.
-type TaskTrigger struct {
-	Filters     Filters      `json:"filters"`
-	LabelPrefix *string      `json:"label_prefix,omitempty"`
-	StopModes   *[]StopModes `json:"stop_modes,omitempty"`
-}
 
 // Version defines model for Version.
 type Version struct {
@@ -100,11 +98,12 @@ type Version struct {
 // Volume defines model for Volume.
 type Volume struct {
 	Created time.Time `json:"created"`
-	Error   string    `json:"error"`
+	Error   *string   `json:"error,omitempty"`
 	Ext     string    `json:"ext"`
 	Mount   string    `json:"mount"`
 	Name    string    `json:"name"`
-	Size    int64     `json:"size"`
+	Size    *int64    `json:"size,omitempty"`
+	Status  Status    `json:"status"`
 }
 
 // Backups defines model for Backups.
@@ -114,227 +113,16 @@ type Backups = []Backup
 type NotFound = Error
 
 // TriggerBackupJSONRequestBody defines body for TriggerBackup for application/json ContentType.
-type TriggerBackupJSONRequestBody = BackupTrigger
+type TriggerBackupJSONRequestBody = ContainersConfig
 
 // TriggerBackupWithIdJSONRequestBody defines body for TriggerBackupWithId for application/json ContentType.
-type TriggerBackupWithIdJSONRequestBody = BackupTrigger
+type TriggerBackupWithIdJSONRequestBody = ContainersConfig
 
 // TriggerRestoreJSONRequestBody defines body for TriggerRestore for application/json ContentType.
-type TriggerRestoreJSONRequestBody = RestoreTrigger
+type TriggerRestoreJSONRequestBody = ContainersConfig
 
 // RotateBackupsJSONRequestBody defines body for RotateBackups for application/json ContentType.
-type RotateBackupsJSONRequestBody = RotateTrigger
-
-// AsTask returns the union data inside the Backup as a Task
-func (t Backup) AsTask() (Task, error) {
-	var body Task
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromTask overwrites any union data inside the Backup as the provided Task
-func (t *Backup) FromTask(v Task) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeTask performs a merge with any union data inside the Backup, using the provided Task
-func (t *Backup) MergeTask(v Task) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t Backup) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	object := make(map[string]json.RawMessage)
-	if t.union != nil {
-		err = json.Unmarshal(b, &object)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	object["created"], err = json.Marshal(t.Created)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'created': %w", err)
-	}
-
-	object["id"], err = json.Marshal(t.Id)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'id': %w", err)
-	}
-
-	object["type"], err = json.Marshal(t.Type)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'type': %w", err)
-	}
-
-	object["volumes"], err = json.Marshal(t.Volumes)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'volumes': %w", err)
-	}
-
-	b, err = json.Marshal(object)
-	return b, err
-}
-
-func (t *Backup) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	if err != nil {
-		return err
-	}
-	object := make(map[string]json.RawMessage)
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["created"]; found {
-		err = json.Unmarshal(raw, &t.Created)
-		if err != nil {
-			return fmt.Errorf("error reading 'created': %w", err)
-		}
-	}
-
-	if raw, found := object["id"]; found {
-		err = json.Unmarshal(raw, &t.Id)
-		if err != nil {
-			return fmt.Errorf("error reading 'id': %w", err)
-		}
-	}
-
-	if raw, found := object["type"]; found {
-		err = json.Unmarshal(raw, &t.Type)
-		if err != nil {
-			return fmt.Errorf("error reading 'type': %w", err)
-		}
-	}
-
-	if raw, found := object["volumes"]; found {
-		err = json.Unmarshal(raw, &t.Volumes)
-		if err != nil {
-			return fmt.Errorf("error reading 'volumes': %w", err)
-		}
-	}
-
-	return err
-}
-
-// AsTaskTrigger returns the union data inside the BackupTrigger as a TaskTrigger
-func (t BackupTrigger) AsTaskTrigger() (TaskTrigger, error) {
-	var body TaskTrigger
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromTaskTrigger overwrites any union data inside the BackupTrigger as the provided TaskTrigger
-func (t *BackupTrigger) FromTaskTrigger(v TaskTrigger) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeTaskTrigger performs a merge with any union data inside the BackupTrigger, using the provided TaskTrigger
-func (t *BackupTrigger) MergeTaskTrigger(v TaskTrigger) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t BackupTrigger) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *BackupTrigger) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsTaskTrigger returns the union data inside the RestoreTrigger as a TaskTrigger
-func (t RestoreTrigger) AsTaskTrigger() (TaskTrigger, error) {
-	var body TaskTrigger
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromTaskTrigger overwrites any union data inside the RestoreTrigger as the provided TaskTrigger
-func (t *RestoreTrigger) FromTaskTrigger(v TaskTrigger) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeTaskTrigger performs a merge with any union data inside the RestoreTrigger, using the provided TaskTrigger
-func (t *RestoreTrigger) MergeTaskTrigger(v TaskTrigger) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t RestoreTrigger) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	object := make(map[string]json.RawMessage)
-	if t.union != nil {
-		err = json.Unmarshal(b, &object)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if t.Dummy != nil {
-		object["dummy"], err = json.Marshal(t.Dummy)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'dummy': %w", err)
-		}
-	}
-	b, err = json.Marshal(object)
-	return b, err
-}
-
-func (t *RestoreTrigger) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	if err != nil {
-		return err
-	}
-	object := make(map[string]json.RawMessage)
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["dummy"]; found {
-		err = json.Unmarshal(raw, &t.Dummy)
-		if err != nil {
-			return fmt.Errorf("error reading 'dummy': %w", err)
-		}
-	}
-
-	return err
-}
+type RotateBackupsJSONRequestBody = RotateInput
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -427,6 +215,9 @@ type ClientInterface interface {
 	TriggerBackupWithIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	TriggerBackupWithId(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRestore request
+	GetRestore(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// TriggerRestoreWithBody request with any body
 	TriggerRestoreWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -526,6 +317,18 @@ func (c *Client) TriggerBackupWithId(ctx context.Context, id string, body Trigge
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetRestore(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRestoreRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) TriggerRestoreWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewTriggerRestoreRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
@@ -595,7 +398,7 @@ func NewListBackupsRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/backups")
+	operationPath := fmt.Sprintf("/api/backups")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -633,7 +436,7 @@ func NewTriggerBackupRequestWithBody(server string, contentType string, body io.
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/backups")
+	operationPath := fmt.Sprintf("/api/backups")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -669,7 +472,7 @@ func NewDeleteBackupRequest(server string, id string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/backups/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/backups/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -703,7 +506,7 @@ func NewGetBackupRequest(server string, id string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/backups/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/backups/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -748,7 +551,7 @@ func NewTriggerBackupWithIdRequestWithBody(server string, id string, contentType
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/backups/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/backups/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -764,6 +567,40 @@ func NewTriggerBackupWithIdRequestWithBody(server string, id string, contentType
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetRestoreRequest generates requests for GetRestore
+func NewGetRestoreRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/backups/%s/restore", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -795,7 +632,7 @@ func NewTriggerRestoreRequestWithBody(server string, id string, contentType stri
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/backups/%s/restore", pathParam0)
+	operationPath := fmt.Sprintf("/api/backups/%s/restore", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -835,7 +672,7 @@ func NewRotateBackupsRequestWithBody(server string, contentType string, body io.
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/rotate")
+	operationPath := fmt.Sprintf("/api/rotate")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -864,7 +701,7 @@ func NewGetVersionRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/version")
+	operationPath := fmt.Sprintf("/api/version")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -943,6 +780,9 @@ type ClientWithResponsesInterface interface {
 	TriggerBackupWithIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error)
 
 	TriggerBackupWithIdWithResponse(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error)
+
+	// GetRestoreWithResponse request
+	GetRestoreWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetRestoreResponse, error)
 
 	// TriggerRestoreWithBodyWithResponse request with any body
 	TriggerRestoreWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerRestoreResponse, error)
@@ -1068,10 +908,32 @@ func (r TriggerBackupWithIdResponse) StatusCode() int {
 	return 0
 }
 
+type GetRestoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Restore
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRestoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRestoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type TriggerRestoreResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *Task
+	JSON200      *Restore
 }
 
 // Status returns HTTPResponse.Status
@@ -1093,7 +955,7 @@ func (r TriggerRestoreResponse) StatusCode() int {
 type RotateBackupsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *Task
+	JSON200      *Rotate
 }
 
 // Status returns HTTPResponse.Status
@@ -1193,6 +1055,15 @@ func (c *ClientWithResponses) TriggerBackupWithIdWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParseTriggerBackupWithIdResponse(rsp)
+}
+
+// GetRestoreWithResponse request returning *GetRestoreResponse
+func (c *ClientWithResponses) GetRestoreWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetRestoreResponse, error) {
+	rsp, err := c.GetRestore(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRestoreResponse(rsp)
 }
 
 // TriggerRestoreWithBodyWithResponse request with arbitrary body returning *TriggerRestoreResponse
@@ -1365,6 +1236,32 @@ func ParseTriggerBackupWithIdResponse(rsp *http.Response) (*TriggerBackupWithIdR
 	return response, nil
 }
 
+// ParseGetRestoreResponse parses an HTTP response from a GetRestoreWithResponse call
+func ParseGetRestoreResponse(rsp *http.Response) (*GetRestoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRestoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Restore
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseTriggerRestoreResponse parses an HTTP response from a TriggerRestoreWithResponse call
 func ParseTriggerRestoreResponse(rsp *http.Response) (*TriggerRestoreResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1380,7 +1277,7 @@ func ParseTriggerRestoreResponse(rsp *http.Response) (*TriggerRestoreResponse, e
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest Task
+		var dest Restore
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1406,7 +1303,7 @@ func ParseRotateBackupsResponse(rsp *http.Response) (*RotateBackupsResponse, err
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest Task
+		var dest Rotate
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

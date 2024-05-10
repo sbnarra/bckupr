@@ -9,9 +9,9 @@ import (
 	"github.com/sbnarra/bckupr/internal/api/config"
 	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/config/containers"
-	"github.com/sbnarra/bckupr/internal/interrupt"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
+	"github.com/sbnarra/bckupr/internal/utils/interrupt"
 )
 
 type Server struct {

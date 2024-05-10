@@ -26,7 +26,7 @@ func TestRestoreMissingBackupId(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	restoreBackup := spec.RestoreTrigger{}
+	restoreBackup := spec.ContainersConfig{}
 	if client, err := client.New(ctx, keys.DaemonProtocol.Default.(string), keys.DaemonAddr.Default.(string)); err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	} else if _, err := client.TriggerRestore(ctx, "", restoreBackup); err == nil {

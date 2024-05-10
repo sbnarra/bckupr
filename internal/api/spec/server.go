@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -20,6 +19,14 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for Status.
+const (
+	StatusCompleted Status = "completed"
+	StatusError     Status = "error"
+	StatusPending   Status = "pending"
+	StatusRunning   Status = "running"
+)
+
 // Defines values for StopModes.
 const (
 	All      StopModes = "all"
@@ -29,25 +36,20 @@ const (
 	Writers  StopModes = "writers"
 )
 
-// Defines values for TaskStatus.
-const (
-	TaskStatusCompleted TaskStatus = "completed"
-	TaskStatusError     TaskStatus = "error"
-	TaskStatusPending   TaskStatus = "pending"
-)
-
 // Backup defines model for Backup.
 type Backup struct {
 	Created time.Time `json:"created"`
 	Id      string    `json:"id"`
+	Status  Status    `json:"status"`
 	Type    string    `json:"type"`
 	Volumes []Volume  `json:"volumes"`
-	union   json.RawMessage
 }
 
-// BackupTrigger defines model for BackupTrigger.
-type BackupTrigger struct {
-	union json.RawMessage
+// ContainersConfig defines model for ContainersConfig.
+type ContainersConfig struct {
+	Filters     Filters      `json:"filters"`
+	LabelPrefix *string      `json:"label_prefix,omitempty"`
+	StopModes   *[]StopModes `json:"stop_modes,omitempty"`
 }
 
 // Error defines model for Error.
@@ -63,36 +65,31 @@ type Filters struct {
 	IncludeVolumes []string `json:"include_volumes"`
 }
 
-// RestoreTrigger defines model for RestoreTrigger.
-type RestoreTrigger struct {
-	Dummy *string `json:"dummy,omitempty"`
-	union json.RawMessage
+// Restore defines model for Restore.
+type Restore struct {
+	Error   *string   `json:"error,omitempty"`
+	Started time.Time `json:"started"`
+	Status  Status    `json:"status"`
 }
 
-// RotateTrigger defines model for RotateTrigger.
-type RotateTrigger struct {
+// Rotate defines model for Rotate.
+type Rotate struct {
+	Error   *string   `json:"error,omitempty"`
+	Started time.Time `json:"started"`
+	Status  Status    `json:"status"`
+}
+
+// RotateInput defines model for RotateInput.
+type RotateInput struct {
 	Destroy      bool   `json:"destroy"`
 	PoliciesPath string `json:"policies_path"`
 }
 
+// Status defines model for Status.
+type Status string
+
 // StopModes defines model for StopModes.
 type StopModes string
-
-// Task defines model for Task.
-type Task struct {
-	Created time.Time  `json:"created"`
-	Status  TaskStatus `json:"status"`
-}
-
-// TaskStatus defines model for Task.Status.
-type TaskStatus string
-
-// TaskTrigger defines model for TaskTrigger.
-type TaskTrigger struct {
-	Filters     Filters      `json:"filters"`
-	LabelPrefix *string      `json:"label_prefix,omitempty"`
-	StopModes   *[]StopModes `json:"stop_modes,omitempty"`
-}
 
 // Version defines model for Version.
 type Version struct {
@@ -103,11 +100,12 @@ type Version struct {
 // Volume defines model for Volume.
 type Volume struct {
 	Created time.Time `json:"created"`
-	Error   string    `json:"error"`
+	Error   *string   `json:"error,omitempty"`
 	Ext     string    `json:"ext"`
 	Mount   string    `json:"mount"`
 	Name    string    `json:"name"`
-	Size    int64     `json:"size"`
+	Size    *int64    `json:"size,omitempty"`
+	Status  Status    `json:"status"`
 }
 
 // Backups defines model for Backups.
@@ -117,253 +115,45 @@ type Backups = []Backup
 type NotFound = Error
 
 // TriggerBackupJSONRequestBody defines body for TriggerBackup for application/json ContentType.
-type TriggerBackupJSONRequestBody = BackupTrigger
+type TriggerBackupJSONRequestBody = ContainersConfig
 
 // TriggerBackupWithIdJSONRequestBody defines body for TriggerBackupWithId for application/json ContentType.
-type TriggerBackupWithIdJSONRequestBody = BackupTrigger
+type TriggerBackupWithIdJSONRequestBody = ContainersConfig
 
 // TriggerRestoreJSONRequestBody defines body for TriggerRestore for application/json ContentType.
-type TriggerRestoreJSONRequestBody = RestoreTrigger
+type TriggerRestoreJSONRequestBody = ContainersConfig
 
 // RotateBackupsJSONRequestBody defines body for RotateBackups for application/json ContentType.
-type RotateBackupsJSONRequestBody = RotateTrigger
-
-// AsTask returns the union data inside the Backup as a Task
-func (t Backup) AsTask() (Task, error) {
-	var body Task
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromTask overwrites any union data inside the Backup as the provided Task
-func (t *Backup) FromTask(v Task) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeTask performs a merge with any union data inside the Backup, using the provided Task
-func (t *Backup) MergeTask(v Task) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t Backup) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	object := make(map[string]json.RawMessage)
-	if t.union != nil {
-		err = json.Unmarshal(b, &object)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	object["created"], err = json.Marshal(t.Created)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'created': %w", err)
-	}
-
-	object["id"], err = json.Marshal(t.Id)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'id': %w", err)
-	}
-
-	object["type"], err = json.Marshal(t.Type)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'type': %w", err)
-	}
-
-	object["volumes"], err = json.Marshal(t.Volumes)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'volumes': %w", err)
-	}
-
-	b, err = json.Marshal(object)
-	return b, err
-}
-
-func (t *Backup) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	if err != nil {
-		return err
-	}
-	object := make(map[string]json.RawMessage)
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["created"]; found {
-		err = json.Unmarshal(raw, &t.Created)
-		if err != nil {
-			return fmt.Errorf("error reading 'created': %w", err)
-		}
-	}
-
-	if raw, found := object["id"]; found {
-		err = json.Unmarshal(raw, &t.Id)
-		if err != nil {
-			return fmt.Errorf("error reading 'id': %w", err)
-		}
-	}
-
-	if raw, found := object["type"]; found {
-		err = json.Unmarshal(raw, &t.Type)
-		if err != nil {
-			return fmt.Errorf("error reading 'type': %w", err)
-		}
-	}
-
-	if raw, found := object["volumes"]; found {
-		err = json.Unmarshal(raw, &t.Volumes)
-		if err != nil {
-			return fmt.Errorf("error reading 'volumes': %w", err)
-		}
-	}
-
-	return err
-}
-
-// AsTaskTrigger returns the union data inside the BackupTrigger as a TaskTrigger
-func (t BackupTrigger) AsTaskTrigger() (TaskTrigger, error) {
-	var body TaskTrigger
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromTaskTrigger overwrites any union data inside the BackupTrigger as the provided TaskTrigger
-func (t *BackupTrigger) FromTaskTrigger(v TaskTrigger) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeTaskTrigger performs a merge with any union data inside the BackupTrigger, using the provided TaskTrigger
-func (t *BackupTrigger) MergeTaskTrigger(v TaskTrigger) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t BackupTrigger) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *BackupTrigger) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsTaskTrigger returns the union data inside the RestoreTrigger as a TaskTrigger
-func (t RestoreTrigger) AsTaskTrigger() (TaskTrigger, error) {
-	var body TaskTrigger
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromTaskTrigger overwrites any union data inside the RestoreTrigger as the provided TaskTrigger
-func (t *RestoreTrigger) FromTaskTrigger(v TaskTrigger) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeTaskTrigger performs a merge with any union data inside the RestoreTrigger, using the provided TaskTrigger
-func (t *RestoreTrigger) MergeTaskTrigger(v TaskTrigger) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t RestoreTrigger) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	object := make(map[string]json.RawMessage)
-	if t.union != nil {
-		err = json.Unmarshal(b, &object)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if t.Dummy != nil {
-		object["dummy"], err = json.Marshal(t.Dummy)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'dummy': %w", err)
-		}
-	}
-	b, err = json.Marshal(object)
-	return b, err
-}
-
-func (t *RestoreTrigger) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	if err != nil {
-		return err
-	}
-	object := make(map[string]json.RawMessage)
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["dummy"]; found {
-		err = json.Unmarshal(raw, &t.Dummy)
-		if err != nil {
-			return fmt.Errorf("error reading 'dummy': %w", err)
-		}
-	}
-
-	return err
-}
+type RotateBackupsJSONRequestBody = RotateInput
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
-	// (GET /backups)
+	// (GET /api/backups)
 	ListBackups(c *gin.Context)
 	// Creates new backup
-	// (POST /backups)
+	// (POST /api/backups)
 	TriggerBackup(c *gin.Context)
 	// Deletes backup
-	// (DELETE /backups/{id})
+	// (DELETE /api/backups/{id})
 	DeleteBackup(c *gin.Context, id string)
 	// Gets backup by id
-	// (GET /backups/{id})
+	// (GET /api/backups/{id})
 	GetBackup(c *gin.Context, id string)
 
-	// (PUT /backups/{id})
+	// (PUT /api/backups/{id})
 	TriggerBackupWithId(c *gin.Context, id string)
 
-	// (POST /backups/{id}/restore)
+	// (GET /api/backups/{id}/restore)
+	GetRestore(c *gin.Context, id string)
+
+	// (POST /api/backups/{id}/restore)
 	TriggerRestore(c *gin.Context, id string)
 	// Retrieves application version
-	// (POST /rotate)
+	// (POST /api/rotate)
 	RotateBackups(c *gin.Context)
 	// Retrieves application version
-	// (GET /version)
+	// (GET /api/version)
 	GetVersion(c *gin.Context)
 }
 
@@ -474,6 +264,30 @@ func (siw *ServerInterfaceWrapper) TriggerBackupWithId(c *gin.Context) {
 	siw.Handler.TriggerBackupWithId(c, id)
 }
 
+// GetRestore operation middleware
+func (siw *ServerInterfaceWrapper) GetRestore(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetRestore(c, id)
+}
+
 // TriggerRestore operation middleware
 func (siw *ServerInterfaceWrapper) TriggerRestore(c *gin.Context) {
 
@@ -551,37 +365,39 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
-	router.GET(options.BaseURL+"/backups", wrapper.ListBackups)
-	router.POST(options.BaseURL+"/backups", wrapper.TriggerBackup)
-	router.DELETE(options.BaseURL+"/backups/:id", wrapper.DeleteBackup)
-	router.GET(options.BaseURL+"/backups/:id", wrapper.GetBackup)
-	router.PUT(options.BaseURL+"/backups/:id", wrapper.TriggerBackupWithId)
-	router.POST(options.BaseURL+"/backups/:id/restore", wrapper.TriggerRestore)
-	router.POST(options.BaseURL+"/rotate", wrapper.RotateBackups)
-	router.GET(options.BaseURL+"/version", wrapper.GetVersion)
+	router.GET(options.BaseURL+"/api/backups", wrapper.ListBackups)
+	router.POST(options.BaseURL+"/api/backups", wrapper.TriggerBackup)
+	router.DELETE(options.BaseURL+"/api/backups/:id", wrapper.DeleteBackup)
+	router.GET(options.BaseURL+"/api/backups/:id", wrapper.GetBackup)
+	router.PUT(options.BaseURL+"/api/backups/:id", wrapper.TriggerBackupWithId)
+	router.GET(options.BaseURL+"/api/backups/:id/restore", wrapper.GetRestore)
+	router.POST(options.BaseURL+"/api/backups/:id/restore", wrapper.TriggerRestore)
+	router.POST(options.BaseURL+"/api/rotate", wrapper.RotateBackups)
+	router.GET(options.BaseURL+"/api/version", wrapper.GetVersion)
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"H4sIAAAAAAAC/9xY3W7jNhN9FYHfd8mujDYoCt11080iQFsUSZFeBEFAS2ObuxKpkqNs3EDvXpAUqT/a",
+	"sWMX2PZOpsgzZw7nT34huaxqKUCgJtkLUaBrKTTYH+9Z/rmpzVMuBYJA88jquuQ5Qy5F+klLYdZ0voGK",
+	"maf/K1iRjPwv7WFT91anHVzbtpQUoHPFa4NCMm+opd2TPsomR6j0ocYpwW0NJCNMKbbdTUabrb9KvJKN",
+	"KM4mwQelpIoZ/SCQ4zYREpOVtdhScgMapYKzGfd4EfPhFSU3Ehme0aiDi9ns3lByB0pzB3oWmx4vYrR/",
+	"RTuwSaTXStagkLsMyBUwBHv/K6kqhiQjBUP4BnkFJMSSRsXF2rjC7d7ZskaGzasxeut2hRiNAD3Jsqkc",
+	"t4PC/s7uj4Q9JQr+bLgyzt0b2jQ42+0NrHurDwFGLj9Bjgb3UgpkXIDSl1Ks+Hou4oqXCOpVqlfdtpaS",
+	"ki2hfKwVrPizOVbAijWlEX9p7knFlNco68dKFkeIc4uy/sWeeE0f70JMAJfTM6/BL0+YTpDdthjuVS/b",
+	"BPk5L5sCHgXrIiHIc/9Ae89nCo09pAFnEFNvROLiPIw8zqmMptE9ojc3QyeSzqWJ3c+gPB928zah1FHl",
+	"5Li6MXHbWwswUS9Cuf/XO3Et6gbnnhSgUcntwJellCUwYU7WsuQ5B/1YM9y8nq3j7TRgx0jdBrdBNJU9",
+	"DaIwqJSoRgj3ZJQowXk4rQW9hH2lGsCxsiRdrSzt+S+K24pBCUNk+cYullx8hiKKOui7O9vevAP1h/qy",
+	"vHi3eLeY3/1EPX+0bzUx3bqWdXov3h3C8IzR9Uo2Iv7GFIZ4NvC/YESJC/z+oqfDBcIa1Ml5YAk45oPG",
+	"7Ajv07O1ZXUlu0wYzrm2lSY//nZt2HIsISySwTWTkiFoezOyBsFqTjLyXXffJg2sRymrebrsh/c1WB3N",
+	"/dkJ7rogGfmZa/TTNR1/any7WOwSJuxLw2RuCj5ba6OLs0kebC7riNHfFV+vQXUTnhMVNL6XxfZsA+ds",
+	"Btr5WZGgTJaQ9KNWf8eoGmjfLosbaZuqYmpLMnJpLehEwJdk6X2fidbS0c2lL7xoXaSYmjQX8ye7PtBy",
+	"znXstf2Y8QTGDB2W3sOOxsPoI+BeBoepRcnF4uL17eETcEz+I6Bnniy3iZ2fYyHJFKvAjXH3U2264/Ys",
+	"NwtdU3G1xs3k4/Cgg3icltoHSrr2tyf+/+C4uS6+tiw4NeoPCmtz1M9ru8LKj3Rv4dN/XX8NkbCvFA69",
+	"/K/Vwr234MNC9TNvVCc3Tg471fllGo6s/2iehD9ghuXrBlBxeAKdDDxI+vnMS6e3GqEaSDeY/nYl0V1A",
+	"OZ7s6O+ZE9ia46CefLY1qiQZ2SDWWZqWMmflRmrMflgsFsSkSwfw4hPO9ysaVjro9qH9OwAA//+xIyXm",
+	"MhUAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

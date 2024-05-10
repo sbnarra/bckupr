@@ -47,7 +47,7 @@ func startCron(ctx contexts.Context, cmd *cobra.Command, containers containers.T
 	return nil
 }
 
-func newRequest(ctx contexts.Context, cmd *cobra.Command) (spec.RotateTrigger, *errors.Error) {
+func newRequest(ctx contexts.Context, cmd *cobra.Command) (spec.RotateInput, *errors.Error) {
 
-	return spec.RotateTrigger{}, nil
+	return spec.RotateInput{}, nil
 }

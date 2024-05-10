@@ -9,7 +9,7 @@ tags:
   - name: backup
   - name: system
 paths:
-  /backups:
+  /api/backups:
     post:
       operationId: triggerBackup
       summary: Creates new backup
@@ -20,7 +20,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BackupTrigger'
+              $ref: '#/components/schemas/ContainersConfig'
         required: true
       responses:
         '200':
@@ -32,7 +32,7 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/Backups'
-  /backups/{id}:
+  /api/backups/{id}:
     parameters:
         - name: id
           in: path
@@ -59,14 +59,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BackupTrigger'
+              $ref: '#/components/schemas/ContainersConfig'
       responses:
         '200':
-          description: created b
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Backup'
+          $ref: '#/components/responses/Backup'
     delete:
       operationId: deleteBackup
       summary: Deletes backup
@@ -75,7 +71,7 @@ paths:
       responses:
         '200':
           description: found backup
-  /backups/{id}/restore:
+  /api/backups/{id}/restore:
     parameters:
         - name: id
           in: path
@@ -93,11 +89,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RestoreTrigger'
+              $ref: '#/components/schemas/ContainersConfig'
       responses:
         '200':
-          $ref: '#/components/responses/Task'
-  /rotate:
+          $ref: '#/components/responses/Restore'
+    get:
+      operationId: getRestore
+      tags:
+        - backup
+      responses:
+        '200':
+          $ref: '#/components/responses/Restore'
+  /api/rotate:
     post:
       operationId: rotateBackups
       summary: Retrieves application version
@@ -108,11 +111,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RotateTrigger'
+              $ref: '#/components/schemas/RotateInput'
       responses:
         '200':
-          $ref: '#/components/responses/Task'
-  /version:
+          $ref: '#/components/responses/Rotate'
+  /api/version:
     get:
       operationId: getVersion
       summary: Retrieves application version
@@ -120,11 +123,7 @@ paths:
         - system
       responses:
         '200':
-          description: Application Version
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Version'
+          $ref: '#/components/responses/Version'
 components:
   responses:
     Backup:
@@ -141,12 +140,24 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/Backup'
-    Task:
-      description: Task
+    Restore:
+      description: Restore
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Task'
+            $ref: '#/components/schemas/Restore'
+    Rotate:
+      description: Rotate
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Rotate'
+    Version:
+      description: Version
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Version'
     NotFound:
       description: Entity not found
       content:
@@ -154,89 +165,7 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
-    Backup:
-      type: object
-      anyOf:
-        - $ref: '#/components/schemas/Task'
-      required:
-        - id
-        - created
-        - type
-        - volumes
-      properties:
-        id:
-          type: string
-        created:
-          type: string
-          format: date-time
-        type:
-          type: string
-        volumes:
-          type: array
-          items:
-            $ref: '#/components/schemas/Volume'
-    Volume:
-      type: object
-      required:
-        - name
-        - ext
-        - mount
-        - created
-        - size
-        - error
-      properties:
-        name:
-          type: string
-        ext:
-          type: string
-        mount:
-          type: string
-        created:
-          type: string
-          format: date-time
-        size:
-          type: integer
-          format: int64
-        error:
-          type: string
-    Task:
-      type: object
-      required:
-        - created
-        - status
-      properties:
-        created:
-          type: string
-          format: date-time
-        status:
-          type: string
-          enum:
-            - pending
-            - completed
-            - error
-    BackupTrigger:
-      type: object
-      anyOf:
-        - $ref: '#/components/schemas/TaskTrigger'
-      properties:
-    RestoreTrigger:
-      type: object
-      anyOf:
-        - $ref: '#/components/schemas/TaskTrigger'
-      properties:
-        dummy:
-          type: string
-    RotateTrigger:
-      type: object
-      required:
-        - policies_path
-        - destroy
-      properties:
-        policies_path:
-          type: string
-        destroy:
-          type: boolean
-    TaskTrigger:
+    ContainersConfig:
       type: object
       required:
         - filters
@@ -250,6 +179,96 @@ components:
             $ref: '#/components/schemas/StopModes'
         filters:
           $ref: '#/components/schemas/Filters'
+    Status:
+      type: string
+      enum:
+        - pending
+        - running
+        - completed
+        - error
+    Backup:
+      type: object
+      required:
+        - id
+        - created
+        - type
+        - status
+        - volumes
+      properties:
+        id:
+          type: string
+        created:
+          type: string
+          format: date-time
+        type:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        volumes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume'
+    Volume:
+      type: object
+      required:
+        - name
+        - ext
+        - status
+        - mount
+        - created
+      properties:
+        name:
+          type: string
+        ext:
+          type: string
+        mount:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        created:
+          type: string
+          format: date-time
+        size:
+          type: integer
+          format: int64
+        error:
+          type: string
+    Restore:
+      type: object
+      required:
+        - started
+        - status
+      properties:
+        started:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/Status'
+        error:
+          type: string
+    RotateInput:
+      type: object
+      required:
+        - policies_path
+        - destroy
+      properties:
+        policies_path:
+          type: string
+        destroy:
+          type: boolean
+    Rotate:
+      type: object
+      required:
+        - started
+        - status
+      properties:
+        started:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/Status'
+        error:
+          type: string
     StopModes:
       type: string
       enum:

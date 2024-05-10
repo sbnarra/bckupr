@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/sbnarra/bckupr/cmd"
-	"github.com/sbnarra/bckupr/internal/interrupt"
+	"github.com/sbnarra/bckupr/internal/utils/interrupt"
 )
 
 func main() {

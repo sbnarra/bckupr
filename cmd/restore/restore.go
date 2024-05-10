@@ -1,6 +1,8 @@
 package restore
 
 import (
+	"time"
+
 	"github.com/sbnarra/bckupr/internal/cmd/config"
 	"github.com/sbnarra/bckupr/internal/cmd/flags"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
@@ -37,20 +39,40 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if client, err := util.NewClient(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if task, err := client.TriggerRestore(ctx, id, *input); err != nil {
+	} else if restore, err := client.TriggerRestore(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
-		logging.Info(ctx, "Restore Complete", encodings.ToJsonIE(task))
+		logging.Info(ctx, "Restore Complete", encodings.ToJsonIE(restore))
+
+		ctx, _ = ctx.WithDeadline(time.Now().Add(time.Minute * 1))
+
+		for ctx.Err() == nil {
+			restore, err := client.GetRestore(ctx, id)
+			if err != nil {
+				logging.CheckError(ctx, err)
+			} else if restore.Status == spec.StatusCompleted {
+				logging.Info(ctx, "Restore Success", encodings.ToJsonIE(restore))
+				break
+			} else if restore.Status == spec.StatusError {
+				logging.Info(ctx, "Restore Failed", encodings.ToJsonIE(restore))
+				break
+			} else if restore.Status == spec.StatusRunning {
+				logging.Info(ctx, "Restore Running", encodings.ToJsonIE(restore))
+			} else {
+				logging.Warn(ctx, "Restore Status Unknown", encodings.ToJsonIE(restore))
+			}
+			time.Sleep(time.Second)
+		}
+
+		logging.CheckError(ctx, errors.Wrap(ctx.Err(), "ctx error"))
 	}
 	return nil
 }
 
-func newRequest(ctx contexts.Context, cmd *cobra.Command) (string, *spec.RestoreTrigger, *errors.Error) {
-	req := spec.RestoreTrigger{}
-	if id, task, err := config.ReadTaskTrigger(cmd, keys.BackupStopModes); err != nil {
+func newRequest(ctx contexts.Context, cmd *cobra.Command) (string, *spec.ContainersConfig, *errors.Error) {
+	if id, c, err := config.ReadContainersConfig(cmd, keys.BackupStopModes); err != nil {
 		return "", nil, err
 	} else {
-		err := req.FromTaskTrigger(*task)
-		return id, &req, errors.Wrap(err, "")
+		return id, c, err
 	}
 }

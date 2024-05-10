@@ -13,7 +13,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/app/rotate"
 	"github.com/sbnarra/bckupr/internal/app/version"
 	"github.com/sbnarra/bckupr/internal/config/containers"
-	"github.com/sbnarra/bckupr/internal/meta"
+	"github.com/sbnarra/bckupr/internal/meta/reader"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
@@ -51,10 +51,10 @@ func (s handler) TriggerBackup(c *gin.Context) {
 
 func (s handler) TriggerBackupWithId(c *gin.Context, id string) {
 	ctx := s.newContext(c)
-	payload := spec.BackupTrigger{}
+	payload := spec.ContainersConfig{}
 	if err := c.BindJSON(&payload); err != nil {
 		onError(ctx, c, http.StatusBadRequest, "error parsing request:"+err.Error())
-	} else if err := payload.WithDefaults(); err != nil {
+	} else if err := payload.WithDefaults(spec.BackupStopModes); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, "failed to load defaults:"+err.Error())
 	} else if backup, err := backup.CreateBackup(ctx, id, payload, s.containers); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, err.Error())
@@ -65,10 +65,10 @@ func (s handler) TriggerBackupWithId(c *gin.Context, id string) {
 
 func (s handler) TriggerRestore(c *gin.Context, id string) {
 	ctx := s.newContext(c)
-	payload := spec.RestoreTrigger{}
+	payload := spec.ContainersConfig{}
 	if err := c.BindJSON(&payload); err != nil {
 		onError(ctx, c, http.StatusBadRequest, "error parsing request:"+err.Error())
-	} else if err := payload.WithDefaults(); err != nil {
+	} else if err := payload.WithDefaults(spec.RestoreStopModes); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, "failed to load defaults:"+err.Error())
 	} else if task, err := restore.RestoreBackup(ctx, id, payload, s.containers); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, err.Error())
@@ -97,7 +97,7 @@ func (s handler) ListBackups(c *gin.Context) {
 
 func (s handler) GetBackup(c *gin.Context, id string) {
 	ctx := s.newContext(c)
-	if reader, err := meta.NewReader(ctx); err != nil {
+	if reader, err := reader.Load(ctx); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, err.Error())
 	} else if backup := reader.Get(id); backup == nil {
 		onError(ctx, c, http.StatusNotFound, id+" not found")
@@ -106,9 +106,18 @@ func (s handler) GetBackup(c *gin.Context, id string) {
 	}
 }
 
+func (s handler) GetRestore(c *gin.Context, id string) {
+	ctx := s.newContext(c)
+	if latest := restore.Latest(); latest == nil {
+		onError(ctx, c, http.StatusNotFound, id+" not found")
+	} else {
+		onSuccess(c, http.StatusOK, latest)
+	}
+}
+
 func (s handler) RotateBackups(c *gin.Context) {
 	ctx := s.newContext(c)
-	payload := spec.RotateTrigger{}
+	payload := spec.RotateInput{}
 	if err := c.BindJSON(&payload); err != nil {
 		onError(ctx, c, http.StatusBadRequest, "error parsing request:"+err.Error())
 	} else if err := payload.WithDefaults(); err != nil {

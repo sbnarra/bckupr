@@ -2,37 +2,64 @@ package restore
 
 import (
 	"os"
+	"time"
 
 	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/run"
 	"github.com/sbnarra/bckupr/internal/metrics"
-	"github.com/sbnarra/bckupr/internal/tasks"
+	"github.com/sbnarra/bckupr/internal/tasks/runner"
+	"github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func RestoreBackup(ctx contexts.Context, backupId string, input spec.RestoreTrigger, containers containers.Templates) (*spec.Task, *errors.Error) {
+var latest *spec.Restore
+
+func RestoreBackup(ctx contexts.Context, backupId string, input spec.ContainersConfig, containers containers.Templates) (*spec.Restore, *errors.Error) {
 	if backupId == "" {
 		return nil, errors.New("missing backup id")
 	}
 
-	restoreCtx := ctx
-	restoreCtx.Name = "restore"
-
-	if task, err := input.AsTaskTrigger(); err != nil {
-		return nil, errors.Wrap(err, "failed to build task input")
-	} else {
-		return tasks.RunOnEachDockerHost(
-			restoreCtx,
-			backupId,
-			task,
-			newRestoreBackupTask(containers))
+	restore := &spec.Restore{
+		Started: time.Now(),
+		Status:  spec.StatusPending,
 	}
+
+	err := runner.RunOnEachDockerHost(
+		ctx,
+		backupId,
+		input,
+		func(tasks types.Tasks) {
+			latest.Status = spec.StatusRunning
+		},
+		newRestoreBackupTask(containers),
+		func(err *errors.Error) {
+			if err != nil {
+				latest.Status = spec.StatusError
+				msg := err.Error()
+				latest.Error = &msg
+			} else {
+				latest.Status = spec.StatusCompleted
+			}
+		})
+
+	if err != nil {
+		restore.Status = spec.StatusError
+		msg := err.Error()
+		restore.Error = &msg
+	} else {
+		latest = restore
+	}
+	return restore, err
 }
 
-func newRestoreBackupTask(containers containers.Templates) tasks.Exec {
+func Latest() *spec.Restore {
+	return latest
+}
+
+func newRestoreBackupTask(containers containers.Templates) types.Exec {
 	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string) *errors.Error {
 		m := metrics.Restore(backupId, name)
 		err := restoreBackup(ctx, docker, backupId, name, path, containers)

@@ -1,19 +1,20 @@
-package tasks
+package builder
 
 import (
 	"slices"
 
 	"github.com/sbnarra/bckupr/internal/api/spec"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
+	"github.com/sbnarra/bckupr/internal/tasks/types"
 )
 
-func convertToTasks(containerList map[string]*dockerTypes.Container, filters spec.Filters) map[string]*task {
-	tasks := make(map[string]*task)
+func AsTasks(containerList map[string]*dockerTypes.Container, filters spec.Filters) types.Tasks {
+	tasks := make(types.Tasks)
 	for _, container := range containerList {
 		for name, path := range container.Backup.Volumes {
 
 			if addTask(container.Name, name, filters) {
-				tasks[name] = &task{
+				tasks[name] = &types.Task{
 					Completed:  false,
 					Volume:     path,
 					Containers: []*dockerTypes.Container{},
@@ -43,7 +44,7 @@ func addTask(conName string, volName string, filters spec.Filters) bool {
 	return true
 }
 
-func populateTaskContainers(tasks map[string]*task, containerList map[string]*dockerTypes.Container) {
+func populateTaskContainers(tasks types.Tasks, containerList map[string]*dockerTypes.Container) {
 	for _, task := range tasks {
 
 		containersMatchingVolume := make(map[string]*dockerTypes.Container)

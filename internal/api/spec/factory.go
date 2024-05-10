@@ -17,46 +17,31 @@ func NewBackup() Backup {
 	return Backup{}
 }
 
-func (b *BackupTrigger) WithDefaults() *errors.Error {
-	if task, err := b.AsTaskTrigger(); err != nil {
-		return errors.Wrap(err, "error unwrapping task")
-	} else {
-		task.WithDefaults([]StopModes{
-			Writers, Linked, Labelled,
-		})
-		b.FromTaskTrigger(task)
+var (
+	BackupStopModes = []StopModes{
+		Writers, Linked, Labelled,
 	}
-	return nil
-}
-
-func (r *RestoreTrigger) WithDefaults() *errors.Error {
-	if task, err := r.AsTaskTrigger(); err != nil {
-		return errors.Wrap(err, "error unwrapping task")
-	} else {
-		task.WithDefaults([]StopModes{
-			Attached, Linked, Labelled,
-		})
-		r.FromTaskTrigger(task)
+	RestoreStopModes = []StopModes{
+		Attached, Linked, Labelled,
 	}
-	return nil
-}
+)
 
-func (r *RotateTrigger) WithDefaults() *errors.Error {
-	return nil
-}
+func (c *ContainersConfig) WithDefaults(stopModes []StopModes) *errors.Error {
+	d := D{entity: "ContainersConfig"}
 
-func (t *TaskTrigger) WithDefaults(stopModes []StopModes) *errors.Error {
-	d := D{entity: "TaskTrigger"}
-
-	if t.LabelPrefix == nil || *t.LabelPrefix == "" {
+	if c.LabelPrefix == nil || *c.LabelPrefix == "" {
 		if labelPrefix, err := d.aString("label_prefix"); err != nil {
 			return err
 		} else {
-			t.LabelPrefix = labelPrefix
+			c.LabelPrefix = labelPrefix
 		}
 	}
 
-	t.Filters.WithDefaults()
+	c.Filters.WithDefaults()
+	return nil
+}
+
+func (r *RotateInput) WithDefaults() *errors.Error {
 	return nil
 }
 

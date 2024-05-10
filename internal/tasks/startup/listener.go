@@ -1,8 +1,9 @@
-package tasks
+package startup
 
 import (
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/types"
+	tasks "github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
@@ -10,7 +11,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func startupListener(ctx contexts.Context, docker docker.Docker, taskCh chan *task) *concurrent.Concurrent {
+func RunListener(ctx contexts.Context, docker docker.Docker, taskCh chan *tasks.Task) *concurrent.Concurrent {
 	// startup listener shouldn't stop working if context is cancelled
 	// so using new context isn't of one passed through from cmd
 	// meaning it should process all before shutdown on nil task which should still happen in runner
@@ -30,7 +31,7 @@ func startupListener(ctx contexts.Context, docker docker.Docker, taskCh chan *ta
 	})
 }
 
-func startContainers(ctx contexts.Context, docker docker.Docker, task *task) int {
+func startContainers(ctx contexts.Context, docker docker.Docker, task *tasks.Task) int {
 	started := 0
 	for _, container := range task.Containers {
 		removeBackupVolume(container, task)
@@ -50,7 +51,7 @@ func startContainers(ctx contexts.Context, docker docker.Docker, task *task) int
 	return started
 }
 
-func removeBackupVolume(container *types.Container, task *task) {
+func removeBackupVolume(container *types.Container, task *tasks.Task) {
 	withoutBackupVolume := make(map[string]string)
 	for name, path := range container.Backup.Volumes {
 		if path != task.Volume {

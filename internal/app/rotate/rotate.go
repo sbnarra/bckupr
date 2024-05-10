@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/sbnarra/bckupr/internal/api/spec"
-	"github.com/sbnarra/bckupr/internal/meta"
+	"github.com/sbnarra/bckupr/internal/meta/reader"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
@@ -31,7 +31,7 @@ type RotatePolicies struct {
 	Policies []RotatePolicy `json:"policies"`
 }
 
-func Rotate(ctx contexts.Context, input spec.RotateTrigger) *errors.Error {
+func Rotate(ctx contexts.Context, input spec.RotateInput) *errors.Error {
 	policies := &RotatePolicies{}
 	if _, err := os.Stat(input.PoliciesPath); err == nil {
 		if handle, err := os.Open(input.PoliciesPath); err != nil {
@@ -41,7 +41,7 @@ func Rotate(ctx contexts.Context, input spec.RotateTrigger) *errors.Error {
 		}
 	}
 
-	if reader, err := meta.NewReader(ctx); err != nil {
+	if reader, err := reader.Load(ctx); err != nil {
 		return err
 	} else if err := sortAndValidate(policies.Policies); err != nil {
 		return err
@@ -94,17 +94,16 @@ func parsePeriod(period Period) (time.Time, time.Time, *errors.Error) {
 	}
 }
 
-func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy, reader meta.Reader) *errors.Error {
+func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy, reader *reader.Reader) *errors.Error {
 	if policyStart, policyEnd, err := parsePeriod(policy.Period); err != nil {
 		return err
 	} else {
 		backups := []*spec.Backup{}
-		reader.ForEach(func(b *spec.Backup) *errors.Error {
+		for _, b := range reader.Find() {
 			if b.Created.After(policyStart) && b.Created.Before(policyEnd) {
 				backups = append(backups, b)
 			}
-			return nil
-		})
+		}
 
 		if len(backups) == 0 {
 			logging.Info(ctx, fmt.Sprintf("no backups in period: (%v) %v  <->  (%v) %v",
