@@ -114,14 +114,14 @@ type Backups = []Backup
 // NotFound defines model for NotFound.
 type NotFound = Error
 
-// TriggerBackupJSONRequestBody defines body for TriggerBackup for application/json ContentType.
-type TriggerBackupJSONRequestBody = ContainersConfig
+// StartBackupJSONRequestBody defines body for StartBackup for application/json ContentType.
+type StartBackupJSONRequestBody = ContainersConfig
 
-// TriggerBackupWithIdJSONRequestBody defines body for TriggerBackupWithId for application/json ContentType.
-type TriggerBackupWithIdJSONRequestBody = ContainersConfig
+// StartBackupWithIdJSONRequestBody defines body for StartBackupWithId for application/json ContentType.
+type StartBackupWithIdJSONRequestBody = ContainersConfig
 
-// TriggerRestoreJSONRequestBody defines body for TriggerRestore for application/json ContentType.
-type TriggerRestoreJSONRequestBody = ContainersConfig
+// StartRestoreJSONRequestBody defines body for StartRestore for application/json ContentType.
+type StartRestoreJSONRequestBody = ContainersConfig
 
 // RotateBackupsJSONRequestBody defines body for RotateBackups for application/json ContentType.
 type RotateBackupsJSONRequestBody = RotateInput
@@ -133,7 +133,7 @@ type ServerInterface interface {
 	ListBackups(c *gin.Context)
 	// Creates new backup
 	// (POST /api/backups)
-	TriggerBackup(c *gin.Context)
+	StartBackup(c *gin.Context)
 	// Deletes backup
 	// (DELETE /api/backups/{id})
 	DeleteBackup(c *gin.Context, id string)
@@ -142,13 +142,13 @@ type ServerInterface interface {
 	GetBackup(c *gin.Context, id string)
 
 	// (PUT /api/backups/{id})
-	TriggerBackupWithId(c *gin.Context, id string)
+	StartBackupWithId(c *gin.Context, id string)
 
 	// (GET /api/backups/{id}/restore)
 	GetRestore(c *gin.Context, id string)
 
 	// (POST /api/backups/{id}/restore)
-	TriggerRestore(c *gin.Context, id string)
+	StartRestore(c *gin.Context, id string)
 	// Retrieves application version
 	// (POST /api/rotate)
 	RotateBackups(c *gin.Context)
@@ -179,8 +179,8 @@ func (siw *ServerInterfaceWrapper) ListBackups(c *gin.Context) {
 	siw.Handler.ListBackups(c)
 }
 
-// TriggerBackup operation middleware
-func (siw *ServerInterfaceWrapper) TriggerBackup(c *gin.Context) {
+// StartBackup operation middleware
+func (siw *ServerInterfaceWrapper) StartBackup(c *gin.Context) {
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -189,7 +189,7 @@ func (siw *ServerInterfaceWrapper) TriggerBackup(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.TriggerBackup(c)
+	siw.Handler.StartBackup(c)
 }
 
 // DeleteBackup operation middleware
@@ -240,8 +240,8 @@ func (siw *ServerInterfaceWrapper) GetBackup(c *gin.Context) {
 	siw.Handler.GetBackup(c, id)
 }
 
-// TriggerBackupWithId operation middleware
-func (siw *ServerInterfaceWrapper) TriggerBackupWithId(c *gin.Context) {
+// StartBackupWithId operation middleware
+func (siw *ServerInterfaceWrapper) StartBackupWithId(c *gin.Context) {
 
 	var err error
 
@@ -261,7 +261,7 @@ func (siw *ServerInterfaceWrapper) TriggerBackupWithId(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.TriggerBackupWithId(c, id)
+	siw.Handler.StartBackupWithId(c, id)
 }
 
 // GetRestore operation middleware
@@ -288,8 +288,8 @@ func (siw *ServerInterfaceWrapper) GetRestore(c *gin.Context) {
 	siw.Handler.GetRestore(c, id)
 }
 
-// TriggerRestore operation middleware
-func (siw *ServerInterfaceWrapper) TriggerRestore(c *gin.Context) {
+// StartRestore operation middleware
+func (siw *ServerInterfaceWrapper) StartRestore(c *gin.Context) {
 
 	var err error
 
@@ -309,7 +309,7 @@ func (siw *ServerInterfaceWrapper) TriggerRestore(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.TriggerRestore(c, id)
+	siw.Handler.StartRestore(c, id)
 }
 
 // RotateBackups operation middleware
@@ -366,12 +366,12 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	}
 
 	router.GET(options.BaseURL+"/api/backups", wrapper.ListBackups)
-	router.POST(options.BaseURL+"/api/backups", wrapper.TriggerBackup)
+	router.POST(options.BaseURL+"/api/backups", wrapper.StartBackup)
 	router.DELETE(options.BaseURL+"/api/backups/:id", wrapper.DeleteBackup)
 	router.GET(options.BaseURL+"/api/backups/:id", wrapper.GetBackup)
-	router.PUT(options.BaseURL+"/api/backups/:id", wrapper.TriggerBackupWithId)
+	router.PUT(options.BaseURL+"/api/backups/:id", wrapper.StartBackupWithId)
 	router.GET(options.BaseURL+"/api/backups/:id/restore", wrapper.GetRestore)
-	router.POST(options.BaseURL+"/api/backups/:id/restore", wrapper.TriggerRestore)
+	router.POST(options.BaseURL+"/api/backups/:id/restore", wrapper.StartRestore)
 	router.POST(options.BaseURL+"/api/rotate", wrapper.RotateBackups)
 	router.GET(options.BaseURL+"/api/version", wrapper.GetVersion)
 }
@@ -379,25 +379,25 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xY3W7jNhN9FYHfd8mujDYoCt11080iQFsUSZFeBEFAS2ObuxKpkqNs3EDvXpAUqT/a",
-	"sWMX2PZOpsgzZw7nT34huaxqKUCgJtkLUaBrKTTYH+9Z/rmpzVMuBYJA88jquuQ5Qy5F+klLYdZ0voGK",
-	"maf/K1iRjPwv7WFT91anHVzbtpQUoHPFa4NCMm+opd2TPsomR6j0ocYpwW0NJCNMKbbdTUabrb9KvJKN",
-	"KM4mwQelpIoZ/SCQ4zYREpOVtdhScgMapYKzGfd4EfPhFSU3Ehme0aiDi9ns3lByB0pzB3oWmx4vYrR/",
-	"RTuwSaTXStagkLsMyBUwBHv/K6kqhiQjBUP4BnkFJMSSRsXF2rjC7d7ZskaGzasxeut2hRiNAD3Jsqkc",
-	"t4PC/s7uj4Q9JQr+bLgyzt0b2jQ42+0NrHurDwFGLj9Bjgb3UgpkXIDSl1Ks+Hou4oqXCOpVqlfdtpaS",
-	"ki2hfKwVrPizOVbAijWlEX9p7knFlNco68dKFkeIc4uy/sWeeE0f70JMAJfTM6/BL0+YTpDdthjuVS/b",
-	"BPk5L5sCHgXrIiHIc/9Ae89nCo09pAFnEFNvROLiPIw8zqmMptE9ojc3QyeSzqWJ3c+gPB928zah1FHl",
-	"5Li6MXHbWwswUS9Cuf/XO3Et6gbnnhSgUcntwJellCUwYU7WsuQ5B/1YM9y8nq3j7TRgx0jdBrdBNJU9",
-	"DaIwqJSoRgj3ZJQowXk4rQW9hH2lGsCxsiRdrSzt+S+K24pBCUNk+cYullx8hiKKOui7O9vevAP1h/qy",
-	"vHi3eLeY3/1EPX+0bzUx3bqWdXov3h3C8IzR9Uo2Iv7GFIZ4NvC/YESJC/z+oqfDBcIa1Ml5YAk45oPG",
-	"7Ajv07O1ZXUlu0wYzrm2lSY//nZt2HIsISySwTWTkiFoezOyBsFqTjLyXXffJg2sRymrebrsh/c1WB3N",
-	"/dkJ7rogGfmZa/TTNR1/any7WOwSJuxLw2RuCj5ba6OLs0kebC7riNHfFV+vQXUTnhMVNL6XxfZsA+ds",
-	"Btr5WZGgTJaQ9KNWf8eoGmjfLosbaZuqYmpLMnJpLehEwJdk6X2fidbS0c2lL7xoXaSYmjQX8ye7PtBy",
-	"znXstf2Y8QTGDB2W3sOOxsPoI+BeBoepRcnF4uL17eETcEz+I6Bnniy3iZ2fYyHJFKvAjXH3U2264/Ys",
-	"NwtdU3G1xs3k4/Cgg3icltoHSrr2tyf+/+C4uS6+tiw4NeoPCmtz1M9ru8LKj3Rv4dN/XX8NkbCvFA69",
-	"/K/Vwr234MNC9TNvVCc3Tg471fllGo6s/2iehD9ghuXrBlBxeAKdDDxI+vnMS6e3GqEaSDeY/nYl0V1A",
-	"OZ7s6O+ZE9ia46CefLY1qiQZ2SDWWZqWMmflRmrMflgsFsSkSwfw4hPO9ysaVjro9qH9OwAA//+xIyXm",
-	"MhUAAA==",
+	"H4sIAAAAAAAC/9xYTW/jNhD9KwLbI7sy2qAodOumm0WAtigSID0EQUBLY5u7EqmSo2zcQP+9IClSX3Rs",
+	"xy6w7U2myDdvHudLfiG5rGopQKAm2QtRoGspNNgf71n+uanNUy4FgkDzyOq65DlDLkX6SUth1nS+gYqZ",
+	"p28VrEhGvkl72NS91WkH17YtJQXoXPHaoJDMG2pp96SPsskRKn2ocUpwWwPJCFOKbXeT0Wbr7xKvZCOK",
+	"s0nwQSmpYkY/COS4TYTEZGUttpTcgEap4GzGPV7EfHhFyY1Ehmc06uBiNrs3lNyB0tyBnsWmx4sY7V/R",
+	"DmwS6bWSNSjkLgNyBQzB3v9KqoohyUjBEL5DXgEJsaRRcbE2rnC7d7askWGzN0Zv3a4QoxGgJ1k2leN2",
+	"UNjf2f2RsKdEwV8NV8a5e0ObBme7vYF1b/UhwMjlJ8jR4F5KgYwLUPpSihVfz0Vc8RJB7aV61W1rKSnZ",
+	"EsrHWsGKP5tjBaxYUxrxl+aeVEx5jbJ+rGRxhDi3KOvf7Il9+ngXYgK4nJ55DX55wnSC7LbFcK962SbI",
+	"z3nZFPAoWBcJQZ77B9p7PlNo7CENOIOYeiMSF+dh5HFOZTSN7hG9uRk6kXQuTex+BuX5sJu3CaWOKifH",
+	"1Y2J295agIl6Ecr9f96Ja1E3OPekAI1Kbge+LKUsgQlzspYlzznox5rhZn+2jrfTgB0jdRvcBtFU9jSI",
+	"wqBSohoh3JNRogTn4bQW9BL2lWoAx8qSdLWytOe/KG4rBiUMkeUbu1hy8RmKKOqg7+5se/MO1B/qy/Li",
+	"3eLdYn73E/X80b7VxHTrWtbpvXh3CMMzRtcr2Yj4G1MY4tnA/4YRJS7wx4ueDhcIa1An54El4JgPGrMj",
+	"/JqerS2rK9llwnDOta00+fmPa8OWYwlhkQyumZQMQdubkTUIVnOSkR+6+zZpYD1KWc3TZT+8r8HqaO7P",
+	"TnDXBcnIr1yjn67p+FPj+8VilzBhXxomc1Pw2VobXZxN8mBzWUeM3poC0s13TlLQ+F4W27ONm7MJaOdH",
+	"RYIyWULSD1r9DaNqoH27KG6gbaqKqS3JyKW1oBMBX5Kl930mWUtH95a+8KJ1cWIq0lzKX+z6QMs517HX",
+	"9lPGExgzdFj6FXY0HkQfAV9lcJhalFwsLvZvDx+AY/IfAT3zZLlN7PQcC0imWAVuiLufatMdt2e5Weha",
+	"iqs0biIfhwcdxOO00D5Q0jW/ndH/J8fNdfG15cCpMX9QUJujflbbFVR+nHsLn/7L+muIg91lcOjj/60O",
+	"vnoHPihUP+1GVXKD5LBHnV+m4bD6r2ZJ+OtlWLpuABWHJ9DJwIOkn8y8dHqrEaqBdIO5b1cK3QWU48mO",
+	"/pg5ga05DurJ51qjSpKRDWKdpWkpc1ZupMbsp8ViQUyydAAvPt18r6JhpYNuH9p/AgAA///XNCqYLBUA",
+	"AA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

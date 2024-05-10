@@ -11,7 +11,7 @@ tags:
 paths:
   /api/backups:
     post:
-      operationId: triggerBackup
+      operationId: startBackup
       summary: Creates new backup
       tags:
         - backup
@@ -51,7 +51,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      operationId: triggerBackupWithId
+      operationId: startBackupWithId
       tags:
         - backup
       requestBody:
@@ -80,7 +80,7 @@ paths:
           schema:
             type: string
     post:
-      operationId: triggerRestore
+      operationId: startRestore
       tags:
         - backup
       requestBody:

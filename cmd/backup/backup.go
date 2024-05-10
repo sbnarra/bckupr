@@ -36,7 +36,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if client, err := util.NewClient(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if backup, err := client.TriggerBackupUsingId(ctx, id, *input); err != nil {
+	} else if backup, err := client.StartBackupWithId(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
 		ctx, _ = ctx.WithDeadline(time.Now().Add(time.Minute * 1))

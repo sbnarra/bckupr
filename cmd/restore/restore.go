@@ -39,7 +39,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if client, err := util.NewClient(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if restore, err := client.TriggerRestore(ctx, id, *input); err != nil {
+	} else if restore, err := client.StartRestore(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
 		logging.Info(ctx, "Restore Complete", encodings.ToJsonIE(restore))

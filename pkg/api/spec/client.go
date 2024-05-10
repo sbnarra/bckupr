@@ -112,14 +112,14 @@ type Backups = []Backup
 // NotFound defines model for NotFound.
 type NotFound = Error
 
-// TriggerBackupJSONRequestBody defines body for TriggerBackup for application/json ContentType.
-type TriggerBackupJSONRequestBody = ContainersConfig
+// StartBackupJSONRequestBody defines body for StartBackup for application/json ContentType.
+type StartBackupJSONRequestBody = ContainersConfig
 
-// TriggerBackupWithIdJSONRequestBody defines body for TriggerBackupWithId for application/json ContentType.
-type TriggerBackupWithIdJSONRequestBody = ContainersConfig
+// StartBackupWithIdJSONRequestBody defines body for StartBackupWithId for application/json ContentType.
+type StartBackupWithIdJSONRequestBody = ContainersConfig
 
-// TriggerRestoreJSONRequestBody defines body for TriggerRestore for application/json ContentType.
-type TriggerRestoreJSONRequestBody = ContainersConfig
+// StartRestoreJSONRequestBody defines body for StartRestore for application/json ContentType.
+type StartRestoreJSONRequestBody = ContainersConfig
 
 // RotateBackupsJSONRequestBody defines body for RotateBackups for application/json ContentType.
 type RotateBackupsJSONRequestBody = RotateInput
@@ -200,10 +200,10 @@ type ClientInterface interface {
 	// ListBackups request
 	ListBackups(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// TriggerBackupWithBody request with any body
-	TriggerBackupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// StartBackupWithBody request with any body
+	StartBackupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	TriggerBackup(ctx context.Context, body TriggerBackupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	StartBackup(ctx context.Context, body StartBackupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteBackup request
 	DeleteBackup(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -211,18 +211,18 @@ type ClientInterface interface {
 	// GetBackup request
 	GetBackup(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// TriggerBackupWithIdWithBody request with any body
-	TriggerBackupWithIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// StartBackupWithIdWithBody request with any body
+	StartBackupWithIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	TriggerBackupWithId(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	StartBackupWithId(ctx context.Context, id string, body StartBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetRestore request
 	GetRestore(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// TriggerRestoreWithBody request with any body
-	TriggerRestoreWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// StartRestoreWithBody request with any body
+	StartRestoreWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	TriggerRestore(ctx context.Context, id string, body TriggerRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	StartRestore(ctx context.Context, id string, body StartRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// RotateBackupsWithBody request with any body
 	RotateBackupsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -245,8 +245,8 @@ func (c *Client) ListBackups(ctx context.Context, reqEditors ...RequestEditorFn)
 	return c.Client.Do(req)
 }
 
-func (c *Client) TriggerBackupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTriggerBackupRequestWithBody(c.Server, contentType, body)
+func (c *Client) StartBackupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartBackupRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -257,8 +257,8 @@ func (c *Client) TriggerBackupWithBody(ctx context.Context, contentType string, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) TriggerBackup(ctx context.Context, body TriggerBackupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTriggerBackupRequest(c.Server, body)
+func (c *Client) StartBackup(ctx context.Context, body StartBackupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartBackupRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -293,8 +293,8 @@ func (c *Client) GetBackup(ctx context.Context, id string, reqEditors ...Request
 	return c.Client.Do(req)
 }
 
-func (c *Client) TriggerBackupWithIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTriggerBackupWithIdRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) StartBackupWithIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartBackupWithIdRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -305,8 +305,8 @@ func (c *Client) TriggerBackupWithIdWithBody(ctx context.Context, id string, con
 	return c.Client.Do(req)
 }
 
-func (c *Client) TriggerBackupWithId(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTriggerBackupWithIdRequest(c.Server, id, body)
+func (c *Client) StartBackupWithId(ctx context.Context, id string, body StartBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartBackupWithIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -329,8 +329,8 @@ func (c *Client) GetRestore(ctx context.Context, id string, reqEditors ...Reques
 	return c.Client.Do(req)
 }
 
-func (c *Client) TriggerRestoreWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTriggerRestoreRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) StartRestoreWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartRestoreRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -341,8 +341,8 @@ func (c *Client) TriggerRestoreWithBody(ctx context.Context, id string, contentT
 	return c.Client.Do(req)
 }
 
-func (c *Client) TriggerRestore(ctx context.Context, id string, body TriggerRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTriggerRestoreRequest(c.Server, id, body)
+func (c *Client) StartRestore(ctx context.Context, id string, body StartRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartRestoreRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -416,19 +416,19 @@ func NewListBackupsRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewTriggerBackupRequest calls the generic TriggerBackup builder with application/json body
-func NewTriggerBackupRequest(server string, body TriggerBackupJSONRequestBody) (*http.Request, error) {
+// NewStartBackupRequest calls the generic StartBackup builder with application/json body
+func NewStartBackupRequest(server string, body StartBackupJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewTriggerBackupRequestWithBody(server, "application/json", bodyReader)
+	return NewStartBackupRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewTriggerBackupRequestWithBody generates requests for TriggerBackup with any type of body
-func NewTriggerBackupRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewStartBackupRequestWithBody generates requests for StartBackup with any type of body
+func NewStartBackupRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -524,19 +524,19 @@ func NewGetBackupRequest(server string, id string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewTriggerBackupWithIdRequest calls the generic TriggerBackupWithId builder with application/json body
-func NewTriggerBackupWithIdRequest(server string, id string, body TriggerBackupWithIdJSONRequestBody) (*http.Request, error) {
+// NewStartBackupWithIdRequest calls the generic StartBackupWithId builder with application/json body
+func NewStartBackupWithIdRequest(server string, id string, body StartBackupWithIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewTriggerBackupWithIdRequestWithBody(server, id, "application/json", bodyReader)
+	return NewStartBackupWithIdRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewTriggerBackupWithIdRequestWithBody generates requests for TriggerBackupWithId with any type of body
-func NewTriggerBackupWithIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+// NewStartBackupWithIdRequestWithBody generates requests for StartBackupWithId with any type of body
+func NewStartBackupWithIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -605,19 +605,19 @@ func NewGetRestoreRequest(server string, id string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewTriggerRestoreRequest calls the generic TriggerRestore builder with application/json body
-func NewTriggerRestoreRequest(server string, id string, body TriggerRestoreJSONRequestBody) (*http.Request, error) {
+// NewStartRestoreRequest calls the generic StartRestore builder with application/json body
+func NewStartRestoreRequest(server string, id string, body StartRestoreJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewTriggerRestoreRequestWithBody(server, id, "application/json", bodyReader)
+	return NewStartRestoreRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewTriggerRestoreRequestWithBody generates requests for TriggerRestore with any type of body
-func NewTriggerRestoreRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+// NewStartRestoreRequestWithBody generates requests for StartRestore with any type of body
+func NewStartRestoreRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -765,10 +765,10 @@ type ClientWithResponsesInterface interface {
 	// ListBackupsWithResponse request
 	ListBackupsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListBackupsResponse, error)
 
-	// TriggerBackupWithBodyWithResponse request with any body
-	TriggerBackupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerBackupResponse, error)
+	// StartBackupWithBodyWithResponse request with any body
+	StartBackupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartBackupResponse, error)
 
-	TriggerBackupWithResponse(ctx context.Context, body TriggerBackupJSONRequestBody, reqEditors ...RequestEditorFn) (*TriggerBackupResponse, error)
+	StartBackupWithResponse(ctx context.Context, body StartBackupJSONRequestBody, reqEditors ...RequestEditorFn) (*StartBackupResponse, error)
 
 	// DeleteBackupWithResponse request
 	DeleteBackupWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteBackupResponse, error)
@@ -776,18 +776,18 @@ type ClientWithResponsesInterface interface {
 	// GetBackupWithResponse request
 	GetBackupWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetBackupResponse, error)
 
-	// TriggerBackupWithIdWithBodyWithResponse request with any body
-	TriggerBackupWithIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error)
+	// StartBackupWithIdWithBodyWithResponse request with any body
+	StartBackupWithIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartBackupWithIdResponse, error)
 
-	TriggerBackupWithIdWithResponse(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error)
+	StartBackupWithIdWithResponse(ctx context.Context, id string, body StartBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*StartBackupWithIdResponse, error)
 
 	// GetRestoreWithResponse request
 	GetRestoreWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetRestoreResponse, error)
 
-	// TriggerRestoreWithBodyWithResponse request with any body
-	TriggerRestoreWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerRestoreResponse, error)
+	// StartRestoreWithBodyWithResponse request with any body
+	StartRestoreWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartRestoreResponse, error)
 
-	TriggerRestoreWithResponse(ctx context.Context, id string, body TriggerRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*TriggerRestoreResponse, error)
+	StartRestoreWithResponse(ctx context.Context, id string, body StartRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*StartRestoreResponse, error)
 
 	// RotateBackupsWithBodyWithResponse request with any body
 	RotateBackupsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RotateBackupsResponse, error)
@@ -820,14 +820,14 @@ func (r ListBackupsResponse) StatusCode() int {
 	return 0
 }
 
-type TriggerBackupResponse struct {
+type StartBackupResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Backup
 }
 
 // Status returns HTTPResponse.Status
-func (r TriggerBackupResponse) Status() string {
+func (r StartBackupResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -835,7 +835,7 @@ func (r TriggerBackupResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r TriggerBackupResponse) StatusCode() int {
+func (r StartBackupResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -886,14 +886,14 @@ func (r GetBackupResponse) StatusCode() int {
 	return 0
 }
 
-type TriggerBackupWithIdResponse struct {
+type StartBackupWithIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Backup
 }
 
 // Status returns HTTPResponse.Status
-func (r TriggerBackupWithIdResponse) Status() string {
+func (r StartBackupWithIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -901,7 +901,7 @@ func (r TriggerBackupWithIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r TriggerBackupWithIdResponse) StatusCode() int {
+func (r StartBackupWithIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -930,14 +930,14 @@ func (r GetRestoreResponse) StatusCode() int {
 	return 0
 }
 
-type TriggerRestoreResponse struct {
+type StartRestoreResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Restore
 }
 
 // Status returns HTTPResponse.Status
-func (r TriggerRestoreResponse) Status() string {
+func (r StartRestoreResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -945,7 +945,7 @@ func (r TriggerRestoreResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r TriggerRestoreResponse) StatusCode() int {
+func (r StartRestoreResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1005,21 +1005,21 @@ func (c *ClientWithResponses) ListBackupsWithResponse(ctx context.Context, reqEd
 	return ParseListBackupsResponse(rsp)
 }
 
-// TriggerBackupWithBodyWithResponse request with arbitrary body returning *TriggerBackupResponse
-func (c *ClientWithResponses) TriggerBackupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerBackupResponse, error) {
-	rsp, err := c.TriggerBackupWithBody(ctx, contentType, body, reqEditors...)
+// StartBackupWithBodyWithResponse request with arbitrary body returning *StartBackupResponse
+func (c *ClientWithResponses) StartBackupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartBackupResponse, error) {
+	rsp, err := c.StartBackupWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseTriggerBackupResponse(rsp)
+	return ParseStartBackupResponse(rsp)
 }
 
-func (c *ClientWithResponses) TriggerBackupWithResponse(ctx context.Context, body TriggerBackupJSONRequestBody, reqEditors ...RequestEditorFn) (*TriggerBackupResponse, error) {
-	rsp, err := c.TriggerBackup(ctx, body, reqEditors...)
+func (c *ClientWithResponses) StartBackupWithResponse(ctx context.Context, body StartBackupJSONRequestBody, reqEditors ...RequestEditorFn) (*StartBackupResponse, error) {
+	rsp, err := c.StartBackup(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseTriggerBackupResponse(rsp)
+	return ParseStartBackupResponse(rsp)
 }
 
 // DeleteBackupWithResponse request returning *DeleteBackupResponse
@@ -1040,21 +1040,21 @@ func (c *ClientWithResponses) GetBackupWithResponse(ctx context.Context, id stri
 	return ParseGetBackupResponse(rsp)
 }
 
-// TriggerBackupWithIdWithBodyWithResponse request with arbitrary body returning *TriggerBackupWithIdResponse
-func (c *ClientWithResponses) TriggerBackupWithIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error) {
-	rsp, err := c.TriggerBackupWithIdWithBody(ctx, id, contentType, body, reqEditors...)
+// StartBackupWithIdWithBodyWithResponse request with arbitrary body returning *StartBackupWithIdResponse
+func (c *ClientWithResponses) StartBackupWithIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartBackupWithIdResponse, error) {
+	rsp, err := c.StartBackupWithIdWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseTriggerBackupWithIdResponse(rsp)
+	return ParseStartBackupWithIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) TriggerBackupWithIdWithResponse(ctx context.Context, id string, body TriggerBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*TriggerBackupWithIdResponse, error) {
-	rsp, err := c.TriggerBackupWithId(ctx, id, body, reqEditors...)
+func (c *ClientWithResponses) StartBackupWithIdWithResponse(ctx context.Context, id string, body StartBackupWithIdJSONRequestBody, reqEditors ...RequestEditorFn) (*StartBackupWithIdResponse, error) {
+	rsp, err := c.StartBackupWithId(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseTriggerBackupWithIdResponse(rsp)
+	return ParseStartBackupWithIdResponse(rsp)
 }
 
 // GetRestoreWithResponse request returning *GetRestoreResponse
@@ -1066,21 +1066,21 @@ func (c *ClientWithResponses) GetRestoreWithResponse(ctx context.Context, id str
 	return ParseGetRestoreResponse(rsp)
 }
 
-// TriggerRestoreWithBodyWithResponse request with arbitrary body returning *TriggerRestoreResponse
-func (c *ClientWithResponses) TriggerRestoreWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TriggerRestoreResponse, error) {
-	rsp, err := c.TriggerRestoreWithBody(ctx, id, contentType, body, reqEditors...)
+// StartRestoreWithBodyWithResponse request with arbitrary body returning *StartRestoreResponse
+func (c *ClientWithResponses) StartRestoreWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartRestoreResponse, error) {
+	rsp, err := c.StartRestoreWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseTriggerRestoreResponse(rsp)
+	return ParseStartRestoreResponse(rsp)
 }
 
-func (c *ClientWithResponses) TriggerRestoreWithResponse(ctx context.Context, id string, body TriggerRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*TriggerRestoreResponse, error) {
-	rsp, err := c.TriggerRestore(ctx, id, body, reqEditors...)
+func (c *ClientWithResponses) StartRestoreWithResponse(ctx context.Context, id string, body StartRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*StartRestoreResponse, error) {
+	rsp, err := c.StartRestore(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseTriggerRestoreResponse(rsp)
+	return ParseStartRestoreResponse(rsp)
 }
 
 // RotateBackupsWithBodyWithResponse request with arbitrary body returning *RotateBackupsResponse
@@ -1135,15 +1135,15 @@ func ParseListBackupsResponse(rsp *http.Response) (*ListBackupsResponse, error) 
 	return response, nil
 }
 
-// ParseTriggerBackupResponse parses an HTTP response from a TriggerBackupWithResponse call
-func ParseTriggerBackupResponse(rsp *http.Response) (*TriggerBackupResponse, error) {
+// ParseStartBackupResponse parses an HTTP response from a StartBackupWithResponse call
+func ParseStartBackupResponse(rsp *http.Response) (*StartBackupResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &TriggerBackupResponse{
+	response := &StartBackupResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1210,15 +1210,15 @@ func ParseGetBackupResponse(rsp *http.Response) (*GetBackupResponse, error) {
 	return response, nil
 }
 
-// ParseTriggerBackupWithIdResponse parses an HTTP response from a TriggerBackupWithIdWithResponse call
-func ParseTriggerBackupWithIdResponse(rsp *http.Response) (*TriggerBackupWithIdResponse, error) {
+// ParseStartBackupWithIdResponse parses an HTTP response from a StartBackupWithIdWithResponse call
+func ParseStartBackupWithIdResponse(rsp *http.Response) (*StartBackupWithIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &TriggerBackupWithIdResponse{
+	response := &StartBackupWithIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1262,15 +1262,15 @@ func ParseGetRestoreResponse(rsp *http.Response) (*GetRestoreResponse, error) {
 	return response, nil
 }
 
-// ParseTriggerRestoreResponse parses an HTTP response from a TriggerRestoreWithResponse call
-func ParseTriggerRestoreResponse(rsp *http.Response) (*TriggerRestoreResponse, error) {
+// ParseStartRestoreResponse parses an HTTP response from a StartRestoreWithResponse call
+func ParseStartRestoreResponse(rsp *http.Response) (*StartRestoreResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &TriggerRestoreResponse{
+	response := &StartRestoreResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

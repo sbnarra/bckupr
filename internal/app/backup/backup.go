@@ -17,7 +17,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func CreateBackup(
+func Start(
 	ctx contexts.Context,
 	id string,
 	input spec.ContainersConfig,

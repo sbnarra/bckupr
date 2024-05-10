@@ -34,92 +34,109 @@ func New(ctx contexts.Context, protocol string, server string) (*Client, *errors
 	}
 }
 
-func (c *Client) TriggerBackup(ctx contexts.Context, req spec.ContainersConfig) (*spec.Backup, *errors.Error) {
-	res, err := c.client.TriggerBackupWithResponse(ctx, req)
-	if checkSuccess(res.HTTPResponse, err) {
+func (c *Client) StartBackup(ctx contexts.Context, req spec.ContainersConfig) (*spec.Backup, *errors.Error) {
+	res, err := c.client.StartBackupWithResponse(ctx, req)
+	if res == nil {
+		return nil, errors.NewWrap(err, "error starting backup")
+	} else if checkSuccess(res.HTTPResponse, err) {
 		backup := res.JSON200
 		return backup, nil
 	} else {
-		return nil, errors.NewWrap(err, "error triggering backup")
+		return nil, errors.NewWrap(err, "error starting backup: "+string(res.Body))
 	}
 }
 
-func (c *Client) TriggerBackupUsingId(ctx contexts.Context, id string, req spec.ContainersConfig) (*spec.Backup, *errors.Error) {
-	res, err := c.client.TriggerBackupWithIdWithResponse(ctx, id, req)
-	if checkSuccess(res.HTTPResponse, err) {
+func (c *Client) StartBackupWithId(ctx contexts.Context, id string, req spec.ContainersConfig) (*spec.Backup, *errors.Error) {
+	res, err := c.client.StartBackupWithIdWithResponse(ctx, id, req)
+	if res == nil {
+		return nil, errors.NewWrap(err, "error starting backup")
+	} else if checkSuccess(res.HTTPResponse, err) {
 		backup := res.JSON200
 		return backup, nil
 	} else {
-		return nil, errors.NewWrap(err, "error triggering backup:"+id)
+		return nil, errors.NewWrap(err, "error starting backup:"+id+": "+string(res.Body))
 	}
 }
 
 func (c *Client) GetBackup(ctx contexts.Context, id string) (*spec.Backup, *errors.Error) {
 	res, err := c.client.GetBackupWithResponse(ctx, id)
-	if checkSuccess(res.HTTPResponse, err) {
+	if res == nil {
+		return nil, errors.NewWrap(err, "error finding backup")
+	} else if checkSuccess(res.HTTPResponse, err) {
 		backup := res.JSON200
 		return backup, nil
 	} else {
-		return nil, errors.NewWrap(err, "error finding backup: "+id)
+		return nil, errors.NewWrap(err, "error finding backup: "+id+": "+string(res.Body))
 	}
 }
 
 func (c *Client) DeleteBackup(ctx contexts.Context, id string) *errors.Error {
 	res, err := c.client.DeleteBackupWithResponse(ctx, id)
-	if checkSuccess(res.HTTPResponse, err) {
-		return nil
-	} else {
-		return errors.NewWrap(err, "error triggering backup")
+	if res == nil {
+		return errors.NewWrap(err, "error starting backup")
+	} else if !checkSuccess(res.HTTPResponse, err) {
+		return errors.NewWrap(err, "error starting backup: "+string(res.Body))
 	}
+	return nil
 }
 
 func (c *Client) ListBackups(ctx contexts.Context) ([]spec.Backup, *errors.Error) {
 	res, err := c.client.ListBackupsWithResponse(ctx)
-	if checkSuccess(res.HTTPResponse, err) {
+	if res == nil {
+		return nil, errors.NewWrap(err, "error listing backups")
+	} else if checkSuccess(res.HTTPResponse, err) {
 		backups := res.JSON200
 		return *backups, nil
 	} else {
-		return nil, errors.NewWrap(err, "error listing backups")
+		return nil, errors.NewWrap(err, "error listing backups: "+string(res.Body))
 	}
 }
 
-func (c *Client) TriggerRestore(ctx contexts.Context, backupId string, req spec.ContainersConfig) (*spec.Restore, *errors.Error) {
-	res, err := c.client.TriggerRestoreWithResponse(ctx, backupId, req)
-	if checkSuccess(res.HTTPResponse, err) {
+func (c *Client) StartRestore(ctx contexts.Context, backupId string, req spec.ContainersConfig) (*spec.Restore, *errors.Error) {
+	res, err := c.client.StartRestoreWithResponse(ctx, backupId, req)
+	if res == nil {
+		return nil, errors.NewWrap(err, "error starting restore")
+	} else if checkSuccess(res.HTTPResponse, err) {
 		restore := res.JSON200
 		return restore, nil
 	} else {
-		return nil, errors.NewWrap(err, "error triggering restore")
+		return nil, errors.NewWrap(err, "error starting restore: "+string(res.Body))
 	}
 }
 
 func (c *Client) GetRestore(ctx contexts.Context, id string) (*spec.Restore, *errors.Error) {
 	res, err := c.client.GetRestoreWithResponse(ctx, id)
-	if checkSuccess(res.HTTPResponse, err) {
+	if res == nil {
+		return nil, errors.NewWrap(err, "error finding restore")
+	} else if checkSuccess(res.HTTPResponse, err) {
 		restore := res.JSON200
 		return restore, nil
 	} else {
-		return nil, errors.NewWrap(err, "error finding restore: "+id)
+		return nil, errors.NewWrap(err, "error finding restore: "+id+": "+string(res.Body))
 	}
 }
 
 func (c *Client) RotateBackups(ctx contexts.Context, req spec.RotateInput) (*spec.Rotate, *errors.Error) {
 	res, err := c.client.RotateBackupsWithResponse(ctx, req)
-	if checkSuccess(res.HTTPResponse, err) {
+	if res == nil {
+		return nil, errors.NewWrap(err, "error starting rotate")
+	} else if checkSuccess(res.HTTPResponse, err) {
 		task := res.JSON200
 		return task, nil
 	} else {
-		return nil, errors.NewWrap(err, "error triggering rotate")
+		return nil, errors.NewWrap(err, "error starting rotate: "+string(res.Body))
 	}
 }
 
 func (c *Client) Version(ctx contexts.Context) (*spec.Version, *errors.Error) {
 	res, err := c.client.GetVersionWithResponse(ctx)
-	if checkSuccess(res.HTTPResponse, err) {
+	if res == nil {
+		return nil, errors.NewWrap(err, "error getting version")
+	} else if checkSuccess(res.HTTPResponse, err) {
 		task := res.JSON200
 		return task, nil
 	} else {
-		return nil, errors.NewWrap(err, "error getting version")
+		return nil, errors.NewWrap(err, "error getting version:"+string(res.Body))
 	}
 }
 

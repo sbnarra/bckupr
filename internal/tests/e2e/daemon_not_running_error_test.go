@@ -14,7 +14,7 @@ func TestNoDaemonRunning(t *testing.T) {
 		t.Fatalf("unexpected error creating client: %v", err)
 	} else {
 		if _, err := client.Version(ctx); err != nil {
-			if err.Error() == "error getting version: Get \"http://0.0.0.0:8000/version\": dial tcp 0.0.0.0:8000: connect: connection refused" {
+			if err.Error() != "error getting version: Get \"http://0.0.0.0:8000/api/version\": dial tcp 0.0.0.0:8000: connect: connection refused" {
 				t.Fatalf("unexpected error: %v", err)
 			}
 		} else {

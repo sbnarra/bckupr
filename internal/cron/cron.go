@@ -79,7 +79,7 @@ func (c *Cron) scheduleBackup(ctx contexts.Context, schedule string, containers 
 		req := spec.ContainersConfig{}
 		if err := req.WithDefaults(spec.BackupStopModes); err != nil {
 			logging.CheckError(ctx, err, "failed to build input")
-		} else if backup, err := backup.CreateBackup(ctx, "", req, containers); err != nil {
+		} else if backup, err := backup.Start(ctx, "", req, containers); err != nil {
 			logging.CheckError(ctx, err, "Backup Failure", backup.Id)
 		}
 		triggerNotifyNextBackup()

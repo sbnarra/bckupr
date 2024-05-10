@@ -45,32 +45,32 @@ func (s handler) newContext(c *gin.Context) contexts.Context {
 	return ctx
 }
 
-func (s handler) TriggerBackup(c *gin.Context) {
-	s.TriggerBackupWithId(c, "")
+func (s handler) StartBackup(c *gin.Context) {
+	s.StartBackupWithId(c, "")
 }
 
-func (s handler) TriggerBackupWithId(c *gin.Context, id string) {
+func (s handler) StartBackupWithId(c *gin.Context, id string) {
 	ctx := s.newContext(c)
 	payload := spec.ContainersConfig{}
 	if err := c.BindJSON(&payload); err != nil {
 		onError(ctx, c, http.StatusBadRequest, "error parsing request:"+err.Error())
 	} else if err := payload.WithDefaults(spec.BackupStopModes); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, "failed to load defaults:"+err.Error())
-	} else if backup, err := backup.CreateBackup(ctx, id, payload, s.containers); err != nil {
+	} else if backup, err := backup.Start(ctx, id, payload, s.containers); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, err.Error())
 	} else {
 		onSuccess(c, http.StatusOK, backup)
 	}
 }
 
-func (s handler) TriggerRestore(c *gin.Context, id string) {
+func (s handler) StartRestore(c *gin.Context, id string) {
 	ctx := s.newContext(c)
 	payload := spec.ContainersConfig{}
 	if err := c.BindJSON(&payload); err != nil {
 		onError(ctx, c, http.StatusBadRequest, "error parsing request:"+err.Error())
 	} else if err := payload.WithDefaults(spec.RestoreStopModes); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, "failed to load defaults:"+err.Error())
-	} else if task, err := restore.RestoreBackup(ctx, id, payload, s.containers); err != nil {
+	} else if task, err := restore.Start(ctx, id, payload, s.containers); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, err.Error())
 	} else {
 		onSuccess(c, http.StatusOK, task)
@@ -79,7 +79,7 @@ func (s handler) TriggerRestore(c *gin.Context, id string) {
 
 func (s handler) DeleteBackup(c *gin.Context, id string) {
 	ctx := s.newContext(c)
-	if err := delete.DeleteBackup(ctx, id); err != nil {
+	if err := delete.Delete(ctx, id); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, err.Error())
 	} else {
 		onSuccess(c, http.StatusOK, nil)

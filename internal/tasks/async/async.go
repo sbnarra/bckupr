@@ -6,12 +6,13 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-type inFlight struct {
+type Async struct {
 	id     string
 	cancel func()
+	Runner *concurrent.Concurrent
 }
 
-var running *inFlight
+var running *Async
 
 func Start(ctx contexts.Context, backupId string, taskExec func(ctx contexts.Context) *errors.Error) *errors.Error {
 	action := ctx.Name
@@ -21,11 +22,11 @@ func Start(ctx contexts.Context, backupId string, taskExec func(ctx contexts.Con
 
 	var cancel func()
 	ctx, cancel = ctx.WithCancel()
-	running = &inFlight{
+	running = &Async{
 		id:     backupId,
 		cancel: cancel,
 	}
-	concurrent.Single(ctx, action, func(ctx contexts.Context) *errors.Error {
+	running.Runner = concurrent.Single(ctx, action, func(ctx contexts.Context) *errors.Error {
 		err := taskExec(ctx)
 		running = nil
 		return err
@@ -33,7 +34,7 @@ func Start(ctx contexts.Context, backupId string, taskExec func(ctx contexts.Con
 	return nil
 }
 
-func getInFlight(action string, id string) (*inFlight, *errors.Error) {
+func Current(action string, id string) (*Async, *errors.Error) {
 	if running == nil {
 		return nil, errors.Errorf("no %v tasks running", action)
 	} else if running.id != id {
@@ -44,7 +45,7 @@ func getInFlight(action string, id string) (*inFlight, *errors.Error) {
 }
 
 func Cancel(action string, id string) *errors.Error {
-	inFlight, err := getInFlight(action, id)
+	inFlight, err := Current(action, id)
 	if err == nil {
 		inFlight.cancel()
 	}

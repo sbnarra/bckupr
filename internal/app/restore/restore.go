@@ -17,7 +17,7 @@ import (
 
 var latest *spec.Restore
 
-func RestoreBackup(ctx contexts.Context, backupId string, input spec.ContainersConfig, containers containers.Templates) (*spec.Restore, *errors.Error) {
+func Start(ctx contexts.Context, backupId string, input spec.ContainersConfig, containers containers.Templates) (*spec.Restore, *errors.Error) {
 	if backupId == "" {
 		return nil, errors.New("missing backup id")
 	}

@@ -8,7 +8,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func DeleteBackup(ctx contexts.Context, id string) *errors.Error {
+func Delete(ctx contexts.Context, id string) *errors.Error {
 	if id == "" {
 		return errors.New("missing backup id")
 	}

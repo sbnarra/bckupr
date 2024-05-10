@@ -12,6 +12,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/app/restore"
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
+	"github.com/sbnarra/bckupr/internal/tasks/async"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/api/client"
@@ -36,9 +37,16 @@ func TestE2EInternal(t *testing.T) {
 			if err := payload.WithDefaults(serverSpec.BackupStopModes); err != nil {
 				return err
 			} else {
-				backup, err := backup.CreateBackup(ctx, "", payload, containers)
-				id = backup.Id
-				return err
+				if backup, err := backup.Start(ctx, "", payload, containers); err != nil {
+					return err
+				} else {
+					id = backup.Id
+					if async, err := async.Current("backup", id); err != nil {
+						return err
+					} else {
+						return async.Runner.Wait()
+					}
+				}
 			}
 		},
 		func() *errors.Error {
@@ -46,13 +54,20 @@ func TestE2EInternal(t *testing.T) {
 			if err := payload.WithDefaults(serverSpec.BackupStopModes); err != nil {
 				return err
 			} else {
-				task, err := restore.RestoreBackup(ctx, id, payload, containers)
-				logging.Info(ctx, task)
+				if _, err := restore.Start(ctx, id, payload, containers); err != nil {
+					return err
+				} else {
+					if async, err := async.Current("restore", id); err != nil {
+						return err
+					} else {
+						return async.Runner.Wait()
+					}
+				}
 				return err
 			}
 		},
 		func() *errors.Error {
-			return delete.DeleteBackup(ctx, id)
+			return delete.Delete(ctx, id)
 		})
 }
 
@@ -84,15 +99,28 @@ func TestE2EExternal(t *testing.T) {
 	e2e(t,
 		func() *errors.Error {
 			req := clientSpec.ContainersConfig{}
-			backup, err := client.TriggerBackupUsingId(ctx, id, req)
-			logging.Info(ctx, backup, err)
-			return err
+			if backup, err := client.StartBackupWithId(ctx, id, req); err != nil {
+				return err
+			} else {
+				id = backup.Id
+				if async, err := async.Current("backup", id); err != nil {
+					return err
+				} else {
+					return async.Runner.Wait()
+				}
+			}
 		},
 		func() *errors.Error {
 			req := clientSpec.ContainersConfig{}
-			task, err := client.TriggerRestore(ctx, id, req)
-			logging.Info(ctx, task, err)
-			return err
+			if _, err := client.StartRestore(ctx, id, req); err != nil {
+				return err
+			} else {
+				if async, err := async.Current("restore", id); err != nil {
+					return err
+				} else {
+					return async.Runner.Wait()
+				}
+			}
 		},
 		func() *errors.Error {
 			return client.DeleteBackup(ctx, id)
