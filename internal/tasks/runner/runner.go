@@ -22,17 +22,14 @@ func RunOnEachDockerHost(
 	ctx contexts.Context,
 	backupId string,
 	args spec.ContainersConfig,
-	preRun types.JobMeta,
+	hooks types.Hooks,
 	exec types.Exec,
-	onComplete func(*errors.Error),
 ) *errors.Error {
 	action := ctx.Name
 	return async.Start(ctx, backupId, func(ctx contexts.Context) *errors.Error {
-		err := docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
-			return run(ctx, d, action, backupId, args, preRun, exec)
+		return docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
+			return run(ctx, d, action, backupId, args, hooks, exec)
 		}).Wait()
-		onComplete(err)
-		return err
 	})
 }
 
@@ -42,7 +39,7 @@ func run(
 	action string,
 	backupId string,
 	args spec.ContainersConfig,
-	preRun types.JobMeta,
+	hooks types.Hooks,
 	exec types.Exec,
 ) *errors.Error {
 	if allContainers, err := docker.List(ctx, *args.LabelPrefix); err != nil {
@@ -50,13 +47,12 @@ func run(
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args); err != nil {
 		return err
 	} else {
-		preRun(tasks)
+		hooks.JobStarted(tasks)
 
 		var notify *notifications.Notifier
 		if notify, err = notifications.New(action); err != nil {
 			return err
 		}
-
 		backupVolumes := backupVolumes(tasks)
 		notify.JobStarted(ctx, action, backupId, backupVolumes)
 		jobStarted := time.Now()
@@ -69,6 +65,7 @@ func run(
 			actionTask.Run(func(ctx contexts.Context) *errors.Error {
 				taskStarted := time.Now()
 				notify.TaskStarted(ctx, backupId, task.Volume)
+				hooks.VolumeStarted(name, task.Volume)
 
 				var runErr *errors.Error
 				if runErr = stopContainers(ctx, docker, task); runErr == nil {
@@ -79,6 +76,7 @@ func run(
 				}
 
 				notify.TaskCompleted(ctx, action, backupId, task.Volume, taskStarted, runErr)
+				hooks.VolumeFinished(name, task.Volume, runErr)
 				taskCh <- task
 				return runErr
 			})
@@ -87,6 +85,7 @@ func run(
 		err := actionTask.Wait()
 		taskCh <- nil
 		notify.JobCompleted(ctx, action, backupId, backupVolumes, jobStarted, err)
+		hooks.JobFinished(err)
 		return listener.Wait()
 	}
 }

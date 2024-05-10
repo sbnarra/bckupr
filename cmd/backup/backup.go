@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/sbnarra/bckupr/internal/cmd/config"
@@ -57,6 +58,7 @@ func run(cmd *cobra.Command, args []string) error {
 				logging.Warn(ctx, "Backup Status Unknown", encodings.ToJsonIE(backup))
 			}
 			time.Sleep(time.Second)
+			fmt.Print("\033[H\033[2J")
 		}
 
 		logging.CheckError(ctx, errors.Wrap(ctx.Err(), "ctx error"))

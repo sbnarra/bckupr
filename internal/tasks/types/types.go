@@ -7,8 +7,6 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-type JobMeta func(Tasks)
-
 type Exec func(
 	ctx contexts.Context,
 	docker docker.Docker,
@@ -23,3 +21,10 @@ type Task struct {
 }
 
 type Tasks map[string]*Task
+
+type Hooks interface {
+	JobStarted(Tasks)
+	VolumeStarted(name string, volume string)
+	VolumeFinished(name string, volume string, err *errors.Error)
+	JobFinished(*errors.Error)
+}

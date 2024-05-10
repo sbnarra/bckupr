@@ -9,42 +9,33 @@ import (
 )
 
 var basicTypeMappings = map[string]TypeMappings{
-	"string": {
+	"string": standardTypeMapping(func(i any) string {
+		return i.(string)
+	}),
+	"int": standardTypeMapping(func(i any) int {
+		return i.(int)
+	}),
+	"bool": standardTypeMapping(func(i any) bool {
+		return i.(bool)
+	}),
+}
+
+func standardTypeMapping[O any](t func(any) O) TypeMappings {
+	return TypeMappings{
 		Single: func(isPointer bool, schema *openapi3.Schema, field reflect.Value) {
-			setSingleField(isPointer, field, schema.Default.(string))
+			setSingleField(isPointer, field, t(schema.Default))
 		},
 		Slice: func(isPointer bool, schema *openapi3.Schema, field reflect.Value) {
-			setSliceField(isPointer, schema, field, func(i any) string {
-				return i.(string)
-			})
+			setSliceField(isPointer, schema, field, t)
 		},
-	},
-	"int": {
-		Single: func(isPointer bool, schema *openapi3.Schema, field reflect.Value) {
-			setSingleField(isPointer, field, int(schema.Default.(float64)))
-		},
-		Slice: func(isPointer bool, schema *openapi3.Schema, field reflect.Value) {
-			setSliceField(isPointer, schema, field, func(i any) int {
-				return i.(int)
-			})
-		},
-	},
-	"bool": {
-		Single: func(isPointer bool, schema *openapi3.Schema, field reflect.Value) {
-			setSingleField(isPointer, field, schema.Default.(bool))
-		},
-		Slice: func(isPointer bool, schema *openapi3.Schema, field reflect.Value) {
-			setSliceField(isPointer, schema, field, func(i any) bool {
-				return i.(bool)
-			})
-		},
-	},
+	}
 }
 
 func (defaults *Defaults) getTypeMappings(fieldType string) (TypeMappings, error) {
 	if typeMappings, found := defaults.typeMappings[fieldType]; found {
 		return typeMappings, nil
 	} else {
+		fmt.Println(typeMappings)
 		return TypeMappings{}, errors.WithStack(fmt.Errorf("mapping missing: %v", fieldType))
 	}
 }

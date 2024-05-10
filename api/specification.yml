@@ -181,6 +181,7 @@ components:
           $ref: '#/components/schemas/Filters'
     Status:
       type: string
+      default: pending
       enum:
         - pending
         - running

@@ -8,7 +8,6 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/run"
-	"github.com/sbnarra/bckupr/internal/meta/writer"
 	"github.com/sbnarra/bckupr/internal/metrics"
 	"github.com/sbnarra/bckupr/internal/tasks/runner"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
@@ -35,31 +34,16 @@ func Start(
 		}
 	}
 
-	writer := writer.New(id, containers.Local)
-	err := runner.RunOnEachDockerHost(
-		ctx, id, input,
-		func(tasks types.Tasks) {
-			writer.JobInit(ctx, tasks)
-		},
-		newBackupVolumeTask(containers, writer),
-		func(err *errors.Error) {
-			writer.JobCompleted(ctx, err)
-		})
-	return writer.Data, err
+	hooks := NewHooks(ctx, id, containers.Local)
+	err := runner.RunOnEachDockerHost(ctx, id, input, hooks, newBackupVolumeTask(containers))
+	return hooks.Writer.Data, err
 }
 
-func newBackupVolumeTask(
-	containers containers.Templates,
-	writer *writer.Writer,
-) types.Exec {
+func newBackupVolumeTask(containers containers.Templates) types.Exec {
 	return func(ctx contexts.Context, docker docker.Docker, id string, name string, volume string) *errors.Error {
-		writer.TaskStarted(ctx, name)
 		m := metrics.Backup(id, name)
-
 		err := backupVolume(ctx, docker, id, name, volume, containers)
-
 		m.OnComplete(err)
-		writer.TaskCompleted(ctx, name, err)
 		return err
 	}
 }

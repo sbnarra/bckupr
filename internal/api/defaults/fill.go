@@ -28,22 +28,6 @@ func fillUsingName(schemaName string, i any, defaults *Defaults) error {
 
 	vo := reflect.ValueOf(i)
 	el := vo.Elem()
-	switch schema.Value.Default.(type) {
-	// always interface?
-	}
-
-	var err error
-	var typeMappings TypeMappings
-	if typeMappings, err = defaults.getTypeMappings(el.Type().String()); err != nil {
-		return err
-	}
-
-	if schema.Value.Default != nil {
-		typeMappings.Single(el.IsNil(), schema.Value, el)
-		return nil
-	} else {
-		fmt.Println("no default")
-	}
 
 	for name, ref := range schema.Value.Properties {
 		fmt.Println("Setting Field", strings.Title(name))
@@ -61,49 +45,21 @@ func setValue(schema *openapi3.Schema, field reflect.Value, defaults *Defaults) 
 		k = field.Elem().Kind()
 	}
 	fmt.Println("setValue", field.Type(), k)
+
 	switch field.Kind() {
 	case reflect.Struct:
-		creator, found := defaults.creators[field.Type().String()]
-		if !found {
-			return fmt.Errorf("add missing creator: Defaults.AddType(\"%v\", func() interface{} { return &%v{} })",
+		if creator, found := defaults.creators[field.Type().String()]; !found {
+			return fmt.Errorf("add missing creator: Defaults.AddType(\"%v\", func() any { return &%v{} })",
 				field.Type().String(),
 				field.Type().String())
-		}
-		instance := creator.New()
-
-		el := reflect.ValueOf(instance)
-
-		el = el.Elem()
-
-		fillUsingName(field.Type().String(), instance, defaults)
-		// fmt.Println("NumField", el.NumField())
-
-		schemaName := field.Type().String()
-		if strings.Contains(schemaName, ".") {
-			schemaName = strings.Split(schemaName, ".")[1]
-		}
-
-		schema, found := defaults.spec.Components.Schemas[schemaName]
-		if !found {
-			fmt.Println("not found", field.Type().String())
+		} else {
+			instance := creator.New()
+			el := reflect.ValueOf(instance)
+			el = el.Elem()
+			fillUsingName(field.Type().String(), instance, defaults)
+			field.Set(el)
 			return nil
 		}
-		for name, ref := range schema.Value.Properties {
-			fmt.Println("Setting Field2", strings.Title(name))
-			field := el.FieldByName(strings.Title(name))
-			if err := setValue(ref.Value, field, defaults); err != nil {
-				return err
-			}
-		}
-		field.Set(el)
-		return nil
-		// if err := fillUsingName(field.Type().String(), &instance, defaults); err != nil {
-		// 	return err
-		// } else {
-		// 	fmt.Println("after", instance)
-		// 	// field.Set(reflect.ValueOf(slice))
-		// 	return nil
-		// }
 	}
 
 	if schema.Default == nil {
@@ -134,9 +90,9 @@ func setValue(schema *openapi3.Schema, field reflect.Value, defaults *Defaults) 
 	if isSlice {
 		typeMappings.Slice(isPointer, schema, field)
 	} else {
-		fmt.Println(field)
+		fmt.Println("before:", field)
 		typeMappings.Single(isPointer, schema, field)
-		fmt.Println(field)
+		fmt.Println("after:", field)
 	}
 
 	return nil

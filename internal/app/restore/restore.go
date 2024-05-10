@@ -15,8 +15,6 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-var latest *spec.Restore
-
 func Start(ctx contexts.Context, backupId string, input spec.ContainersConfig, containers containers.Templates) (*spec.Restore, *errors.Error) {
 	if backupId == "" {
 		return nil, errors.New("missing backup id")
@@ -31,32 +29,9 @@ func Start(ctx contexts.Context, backupId string, input spec.ContainersConfig, c
 		ctx,
 		backupId,
 		input,
-		func(tasks types.Tasks) {
-			latest.Status = spec.StatusRunning
-		},
-		newRestoreBackupTask(containers),
-		func(err *errors.Error) {
-			if err != nil {
-				latest.Status = spec.StatusError
-				msg := err.Error()
-				latest.Error = &msg
-			} else {
-				latest.Status = spec.StatusCompleted
-			}
-		})
-
-	if err != nil {
-		restore.Status = spec.StatusError
-		msg := err.Error()
-		restore.Error = &msg
-	} else {
-		latest = restore
-	}
+		NewHooks(),
+		newRestoreBackupTask(containers))
 	return restore, err
-}
-
-func Latest() *spec.Restore {
-	return latest
 }
 
 func newRestoreBackupTask(containers containers.Templates) types.Exec {
