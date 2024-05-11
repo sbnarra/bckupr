@@ -14,7 +14,7 @@ func StopContainer(ctx contexts.Context, client client.DockerClient, container *
 		return false, nil
 	}
 
-	linkedStopper := concurrent.Default(ctx, "linked-stopper")
+	linkedStopper := concurrent.Default(ctx, "linked")
 	for _, linked := range container.Linked {
 		linkedStopper.Run(func(ctx contexts.Context) *errors.Error {
 			_, err := StopContainer(ctx, client, linked)
@@ -31,21 +31,21 @@ func StopContainer(ctx contexts.Context, client client.DockerClient, container *
 	} else {
 		container.Lock.Lock()
 		if !container.Running {
-			logging.Debug(ctx, "Container", container.Name, "stopped while waiting for lock")
+			logging.Debug(ctx, "stopped while waiting for lock")
 			container.Lock.Unlock()
 			return true, nil
 		}
 	}
 	defer container.Lock.Unlock()
 
-	logging.Info(ctx, "Stopping", container.Name)
+	logging.Info(ctx, "stopping")
 
 	if ctx.DryRun {
-		logging.Info(ctx, "Dry-Run! Stopped", container.Name)
+		logging.Info(ctx, "dry-run! stopped")
 	} else if err := client.StopContainer(ctx, container.Id); err != nil {
 		return true, err
 	} else {
-		logging.Debug(ctx, "Stopped", container.Name)
+		logging.Debug(ctx, "stopped")
 	}
 
 	container.Running = false

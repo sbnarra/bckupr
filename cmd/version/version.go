@@ -27,7 +27,7 @@ func run(cmd *cobra.Command, args []string) error {
 		clientVersion := version.Version(ctx)
 		logging.Info(ctx, "Client:", encodings.ToJsonIE(clientVersion))
 
-		if client, err := util.NewClient(ctx, cmd); err != nil {
+		if client, err := util.NewSdk(ctx, cmd); err != nil {
 			return err
 		} else if serverVersion, err := client.Version(ctx); err != nil {
 			return err

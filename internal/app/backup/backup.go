@@ -11,7 +11,9 @@ import (
 	"github.com/sbnarra/bckupr/internal/metrics"
 	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/tasks/runner"
+	"github.com/sbnarra/bckupr/internal/tasks/tracker"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
+	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -20,10 +22,10 @@ import (
 func Start(
 	ctx contexts.Context,
 	id string,
-	input spec.ContainersConfig,
+	input spec.TaskInput,
 	containers containers.Templates,
 	notificationSettings *notifications.NotificationSettings,
-) (*spec.Backup, *errors.Error) {
+) (*spec.Backup, *concurrent.Concurrent, *errors.Error) {
 	if id == "" {
 		id = time.Now().Format("20060102_1504")
 	}
@@ -32,14 +34,19 @@ func Start(
 	containerBackupDir := ctx.ContainerBackupDir + "/" + id
 	if !ctx.DryRun {
 		if err := os.MkdirAll(containerBackupDir, os.ModePerm); err != nil {
-			return nil, errors.Errorf("failed to create backup dir: %v: %w", containerBackupDir, err)
+			return nil, nil, errors.Errorf("failed to create backup dir: %v: %w", containerBackupDir, err)
 		}
 	}
 
-	hooks := NewHooks(ctx, id, containers.Local)
-	backupTask := newBackupVolumeTask(containers)
-	err := runner.RunOnEachDockerHost(ctx, id, input, hooks, backupTask, notificationSettings)
-	return hooks.Writer.Data, err
+	backup := &spec.Backup{Id: id}
+	if completed, err := tracker.Add("backup", id, backup); err != nil {
+		return nil, nil, err
+	} else {
+		hooks := NewHooks(ctx, backup, containers.Local, completed)
+		backupTask := newBackupVolumeTask(containers)
+		runner, err := runner.RunOnEachDockerHost(ctx, "backup", id, backup, input, hooks, backupTask, notificationSettings)
+		return hooks.Writer.Backup, runner, err
+	}
 }
 
 func newBackupVolumeTask(containers containers.Templates) types.Exec {

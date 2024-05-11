@@ -1,0 +1,9 @@
+docs/*.md
+test/**/*
+.babelrc
+.gitignore
+.travis.yml
+git_push.sh
+mocha.opts
+package.json
+README.md

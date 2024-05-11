@@ -12,7 +12,7 @@ import (
 func StartContainer(ctx contexts.Context, client client.DockerClient, container *types.Container) *errors.Error {
 	startErr := start(ctx, client, container)
 
-	linkedStarter := concurrent.Default(ctx, "linked-starter")
+	linkedStarter := concurrent.Default(ctx, "linked")
 	for _, linked := range container.Linked {
 		linkedStarter.Run(func(ctx contexts.Context) *errors.Error {
 			return StartContainer(ctx, client, linked)

@@ -6,6 +6,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
@@ -34,12 +35,20 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if input, err := newRequest(ctx, cmd); err != nil {
 		return err
-	} else if client, err := util.NewClient(ctx, cmd); err != nil {
+	} else if sdk, err := util.NewSdk(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if task, err := client.RotateBackups(ctx, *input); err != nil {
+	} else if rotate, err := sdk.StartRotate(ctx, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
-		logging.Info(ctx, "Completed:", task)
+		util.TermClear()
+		logging.Info(ctx, "Rotate Started", encodings.ToJsonIE(rotate))
+
+		util.WaitForCompletion(ctx,
+			func() (*spec.Rotate, *errors.Error) {
+				return sdk.GetRotate(ctx)
+			}, func(r *spec.Rotate) spec.Status {
+				return r.Status
+			})
 	}
 	return nil
 }

@@ -8,23 +8,17 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-var latest *spec.Restore
-
-func Latest() *spec.Restore {
-	return latest
-}
-
 type hooks struct {
-	restore *spec.Restore
-	ext     string
+	restore    *spec.Restore
+	ext        string
+	onComplete func(*errors.Error)
 }
 
-func NewHooks() hooks {
+func NewHooks(restore *spec.Restore, onComplete func(*errors.Error)) hooks {
 	return hooks{
-		restore: &spec.Restore{
-			Started: time.Now(),
-			Status:  spec.StatusPending,
-		}}
+		onComplete: onComplete,
+		restore:    restore,
+	}
 }
 
 func (h hooks) JobStarted(tasks types.Tasks) {
@@ -37,11 +31,10 @@ func (h hooks) JobStarted(tasks types.Tasks) {
 		})
 	}
 	h.restore.Status = spec.StatusRunning
-
-	latest = h.restore
 }
 
 func (h hooks) JobFinished(err *errors.Error) {
+	h.onComplete(err)
 	if err != nil {
 		h.restore.Status = spec.StatusError
 		msg := err.Error()

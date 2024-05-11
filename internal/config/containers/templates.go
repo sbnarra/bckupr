@@ -10,7 +10,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func ContainerTemplates(local string, offsite string) (Templates, *errors.Error) {
+func LoadTemplates(local string, offsite string) (Templates, *errors.Error) {
 	if local, err := LocalContainerTemplates(local); err != nil {
 		return Templates{}, err
 	} else if offsite, err := OffsiteContainerTemplates(offsite); err != nil {

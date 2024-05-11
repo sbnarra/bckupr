@@ -9,7 +9,7 @@ import (
 )
 
 func TestRunExecutes(t *testing.T) {
-	c := New(tests.Context, "test", 1)
+	c := New(tests.Context, "", 1)
 	completed := false
 
 	c.Run(func(ctx contexts.Context) *errors.Error {
@@ -26,7 +26,7 @@ func TestRunExecutes(t *testing.T) {
 }
 
 func TestMultipleRunExecutes(t *testing.T) {
-	c := New(tests.Context, "test", 1)
+	c := New(tests.Context, "", 1)
 
 	completed1 := false
 	c.Run(func(ctx contexts.Context) *errors.Error {
@@ -52,7 +52,7 @@ func TestMultipleRunExecutes(t *testing.T) {
 }
 
 func TestRunError(t *testing.T) {
-	c := New(tests.Context, "test", 1)
+	c := New(tests.Context, "", 1)
 	c.Run(func(ctx contexts.Context) *errors.Error {
 		return errors.New("testing")
 	})

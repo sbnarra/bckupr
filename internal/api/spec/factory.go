@@ -26,8 +26,8 @@ var (
 	}
 )
 
-func (c *ContainersConfig) WithDefaults(stopModes []StopModes) *errors.Error {
-	d := D{entity: "ContainersConfig"}
+func (c *TaskInput) WithDefaults(stopModes []StopModes) *errors.Error {
+	d := D{entity: "TaskInput"}
 
 	if c.LabelPrefix == nil || *c.LabelPrefix == "" {
 		if labelPrefix, err := d.aString("label_prefix"); err != nil {

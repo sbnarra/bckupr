@@ -58,5 +58,6 @@ ENV UI_BASE_PATH /
 ENV LOCAL_CONTAINERS_CONFIG=/local/tar.yml
 ENV ROTATION_POLICIES_CONFIG=/rotation/policies.yaml
 ENV BCKUPR_IN_CONTAINER 1
+ENV GIN_MODE release
 
 COPY --from=app /bckupr /bin/bckupr

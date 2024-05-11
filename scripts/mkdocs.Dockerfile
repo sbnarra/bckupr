@@ -10,3 +10,6 @@ WORKDIR /docs
 ENTRYPOINT ["mkdocs"]
 CMD ["serve"]
 EXPOSE 8000
+
+
+docker run --rm -it -v ./docs/gh-pages:/docs -w /docs python:3.9-slim sh -c "pip install -r requirements.txt && mkdocs build --config-file mkdocs.yml"

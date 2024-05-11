@@ -1,8 +1,6 @@
 package restore
 
 import (
-	"time"
-
 	"github.com/sbnarra/bckupr/internal/cmd/config"
 	"github.com/sbnarra/bckupr/internal/cmd/flags"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
@@ -37,40 +35,26 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if id, input, err := newRequest(ctx, cmd); err != nil {
 		return err
-	} else if client, err := util.NewClient(ctx, cmd); err != nil {
+	} else if sdk, err := util.NewSdk(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if restore, err := client.StartRestore(ctx, id, *input); err != nil {
+	} else if restore, err := sdk.StartRestore(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
 		util.TermClear()
 		logging.Info(ctx, "Restore Started", encodings.ToJsonIE(restore))
 
-		ctx, _ = ctx.WithDeadline(time.Now().Add(time.Minute * 1))
-		for ctx.Err() == nil {
-			util.TermClear()
-			restore, err := client.GetRestore(ctx, id)
-			if err != nil {
-				logging.CheckError(ctx, err)
-			} else if restore.Status == spec.StatusCompleted {
-				logging.Info(ctx, "Restore Success", encodings.ToJsonIE(restore))
-				break
-			} else if restore.Status == spec.StatusError {
-				logging.Info(ctx, "Restore Failed", encodings.ToJsonIE(restore))
-				break
-			} else if restore.Status == spec.StatusRunning {
-				logging.Info(ctx, "Restore Running", encodings.ToJsonIE(restore))
-			} else {
-				logging.Warn(ctx, "Restore Status Unknown", encodings.ToJsonIE(restore))
-			}
-			time.Sleep(time.Second)
-		}
-		logging.CheckError(ctx, errors.Wrap(ctx.Err(), "ctx error"))
+		util.WaitForCompletion(ctx,
+			func() (*spec.Restore, *errors.Error) {
+				return sdk.GetRestore(ctx, id)
+			}, func(r *spec.Restore) spec.Status {
+				return r.Status
+			})
 	}
 	return nil
 }
 
-func newRequest(ctx contexts.Context, cmd *cobra.Command) (string, *spec.ContainersConfig, *errors.Error) {
-	if id, c, err := config.ReadContainersConfig(cmd, keys.BackupStopModes); err != nil {
+func newRequest(ctx contexts.Context, cmd *cobra.Command) (string, *spec.TaskInput, *errors.Error) {
+	if id, c, err := config.ReadTaskInput(cmd, keys.BackupStopModes); err != nil {
 		return "", nil, err
 	} else {
 		return id, c, err

@@ -12,119 +12,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/oapi-codegen/runtime"
 )
-
-// Defines values for Status.
-const (
-	StatusCompleted Status = "completed"
-	StatusError     Status = "error"
-	StatusPending   Status = "pending"
-	StatusRunning   Status = "running"
-)
-
-// Defines values for StopModes.
-const (
-	All      StopModes = "all"
-	Attached StopModes = "attached"
-	Labelled StopModes = "labelled"
-	Linked   StopModes = "linked"
-	Writers  StopModes = "writers"
-)
-
-// Backup defines model for Backup.
-type Backup struct {
-	Created time.Time `json:"created"`
-	Id      string    `json:"id"`
-	Status  Status    `json:"status"`
-	Type    string    `json:"type"`
-	Volumes []Volume  `json:"volumes"`
-}
-
-// ContainersConfig defines model for ContainersConfig.
-type ContainersConfig struct {
-	Filters     Filters      `json:"filters"`
-	LabelPrefix *string      `json:"label_prefix,omitempty"`
-	StopModes   *[]StopModes `json:"stop_modes,omitempty"`
-}
-
-// Error defines model for Error.
-type Error struct {
-	Error string `json:"error"`
-}
-
-// Filters defines model for Filters.
-type Filters struct {
-	ExcludeNames   []string `json:"exclude_names"`
-	ExcludeVolumes []string `json:"exclude_volumes"`
-	IncludeNames   []string `json:"include_names"`
-	IncludeVolumes []string `json:"include_volumes"`
-}
-
-// Restore defines model for Restore.
-type Restore struct {
-	Error   *string   `json:"error,omitempty"`
-	Id      string    `json:"id"`
-	Started time.Time `json:"started"`
-	Status  Status    `json:"status"`
-	Volumes []Volume  `json:"volumes"`
-}
-
-// Rotate defines model for Rotate.
-type Rotate struct {
-	Error   *string   `json:"error,omitempty"`
-	Started time.Time `json:"started"`
-	Status  Status    `json:"status"`
-}
-
-// RotateInput defines model for RotateInput.
-type RotateInput struct {
-	Destroy      bool   `json:"destroy"`
-	PoliciesPath string `json:"policies_path"`
-}
-
-// Status defines model for Status.
-type Status string
-
-// StopModes defines model for StopModes.
-type StopModes string
-
-// Version defines model for Version.
-type Version struct {
-	Created string `json:"created"`
-	Version string `json:"version"`
-}
-
-// Volume defines model for Volume.
-type Volume struct {
-	Created time.Time `json:"created"`
-	Error   *string   `json:"error,omitempty"`
-	Ext     string    `json:"ext"`
-	Mount   string    `json:"mount"`
-	Name    string    `json:"name"`
-	Size    *int64    `json:"size,omitempty"`
-	Status  Status    `json:"status"`
-}
-
-// Backups defines model for Backups.
-type Backups = []Backup
-
-// NotFound defines model for NotFound.
-type NotFound = Error
-
-// StartBackupJSONRequestBody defines body for StartBackup for application/json ContentType.
-type StartBackupJSONRequestBody = ContainersConfig
-
-// StartBackupWithIdJSONRequestBody defines body for StartBackupWithId for application/json ContentType.
-type StartBackupWithIdJSONRequestBody = ContainersConfig
-
-// StartRestoreJSONRequestBody defines body for StartRestore for application/json ContentType.
-type StartRestoreJSONRequestBody = ContainersConfig
-
-// RotateBackupsJSONRequestBody defines body for RotateBackups for application/json ContentType.
-type RotateBackupsJSONRequestBody = RotateInput
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -226,10 +116,13 @@ type ClientInterface interface {
 
 	StartRestore(ctx context.Context, id string, body StartRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// RotateBackupsWithBody request with any body
-	RotateBackupsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetRotate request
+	GetRotate(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	RotateBackups(ctx context.Context, body RotateBackupsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// StartRotateWithBody request with any body
+	StartRotateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	StartRotate(ctx context.Context, body StartRotateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetVersion request
 	GetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -355,8 +248,8 @@ func (c *Client) StartRestore(ctx context.Context, id string, body StartRestoreJ
 	return c.Client.Do(req)
 }
 
-func (c *Client) RotateBackupsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRotateBackupsRequestWithBody(c.Server, contentType, body)
+func (c *Client) GetRotate(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRotateRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -367,8 +260,20 @@ func (c *Client) RotateBackupsWithBody(ctx context.Context, contentType string, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) RotateBackups(ctx context.Context, body RotateBackupsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRotateBackupsRequest(c.Server, body)
+func (c *Client) StartRotateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartRotateRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) StartRotate(ctx context.Context, body StartRotateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartRotateRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -654,19 +559,46 @@ func NewStartRestoreRequestWithBody(server string, id string, contentType string
 	return req, nil
 }
 
-// NewRotateBackupsRequest calls the generic RotateBackups builder with application/json body
-func NewRotateBackupsRequest(server string, body RotateBackupsJSONRequestBody) (*http.Request, error) {
+// NewGetRotateRequest generates requests for GetRotate
+func NewGetRotateRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/rotate")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewStartRotateRequest calls the generic StartRotate builder with application/json body
+func NewStartRotateRequest(server string, body StartRotateJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewRotateBackupsRequestWithBody(server, "application/json", bodyReader)
+	return NewStartRotateRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewRotateBackupsRequestWithBody generates requests for RotateBackups with any type of body
-func NewRotateBackupsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewStartRotateRequestWithBody generates requests for StartRotate with any type of body
+func NewStartRotateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -791,10 +723,13 @@ type ClientWithResponsesInterface interface {
 
 	StartRestoreWithResponse(ctx context.Context, id string, body StartRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*StartRestoreResponse, error)
 
-	// RotateBackupsWithBodyWithResponse request with any body
-	RotateBackupsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RotateBackupsResponse, error)
+	// GetRotateWithResponse request
+	GetRotateWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRotateResponse, error)
 
-	RotateBackupsWithResponse(ctx context.Context, body RotateBackupsJSONRequestBody, reqEditors ...RequestEditorFn) (*RotateBackupsResponse, error)
+	// StartRotateWithBodyWithResponse request with any body
+	StartRotateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartRotateResponse, error)
+
+	StartRotateWithResponse(ctx context.Context, body StartRotateJSONRequestBody, reqEditors ...RequestEditorFn) (*StartRotateResponse, error)
 
 	// GetVersionWithResponse request
 	GetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetVersionResponse, error)
@@ -954,14 +889,14 @@ func (r StartRestoreResponse) StatusCode() int {
 	return 0
 }
 
-type RotateBackupsResponse struct {
+type GetRotateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Rotate
 }
 
 // Status returns HTTPResponse.Status
-func (r RotateBackupsResponse) Status() string {
+func (r GetRotateResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -969,7 +904,29 @@ func (r RotateBackupsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r RotateBackupsResponse) StatusCode() int {
+func (r GetRotateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type StartRotateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Rotate
+}
+
+// Status returns HTTPResponse.Status
+func (r StartRotateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StartRotateResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1085,21 +1042,30 @@ func (c *ClientWithResponses) StartRestoreWithResponse(ctx context.Context, id s
 	return ParseStartRestoreResponse(rsp)
 }
 
-// RotateBackupsWithBodyWithResponse request with arbitrary body returning *RotateBackupsResponse
-func (c *ClientWithResponses) RotateBackupsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RotateBackupsResponse, error) {
-	rsp, err := c.RotateBackupsWithBody(ctx, contentType, body, reqEditors...)
+// GetRotateWithResponse request returning *GetRotateResponse
+func (c *ClientWithResponses) GetRotateWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRotateResponse, error) {
+	rsp, err := c.GetRotate(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseRotateBackupsResponse(rsp)
+	return ParseGetRotateResponse(rsp)
 }
 
-func (c *ClientWithResponses) RotateBackupsWithResponse(ctx context.Context, body RotateBackupsJSONRequestBody, reqEditors ...RequestEditorFn) (*RotateBackupsResponse, error) {
-	rsp, err := c.RotateBackups(ctx, body, reqEditors...)
+// StartRotateWithBodyWithResponse request with arbitrary body returning *StartRotateResponse
+func (c *ClientWithResponses) StartRotateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartRotateResponse, error) {
+	rsp, err := c.StartRotateWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseRotateBackupsResponse(rsp)
+	return ParseStartRotateResponse(rsp)
+}
+
+func (c *ClientWithResponses) StartRotateWithResponse(ctx context.Context, body StartRotateJSONRequestBody, reqEditors ...RequestEditorFn) (*StartRotateResponse, error) {
+	rsp, err := c.StartRotate(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStartRotateResponse(rsp)
 }
 
 // GetVersionWithResponse request returning *GetVersionResponse
@@ -1290,15 +1256,41 @@ func ParseStartRestoreResponse(rsp *http.Response) (*StartRestoreResponse, error
 	return response, nil
 }
 
-// ParseRotateBackupsResponse parses an HTTP response from a RotateBackupsWithResponse call
-func ParseRotateBackupsResponse(rsp *http.Response) (*RotateBackupsResponse, error) {
+// ParseGetRotateResponse parses an HTTP response from a GetRotateWithResponse call
+func ParseGetRotateResponse(rsp *http.Response) (*GetRotateResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &RotateBackupsResponse{
+	response := &GetRotateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Rotate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStartRotateResponse parses an HTTP response from a StartRotateWithResponse call
+func ParseStartRotateResponse(rsp *http.Response) (*StartRotateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StartRotateResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

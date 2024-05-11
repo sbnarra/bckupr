@@ -3,13 +3,13 @@ package daemon
 import (
 	"net/http"
 
-	"github.com/sbnarra/bckupr/internal/api/server"
 	"github.com/sbnarra/bckupr/internal/cmd/flags"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/docker/discover"
 	"github.com/sbnarra/bckupr/internal/notifications"
+	"github.com/sbnarra/bckupr/internal/web/server"
 
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
@@ -50,12 +50,12 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if err = buildCron(cmd); err != nil {
 		return err
-	} else if containers, err := containers.ContainerTemplates(input.LocalContainersConfig, input.OffsiteContainersConfig); err != nil {
+	} else if containers, err := containers.LoadTemplates(input.LocalContainersConfig, input.OffsiteContainersConfig); err != nil {
 		return err
 	} else if notificationSettings, err := notificationSettings(cmd); err != nil {
 		return err
 	} else {
-		daemon := concurrent.New(ctx, "daemon", 2)
+		daemon := concurrent.New(ctx, "", 2)
 		daemon.RunN("cron", func(ctx contexts.Context) *errors.Error {
 			return startCron(ctx, cmd, containers, notificationSettings)
 		})

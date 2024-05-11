@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/sbnarra/bckupr/internal/api/server"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/web/server"
 )
 
 func createContext(t *testing.T) contexts.Context {

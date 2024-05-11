@@ -26,7 +26,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if backupId, err := flags.String(keys.BackupId, cmd.Flags()); err != nil {
 		return err
-	} else if client, err := util.NewClient(ctx, cmd); err != nil {
+	} else if client, err := util.NewSdk(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
 	} else if err := client.DeleteBackup(ctx, backupId); err != nil {
 		logging.CheckError(ctx, err)

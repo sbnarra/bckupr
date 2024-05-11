@@ -1,6 +1,6 @@
 module github.com/sbnarra/bckupr
 
-go 1.22.1
+go 1.22.3
 
 require (
 	github.com/containrrr/shoutrrr v0.8.0

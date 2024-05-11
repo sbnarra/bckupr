@@ -20,7 +20,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContainersConfig'
+              $ref: '#/components/schemas/TaskInput'
         required: true
       responses:
         '200':
@@ -59,7 +59,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContainersConfig'
+              $ref: '#/components/schemas/TaskInput'
       responses:
         '200':
           $ref: '#/components/responses/Backup'
@@ -89,7 +89,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContainersConfig'
+              $ref: '#/components/schemas/TaskInput'
       responses:
         '200':
           $ref: '#/components/responses/Restore'
@@ -101,11 +101,18 @@ paths:
         '200':
           $ref: '#/components/responses/Restore'
   /api/rotate:
+    get:
+      operationId: getRotate
+      tags:
+        - backup
+      responses:
+        '200':
+          $ref: '#/components/responses/Rotate'
     post:
-      operationId: rotateBackups
+      operationId: startRotate
       summary: Retrieves application version
       tags:
-        - system
+        - backup
       requestBody:
         description: Backup to be created
         content:
@@ -165,7 +172,7 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
-    ContainersConfig:
+    TaskInput:
       type: object
       required:
         - filters
@@ -205,6 +212,8 @@ components:
           type: string
         status:
           $ref: '#/components/schemas/Status'
+        error:
+          type: string
         volumes:
           type: array
           items:

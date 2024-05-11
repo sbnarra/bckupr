@@ -9,19 +9,17 @@ import (
 )
 
 func ExecPerHost(ctx contexts.Context, exec func(Docker) *errors.Error) *concurrent.Concurrent {
-	runner := concurrent.Default(ctx, ctx.Name)
-
+	runner := concurrent.Default(ctx, "")
 	for _, dockerHost := range ctx.DockerHosts {
 		runner.Run(func(ctx contexts.Context) *errors.Error {
 			logging.Info(ctx, "Connecting to ", dockerHost)
-			client, err := client.Client(ctx, dockerHost)
-			if err != nil {
+			if client, err := client.Client(ctx, dockerHost); err != nil {
 				return err
+			} else {
+				docker := New(client)
+				defer client.Close()
+				return exec(docker)
 			}
-			docker := New(client)
-			err = exec(docker)
-			client.Close()
-			return err
 		})
 	}
 	return runner

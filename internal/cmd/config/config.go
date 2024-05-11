@@ -16,7 +16,7 @@ func InitTaskTrigger(cmd *cobra.Command, stopModes *keys.Key) {
 	flags.Register(keys.BackupId, cmd.Flags())
 }
 
-func ReadContainersConfig(cmd *cobra.Command, stopModesKey *keys.Key) (string, *spec.ContainersConfig, *errors.Error) {
+func ReadTaskInput(cmd *cobra.Command, stopModesKey *keys.Key) (string, *spec.TaskInput, *errors.Error) {
 	stopModes := []spec.StopModes{}
 	if stopModesS, err := flags.StringSlice(stopModesKey, cmd.Flags()); err != nil {
 		return "", nil, err
@@ -33,7 +33,7 @@ func ReadContainersConfig(cmd *cobra.Command, stopModesKey *keys.Key) (string, *
 	} else if backupId, err := flags.String(keys.BackupId, cmd.Flags()); err != nil {
 		return "", nil, err
 	} else {
-		return backupId, &spec.ContainersConfig{
+		return backupId, &spec.TaskInput{
 			Filters:     *filters,
 			LabelPrefix: &labelPrefix,
 			StopModes:   &stopModes,

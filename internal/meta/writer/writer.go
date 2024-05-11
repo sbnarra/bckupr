@@ -15,25 +15,25 @@ import (
 )
 
 type Writer struct {
-	Data *spec.Backup
-	ext  string
+	Backup *spec.Backup
+	ext    string
 }
 
-func New(id string, c containers.LocalTemplates) *Writer {
-	return &Writer{
-		Data: &spec.Backup{
-			Id:      id,
-			Created: time.Now(),
-			Type:    "full",
-			Status:  spec.StatusPending,
-		},
-		ext: c.FileExt,
+func New(ctx contexts.Context, backup *spec.Backup, c containers.LocalTemplates) *Writer {
+	backup.Status = spec.StatusPending
+	backup.Created = time.Now()
+	backup.Type = "full"
+	w := &Writer{
+		Backup: backup,
+		ext:    c.FileExt,
 	}
+	w.write(ctx)
+	return w
 }
 
 func (w *Writer) JobInit(ctx contexts.Context, tasks types.Tasks) *errors.Error {
 	for name, task := range tasks {
-		w.Data.Volumes = append(w.Data.Volumes, spec.Volume{
+		w.Backup.Volumes = append(w.Backup.Volumes, spec.Volume{
 			Name:   name,
 			Mount:  task.Volume,
 			Ext:    w.ext,
@@ -41,21 +41,22 @@ func (w *Writer) JobInit(ctx contexts.Context, tasks types.Tasks) *errors.Error 
 		})
 	}
 
-	w.Data.Status = spec.StatusRunning
+	w.Backup.Status = spec.StatusRunning
 	return w.write(ctx)
 }
 
 func (w *Writer) JobCompleted(ctx contexts.Context, err *errors.Error) *errors.Error {
 	if err == nil {
-		w.Data.Status = spec.StatusCompleted
+		w.Backup.Status = spec.StatusCompleted
 	} else {
-		w.Data.Status = spec.StatusError
+		w.Backup.Status = spec.StatusError
 	}
 	return w.write(ctx)
 }
 
 func (w *Writer) TaskStarted(ctx contexts.Context, name string) *errors.Error {
 	if err := w.updateVolume(name, func(volume *spec.Volume) {
+		volume.Created = time.Now()
 		volume.Status = spec.StatusRunning
 	}); err != nil {
 		return err
@@ -71,7 +72,7 @@ func (w *Writer) TaskCompleted(ctx contexts.Context, name string, err *errors.Er
 			volume.Error = &msg
 		} else {
 			volume.Status = spec.StatusCompleted
-			size := fileSize(ctx, w.Data.Id+"/"+name+"."+w.ext)
+			size := fileSize(ctx, w.Backup.Id+"/"+name+"."+w.ext)
 			volume.Size = &size
 			volume.Created = time.Now()
 		}
@@ -82,10 +83,10 @@ func (w *Writer) TaskCompleted(ctx contexts.Context, name string, err *errors.Er
 }
 
 func (w *Writer) updateVolume(name string, updateFn func(*spec.Volume)) *errors.Error {
-	for i, volume := range w.Data.Volumes {
+	for i, volume := range w.Backup.Volumes {
 		if volume.Name == name {
 			updateFn(&volume)
-			w.Data.Volumes[i] = volume
+			w.Backup.Volumes[i] = volume
 			return nil
 		}
 	}
@@ -95,11 +96,14 @@ func (w *Writer) updateVolume(name string, updateFn func(*spec.Volume)) *errors.
 func (w *Writer) write(ctx contexts.Context) *errors.Error {
 	if ctx.DryRun {
 		return nil
-	} else if yaml, err := encodings.ToYaml(w.Data); err != nil {
+	} else if yaml, err := encodings.ToYaml(w.Backup); err != nil {
 		return err
 	} else {
-		content := bytes.NewBufferString("# DO NOT DELETE OR EDIT BY HAND\n" + yaml).Bytes()
-		err := os.WriteFile(ctx.ContainerBackupDir+"/"+w.Data.Id+"/meta.yaml", content, os.ModePerm)
+		content := bytes.NewBufferString("# DO NOT DELETE OR EDIT BY HAND\n" + yaml)
+		err := os.WriteFile(
+			ctx.ContainerBackupDir+"/"+w.Backup.Id+"/meta.yaml",
+			content.Bytes(),
+			os.ModePerm)
 		return errors.Wrap(err, "failed to write meta")
 	}
 }

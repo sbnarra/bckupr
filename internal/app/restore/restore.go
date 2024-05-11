@@ -11,31 +11,36 @@ import (
 	"github.com/sbnarra/bckupr/internal/metrics"
 	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/tasks/runner"
+	"github.com/sbnarra/bckupr/internal/tasks/tracker"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
+	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
 func Start(
 	ctx contexts.Context,
-	backupId string,
-	input spec.ContainersConfig,
+	id string,
+	input spec.TaskInput,
 	containers containers.Templates,
 	notificationSettings *notifications.NotificationSettings,
-) (*spec.Restore, *errors.Error) {
-	if backupId == "" {
-		return nil, errors.New("missing backup id")
+) (*spec.Restore, *concurrent.Concurrent, *errors.Error) {
+	if id == "" {
+		return nil, nil, errors.New("missing backup id")
 	}
 
 	restore := &spec.Restore{
 		Started: time.Now(),
 		Status:  spec.StatusPending,
 	}
-
-	hooks := NewHooks()
-	restoreTask := newRestoreBackupTask(containers)
-	err := runner.RunOnEachDockerHost(ctx, backupId, input, hooks, restoreTask, notificationSettings)
-	return restore, err
+	if completed, err := tracker.Add("restore", id, restore); err != nil {
+		return nil, nil, err
+	} else {
+		hooks := NewHooks(restore, completed)
+		restoreTask := newRestoreBackupTask(containers)
+		runner, err := runner.RunOnEachDockerHost(ctx, "restore", id, restore, input, hooks, restoreTask, notificationSettings)
+		return restore, runner, err
+	}
 }
 
 func newRestoreBackupTask(containers containers.Templates) types.Exec {

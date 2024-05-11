@@ -2,3 +2,4 @@
 .env
 bckupr
 docs/gh-pages/site
+.openapi-generator

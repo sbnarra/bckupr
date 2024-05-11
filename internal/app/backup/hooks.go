@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/meta/writer"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
@@ -11,11 +12,17 @@ import (
 type hooks struct {
 	contexts.Context
 	*writer.Writer
+	OnComplete func(*errors.Error)
 }
 
-func NewHooks(ctx contexts.Context, id string, localTemplates containers.LocalTemplates) hooks {
-	writer := writer.New(id, localTemplates)
-	return hooks{ctx, writer}
+func NewHooks(
+	ctx contexts.Context,
+	backup *spec.Backup,
+	localTemplates containers.LocalTemplates,
+	OnComplete func(*errors.Error),
+) hooks {
+	writer := writer.New(ctx, backup, localTemplates)
+	return hooks{ctx, writer, OnComplete}
 }
 
 func (h hooks) JobStarted(tasks types.Tasks) {
@@ -32,4 +39,5 @@ func (h hooks) VolumeFinished(name string, volume string, err *errors.Error) {
 
 func (h hooks) JobFinished(err *errors.Error) {
 	h.Writer.JobCompleted(h.Context, err)
+	h.OnComplete(err)
 }

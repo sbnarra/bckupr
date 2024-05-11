@@ -9,7 +9,7 @@ import (
 	pkg "github.com/pkg/errors"
 )
 
-func new(err error) *Error {
+func withStack(err error) *Error {
 	if err == nil {
 		return nil
 	} else {
@@ -25,24 +25,24 @@ func new(err error) *Error {
 
 func NewWrap(err error, msg string) *Error {
 	if err == nil {
-		return new(fmt.Errorf("%v", msg))
+		return withStack(fmt.Errorf("%v", msg))
 	}
-	return new(fmt.Errorf("%v: %w", msg, err))
+	return withStack(fmt.Errorf("%v: %w", msg, err))
 }
 
 func Wrap(err error, msg string) *Error {
 	if err == nil {
 		return nil
 	}
-	return new(fmt.Errorf("%v: %w", msg, err))
+	return withStack(fmt.Errorf("%v: %w", msg, err))
 }
 
 func Errorf(format string, args ...interface{}) *Error {
-	return new(fmt.Errorf(format, args...))
+	return withStack(fmt.Errorf(format, args...))
 }
 
 func New(msg string) *Error {
-	return new(std.New(msg))
+	return withStack(std.New(msg))
 }
 
 func Unwrap(err *Error) *Error {
@@ -50,7 +50,7 @@ func Unwrap(err *Error) *Error {
 	if Is(unwrapped, &Error{}) {
 		return unwrapped.(*Error)
 	} else {
-		return new(unwrapped)
+		return withStack(unwrapped)
 	}
 }
 
@@ -66,7 +66,7 @@ func Join(errs ...*Error) *Error {
 	if err == nil {
 		return nil
 	}
-	return new(err)
+	return withStack(err)
 }
 
 func Is(err, target error) bool {

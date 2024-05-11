@@ -15,12 +15,12 @@ func RunListener(ctx contexts.Context, docker docker.Docker, taskCh chan *tasks.
 	// startup listener shouldn't stop working if context is cancelled
 	// so using new context isn't of one passed through from cmd
 	// meaning it should process all before shutdown on nil task which should still happen in runner
-	return concurrent.Single(contexts.NonCancallable(ctx), "startup", func(ctx contexts.Context) *errors.Error {
+	return concurrent.Single(contexts.NonCancallable(ctx), "start", func(ctx contexts.Context) *errors.Error {
 		for {
 			task := <-taskCh
 
 			if task == nil {
-				logging.Debug(ctx, "Stopping completed task listener")
+				logging.Debug(ctx, "stopping container starter")
 				break
 			}
 
@@ -38,14 +38,13 @@ func startContainers(ctx contexts.Context, docker docker.Docker, task *tasks.Tas
 
 		if len(container.Backup.Volumes) == 0 {
 			if err := docker.Start(ctx, container); err != nil {
-				logging.CheckError(ctx, err, "failed to start", container.Name)
+				logging.CheckError(ctx, err, "failed to start")
 			} else {
 				started++
 			}
-		} else if j, err := encodings.ToJson(container.Backup.Volumes); err != nil {
-			logging.CheckError(ctx, err)
 		} else {
-			logging.Debug(ctx, "Unable to start", container.Name, ", has tasks in progress", j)
+			j := encodings.ToJsonIE(container.Backup.Volumes)
+			logging.Debug(ctx, "unable to start, volumes pending", j)
 		}
 	}
 	return started

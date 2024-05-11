@@ -22,7 +22,7 @@ func init() {
 func run(cmd *cobra.Command, args []string) error {
 	if ctx, err := util.NewContext(cmd); err != nil {
 		return err
-	} else if client, err := util.NewClient(ctx, cmd); err != nil {
+	} else if client, err := util.NewSdk(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
 	} else if backups, err := client.ListBackups(ctx); err != nil {
 		logging.CheckError(ctx, err)

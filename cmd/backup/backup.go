@@ -1,8 +1,6 @@
 package backup
 
 import (
-	"time"
-
 	"github.com/sbnarra/bckupr/internal/cmd/config"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/keys"
@@ -34,40 +32,26 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if id, input, err := newRequest(cmd); err != nil {
 		return err
-	} else if client, err := util.NewClient(ctx, cmd); err != nil {
+	} else if sdk, err := util.NewSdk(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if backup, err := client.StartBackupWithId(ctx, id, *input); err != nil {
+	} else if backup, err := sdk.StartBackupWithId(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
-		ctx, _ = ctx.WithDeadline(time.Now().Add(time.Minute * 1))
+		util.TermClear()
+		logging.Info(ctx, "Backup Started", encodings.ToJsonIE(backup))
 
-		for ctx.Err() == nil {
-			backup, err := client.GetBackup(ctx, backup.Id)
-			util.TermClear()
-			if err != nil {
-				logging.CheckError(ctx, err)
-			} else if backup.Status == spec.StatusCompleted {
-				logging.Info(ctx, "Backup Success", encodings.ToJsonIE(backup))
-				break
-			} else if backup.Status == spec.StatusError {
-				logging.Info(ctx, "Backup Failed", encodings.ToJsonIE(backup))
-				break
-			} else if backup.Status == spec.StatusRunning {
-				logging.Info(ctx, "Backup Running", encodings.ToJsonIE(backup))
-			} else {
-				logging.Warn(ctx, "Backup Status Unknown", encodings.ToJsonIE(backup))
-			}
-			time.Sleep(time.Second)
-		}
-
-		logging.CheckError(ctx, errors.Wrap(ctx.Err(), "ctx error"))
-
+		util.WaitForCompletion(ctx,
+			func() (*spec.Backup, *errors.Error) {
+				return sdk.GetBackup(ctx, backup.Id)
+			}, func(r *spec.Backup) spec.Status {
+				return r.Status
+			})
 	}
 	return nil
 }
 
-func newRequest(cmd *cobra.Command) (string, *spec.ContainersConfig, *errors.Error) {
-	if id, c, err := config.ReadContainersConfig(cmd, keys.BackupStopModes); err != nil {
+func newRequest(cmd *cobra.Command) (string, *spec.TaskInput, *errors.Error) {
+	if id, c, err := config.ReadTaskInput(cmd, keys.BackupStopModes); err != nil {
 		return "", nil, err
 	} else {
 		return id, c, err

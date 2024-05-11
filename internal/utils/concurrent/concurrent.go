@@ -1,7 +1,7 @@
 package concurrent
 
 import (
-	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
@@ -10,6 +10,8 @@ import (
 )
 
 type Concurrent struct {
+	name     string
+	counter  int
 	channels []chan *errors.Error
 	wg       sync.WaitGroup
 	limit    int
@@ -34,16 +36,22 @@ func New(ctx contexts.Context, name string, limit int) *Concurrent {
 	} else {
 		limiter = nil
 	}
-	copy := ctx
-	copy.Name = name
+
+	copy := contexts.Copy(ctx.Context, ctx)
+	if name != "" {
+		copy.Name = ctx.Name + "/" + name
+	}
+
 	return &Concurrent{
+		name:    name,
+		counter: 0,
 		ctx:     copy,
 		limit:   limit,
 		limiter: limiter}
 }
 
 func (c *Concurrent) Run(exec func(ctx contexts.Context) *errors.Error) {
-	c.RunN(c.ctx.Name, exec)
+	c.RunN("", exec)
 }
 
 func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) *errors.Error) {
@@ -54,12 +62,14 @@ func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) *errors.E
 		if c.limit > 0 {
 			c.limiter <- struct{}{}
 		}
+		c.counter++
 
-		ctx := c.ctx
-		if name == "" {
-			ctx.Name = fmt.Sprintf("%v-%v", c.ctx.Name, len(c.limiter))
-		} else {
-			ctx.Name = name
+		ctx := contexts.Copy(c.ctx.Context, c.ctx)
+		if name != "" {
+			ctx.Name += "/" + name
+		}
+		if ctx.Debug {
+			ctx.Name += ":" + strconv.Itoa(c.counter)
 		}
 
 		var err *errors.Error

@@ -10,6 +10,8 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/meta/reader"
+	"github.com/sbnarra/bckupr/internal/tasks/tracker"
+	"github.com/sbnarra/bckupr/internal/utils/concurrent"
 	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
@@ -17,21 +19,21 @@ import (
 	"github.com/xhit/go-str2duration/v2"
 )
 
-type Period struct {
-	From string `json:"from"`
-	To   string `json:"to"`
+func Rotate(ctx contexts.Context, input spec.RotateInput) (*spec.Rotate, *concurrent.Concurrent, *errors.Error) {
+	rotate := &spec.Rotate{}
+	if completed, err := tracker.Add("rotate", "", rotate); err != nil {
+		return nil, nil, err
+	} else {
+		runner := concurrent.Single(ctx, "", func(ctx contexts.Context) *errors.Error {
+			err := run(ctx, input)
+			completed(err)
+			return err
+		})
+		return rotate, runner, nil
+	}
 }
 
-type RotatePolicy struct {
-	Period Period `json:"period"`
-	Keep   int    `json:"keep"`
-}
-
-type RotatePolicies struct {
-	Policies []RotatePolicy `json:"policies"`
-}
-
-func Rotate(ctx contexts.Context, input spec.RotateInput) *errors.Error {
+func run(ctx contexts.Context, input spec.RotateInput) *errors.Error {
 	policies := &RotatePolicies{}
 	if _, err := os.Stat(input.PoliciesPath); err == nil {
 		if handle, err := os.Open(input.PoliciesPath); err != nil {

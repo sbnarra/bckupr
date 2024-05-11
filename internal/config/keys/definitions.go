@@ -38,7 +38,7 @@ var ExcludeVolumes = newKey("exclude-volumes", "exclude containers with matching
 
 // cron
 var TimeZone = newKey("timezone", "timezone to use for cron scheduling", "UTC")
-var BackupSchedule = newKey("backup-schedule", "cron expression for backups schedule", "0 0 * * *")
+var BackupSchedule = newKey("backup-schedule", "cron expression for backups schedule", "")
 var RotateSchedule = newKey("rotate-schedule", "cron expression for rotations schedule", "")
 
 // daemon
