@@ -20,7 +20,9 @@ func TestCmdE2E(t *testing.T) {
 	e2e.PrepareIntegrationTest(t)
 
 	go func() {
-		os.Args = []string{"", "daemon", "--host-backup-dir", e2e.BackupDir, "--container-backup-dir", e2e.BackupDir}
+		os.Args = []string{"", "daemon",
+			"--" + keys.HostBackupDir.CliId, e2e.BackupDir,
+			"--" + keys.ContainerBackupDir.CliId, e2e.BackupDir}
 		Cmd.Execute()
 	}()
 	time.Sleep(time.Second * 3)
