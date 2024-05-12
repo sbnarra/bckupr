@@ -15,10 +15,8 @@ func WaitForCompletion[T any](
 	get func() (T, *errors.E),
 	status func(T) spec.Status,
 ) {
-	time.Sleep(time.Second)
 	ctx, _ = context.WithDeadline(ctx, time.Now().Add(time.Minute*1))
 	for ctx.Err() == nil {
-		TermClear()
 		if retrieved, err := get(); err != nil {
 			logging.CheckError(ctx, err)
 		} else if status(retrieved) == spec.StatusCompleted {
@@ -33,6 +31,7 @@ func WaitForCompletion[T any](
 			logging.Warn(ctx, "Status Unknown", status(retrieved), encodings.ToJsonIE(retrieved))
 		}
 		time.Sleep(time.Second * 2)
+		TermClear()
 	}
 	logging.CheckError(ctx, errors.Wrap(ctx.Err(), "ctx error"))
 }

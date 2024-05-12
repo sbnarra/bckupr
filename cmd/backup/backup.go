@@ -4,7 +4,6 @@ import (
 	"github.com/sbnarra/bckupr/internal/cmd/config"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/keys"
-	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
@@ -37,9 +36,6 @@ func run(cmd *cobra.Command, args []string) error {
 	} else if backup, err := sdk.StartBackupWithId(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
-		util.TermClear()
-		logging.Info(ctx, "Backup Started", encodings.ToJsonIE(backup))
-
 		util.WaitForCompletion(ctx,
 			func() (*spec.Backup, *errors.E) {
 				return sdk.GetBackup(ctx, backup.Id)

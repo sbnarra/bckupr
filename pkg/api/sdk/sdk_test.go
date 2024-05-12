@@ -1,6 +1,7 @@
 package sdk_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -21,13 +22,17 @@ func TestSdkE2E(t *testing.T) {
 	if containers, err := containers.LoadTemplates(config.LocalContainersConfig, config.OffsiteContainersConfig); err != nil {
 		t.Fatalf("failed to load container templates: %v", err)
 	} else {
+		ctx, close := context.WithCancel(ctx)
 		s := server.New(ctx, config, containers)
 		go func() {
 			if err := s.Listen(ctx); err != nil {
 				logging.CheckWarn(ctx, err)
 			}
 		}()
-		defer s.Server.Shutdown(ctx)
+		defer func() {
+			s.Server.Shutdown(ctx)
+			close()
+		}()
 	}
 
 	time.Sleep(2 * time.Second)

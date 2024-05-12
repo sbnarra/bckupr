@@ -7,6 +7,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/tests/e2e"
+	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/internal/web/server"
 	"github.com/sbnarra/bckupr/pkg/api/sdk"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
@@ -17,11 +18,14 @@ func TestRestoreMissingBackupId(t *testing.T) {
 
 	s := server.New(ctx, e2e.NewServerConfig(), containers.Templates{})
 	go func() {
-		s.Listen(ctx)
+		if err := s.Listen(ctx); err != nil {
+			logging.Warn(ctx, "api listener error", err)
+		}
 	}()
-	defer func() {
-		s.Server.Close()
-	}()
+	t.Cleanup(func() {
+		s.Server.Shutdown(ctx)
+		time.Sleep(time.Second * 3)
+	})
 
 	time.Sleep(2 * time.Second)
 

@@ -26,14 +26,18 @@ func TestCmdE2E(t *testing.T) {
 		Cmd.Execute()
 	}()
 	time.Sleep(time.Second * 3)
-	defer func() {
-		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-	}()
+
+	t.Cleanup(func() {
+		os.Args = args
+		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+		time.Sleep(time.Second * 3)
+		// TODO: instead of wait,poll version til remote failure
+
+	})
 
 	id := time.Now().Format("200601021504") + "-cmd"
 	e2e.RunE2E(t,
 		func() *errors.E {
-
 			os.Args = []string{"", "backup", "--" + keys.NoDryRun.CliId, "--" + keys.BackupId.CliId, id}
 			return errors.Wrap(Cmd.Execute(), "backup failed")
 		},

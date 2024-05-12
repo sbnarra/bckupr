@@ -25,12 +25,12 @@ func TestAppE2E(t *testing.T) {
 		t.Fatalf("failed to load container templates: %v", err)
 	}
 
+	tr := true
 	notificationSettings := &notifications.NotificationSettings{}
 	e2e.RunE2E(t,
 		func() *errors.E {
-			t := true
 			payload := spec.TaskInput{
-				NoDryRun: &t,
+				NoDryRun: &tr,
 			}
 			if err := payload.WithDefaults(spec.BackupStopModes); err != nil {
 				return err
@@ -43,7 +43,9 @@ func TestAppE2E(t *testing.T) {
 			}
 		},
 		func() *errors.E {
-			payload := spec.TaskInput{}
+			payload := spec.TaskInput{
+				NoDryRun: &tr,
+			}
 			if err := payload.WithDefaults(spec.BackupStopModes); err != nil {
 				return err
 			} else {
