@@ -11,7 +11,7 @@ func ToJsonIE(data any) string { // ignore error
 	return j
 }
 
-func ToJson(data any) (string, *errors.Error) {
+func ToJson(data any) (string, *errors.E) {
 	if b, err := json.MarshalIndent(data, "", "  "); err != nil {
 		return "", errors.Wrap(err, "error encoding to json")
 	} else {
@@ -19,7 +19,7 @@ func ToJson(data any) (string, *errors.Error) {
 	}
 }
 
-func FromJson(data []byte, v any) *errors.Error {
+func FromJson(data []byte, v any) *errors.E {
 	err := json.Unmarshal(data, v)
 	return errors.Wrap(err, "error encoding to json")
 }

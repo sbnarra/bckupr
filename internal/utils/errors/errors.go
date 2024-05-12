@@ -9,52 +9,52 @@ import (
 	pkg "github.com/pkg/errors"
 )
 
-func withStack(err error) *Error {
+func withStack(err error) *E {
 	if err == nil {
 		return nil
 	} else {
 		debug, _ := strconv.ParseBool(os.Getenv("DEBUG"))
 		if debug {
-			if _, stackCaptured := err.(stackTracer); !stackCaptured {
+			if _, stackCaptured := err.(stacked); !stackCaptured {
 				err = pkg.WithStack(err)
 			}
 		}
 	}
-	return &Error{err}
+	return &E{err}
 }
 
-func NewWrap(err error, msg string) *Error {
+func NewWrap(err error, msg string) *E {
 	if err == nil {
 		return withStack(fmt.Errorf("%v", msg))
 	}
 	return withStack(fmt.Errorf("%v: %w", msg, err))
 }
 
-func Wrap(err error, msg string) *Error {
+func Wrap(err error, msg string) *E {
 	if err == nil {
 		return nil
 	}
 	return withStack(fmt.Errorf("%v: %w", msg, err))
 }
 
-func Errorf(format string, args ...interface{}) *Error {
+func Errorf(format string, args ...interface{}) *E {
 	return withStack(fmt.Errorf(format, args...))
 }
 
-func New(msg string) *Error {
+func New(msg string) *E {
 	return withStack(std.New(msg))
 }
 
-func Unwrap(err *Error) *Error {
+func Unwrap(err *E) *E {
 	unwrapped := std.Unwrap(err)
-	if Is(unwrapped, &Error{}) {
-		return unwrapped.(*Error)
+	if Is(unwrapped, &E{}) {
+		return unwrapped.(*E)
 	} else {
 		return withStack(unwrapped)
 	}
 }
 
-func Join(errs ...*Error) *Error {
+func Join(errs ...*E) *E {
 	bErrs := []error{}
 	for _, err := range errs {
 		if err == nil {

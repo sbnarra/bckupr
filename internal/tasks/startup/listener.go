@@ -1,21 +1,22 @@
 package startup
 
 import (
+	"context"
+
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/types"
 	tasks "github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func RunListener(ctx contexts.Context, docker docker.Docker, taskCh chan *tasks.Task) *concurrent.Concurrent {
+func RunListener(ctx context.Context, docker docker.Docker, taskCh chan *tasks.Task) *concurrent.Concurrent {
 	// startup listener shouldn't stop working if context is cancelled
 	// so using new context isn't of one passed through from cmd
 	// meaning it should process all before shutdown on nil task which should still happen in runner
-	return concurrent.Single(contexts.NonCancallable(ctx), "start", func(ctx contexts.Context) *errors.Error {
+	return concurrent.Single(ctx, "start", func(ctx context.Context) *errors.E {
 		for {
 			task := <-taskCh
 
@@ -31,7 +32,7 @@ func RunListener(ctx contexts.Context, docker docker.Docker, taskCh chan *tasks.
 	})
 }
 
-func startContainers(ctx contexts.Context, docker docker.Docker, task *tasks.Task) int {
+func startContainers(ctx context.Context, docker docker.Docker, task *tasks.Task) int {
 	started := 0
 	for _, container := range task.Containers {
 		removeBackupVolume(container, task)

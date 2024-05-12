@@ -177,6 +177,9 @@ components:
       required:
         - filters
       properties:
+        no_dry_run:
+          type: boolean
+          default: false
         label_prefix:
           type: string
           default: bckupr
@@ -270,6 +273,9 @@ components:
         - policies_path
         - destroy
       properties:
+        no_dry_run:
+          type: boolean
+          default: false
         policies_path:
           type: string
         destroy:

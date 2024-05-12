@@ -66,6 +66,7 @@ type Rotate struct {
 // RotateInput defines model for RotateInput.
 type RotateInput struct {
 	Destroy      bool   `json:"destroy"`
+	NoDryRun     *bool  `json:"no_dry_run,omitempty"`
 	PoliciesPath string `json:"policies_path"`
 }
 
@@ -79,6 +80,7 @@ type StopModes string
 type TaskInput struct {
 	Filters     Filters      `json:"filters"`
 	LabelPrefix *string      `json:"label_prefix,omitempty"`
+	NoDryRun    *bool        `json:"no_dry_run,omitempty"`
 	StopModes   *[]StopModes `json:"stop_modes,omitempty"`
 }
 

@@ -41,7 +41,7 @@ func run(cmd *cobra.Command, args []string) error {
 		logging.Info(ctx, "Backup Started", encodings.ToJsonIE(backup))
 
 		util.WaitForCompletion(ctx,
-			func() (*spec.Backup, *errors.Error) {
+			func() (*spec.Backup, *errors.E) {
 				return sdk.GetBackup(ctx, backup.Id)
 			}, func(r *spec.Backup) spec.Status {
 				return r.Status
@@ -50,7 +50,7 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newRequest(cmd *cobra.Command) (string, *spec.TaskInput, *errors.Error) {
+func newRequest(cmd *cobra.Command) (string, *spec.TaskInput, *errors.E) {
 	if id, c, err := config.ReadTaskInput(cmd, keys.BackupStopModes); err != nil {
 		return "", nil, err
 	} else {

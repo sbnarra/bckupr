@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/notifications"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/interrupt"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -25,7 +25,7 @@ type Cron struct {
 	RotateSchedule string
 }
 
-func New(timezone string) (*Cron, *errors.Error) {
+func New(timezone string) (*Cron, *errors.E) {
 	if location, err := time.LoadLocation(timezone); err != nil {
 		return nil, errors.Wrap(err, "error loading timezone: "+timezone)
 	} else {
@@ -41,17 +41,20 @@ func (c *Cron) Stop() {
 	c.stop <- os.Kill
 }
 
-func (c *Cron) Start(ctx contexts.Context,
-	backupSchedule string,
+func (c *Cron) Start(ctx context.Context,
 	rotateSchedule string,
 	rotateInput spec.RotateInput,
+	backupSchedule string,
+	dockerHosts []string,
+	hostBackupDir string,
+	containerBackupDir string,
 	containers containers.Templates,
 	notificationSettings *notifications.NotificationSettings,
-) *errors.Error {
+) *errors.E {
 	c.I.Start()
 
 	if backupSchedule != "" {
-		if err := c.scheduleBackup(ctx, backupSchedule, containers, notificationSettings); err != nil {
+		if err := c.scheduleBackup(ctx, backupSchedule, dockerHosts, hostBackupDir, containerBackupDir, containers, notificationSettings); err != nil {
 			return err
 		}
 	} else {
@@ -59,7 +62,7 @@ func (c *Cron) Start(ctx contexts.Context,
 	}
 
 	if rotateSchedule != "" {
-		if err := c.scheduleRotation(ctx, rotateSchedule, rotateInput); err != nil {
+		if err := c.scheduleRotation(ctx, rotateSchedule, rotateInput, containerBackupDir); err != nil {
 			return err
 		}
 	} else {

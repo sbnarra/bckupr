@@ -1,11 +1,12 @@
 package restore
 
 import (
+	"context"
+
 	"github.com/sbnarra/bckupr/internal/cmd/config"
 	"github.com/sbnarra/bckupr/internal/cmd/flags"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/keys"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -44,7 +45,7 @@ func run(cmd *cobra.Command, args []string) error {
 		logging.Info(ctx, "Restore Started", encodings.ToJsonIE(restore))
 
 		util.WaitForCompletion(ctx,
-			func() (*spec.Restore, *errors.Error) {
+			func() (*spec.Restore, *errors.E) {
 				return sdk.GetRestore(ctx, id)
 			}, func(r *spec.Restore) spec.Status {
 				return r.Status
@@ -53,7 +54,7 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newRequest(ctx contexts.Context, cmd *cobra.Command) (string, *spec.TaskInput, *errors.Error) {
+func newRequest(ctx context.Context, cmd *cobra.Command) (string, *spec.TaskInput, *errors.E) {
 	if id, c, err := config.ReadTaskInput(cmd, keys.BackupStopModes); err != nil {
 		return "", nil, err
 	} else {

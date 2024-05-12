@@ -1,6 +1,7 @@
 package restore
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -14,17 +15,19 @@ import (
 	"github.com/sbnarra/bckupr/internal/tasks/tracker"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
 func Start(
-	ctx contexts.Context,
+	ctx context.Context,
 	id string,
+	dockerHosts []string,
+	hostBackupDir string,
+	containerBackupDir string,
 	input spec.TaskInput,
 	containers containers.Templates,
 	notificationSettings *notifications.NotificationSettings,
-) (*spec.Restore, *concurrent.Concurrent, *errors.Error) {
+) (*spec.Restore, *concurrent.Concurrent, *errors.E) {
 	if id == "" {
 		return nil, nil, errors.New("missing backup id")
 	}
@@ -37,40 +40,61 @@ func Start(
 		return nil, nil, err
 	} else {
 		hooks := NewHooks(restore, completed)
-		restoreTask := newRestoreBackupTask(containers)
-		runner, err := runner.RunOnEachDockerHost(ctx, "restore", id, restore, input, hooks, restoreTask, notificationSettings)
+		restoreTask := newRestoreBackupTask(containers, hostBackupDir, containerBackupDir)
+		runner, err := runner.RunOnEachDockerHost(ctx, "restore", id, restore, dockerHosts, input, hooks, restoreTask, notificationSettings)
 		return restore, runner, err
 	}
 }
 
-func newRestoreBackupTask(containers containers.Templates) types.Exec {
-	return func(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string) *errors.Error {
+func newRestoreBackupTask(
+	containers containers.Templates,
+	hostBackupDir string,
+	containerBackupDir string,
+) types.Exec {
+	return func(ctx context.Context, docker docker.Docker, backupId string, name string, path string) *errors.E {
 		m := metrics.Restore(backupId, name)
-		err := restoreBackup(ctx, docker, backupId, name, path, containers)
+		err := restoreBackup(ctx, docker, backupId, name, path, hostBackupDir, containerBackupDir, containers)
 		m.OnComplete(err)
 		return err
 	}
 }
 
-func restoreBackup(ctx contexts.Context, docker docker.Docker, backupId string, name string, path string, containers containers.Templates) *errors.Error {
+func restoreBackup(
+	ctx context.Context,
+	docker docker.Docker,
+	id string,
+	name string,
+	path string,
+	hostBackupDir string,
+	containerBackupDir string,
+	containers containers.Templates,
+) *errors.E {
 	meta := run.CommonEnv{
-		BackupId:   backupId,
+		BackupId:   id,
 		VolumeName: name,
 		FileExt:    containers.Local.FileExt,
 	}
 
-	if err := checkLocalBackup(ctx, docker, backupId, meta, containers); err != nil {
+	if err := checkLocalBackup(ctx, docker, id, hostBackupDir, containerBackupDir, meta, containers); err != nil {
 		return err
 	}
 
 	containers.Local.Restore.Volumes = append(containers.Local.Restore.Volumes,
-		ctx.HostBackupDir+":/backup:ro",
+		hostBackupDir+":/backup:ro",
 		path+":/data:rw")
 	return docker.Run(ctx, meta, containers.Local.Restore)
 }
 
-func checkLocalBackup(ctx contexts.Context, docker docker.Docker, backupId string, meta run.CommonEnv, containers containers.Templates) *errors.Error {
-	containerBackupDir := ctx.ContainerBackupDir + "/" + backupId
+func checkLocalBackup(
+	ctx context.Context,
+	docker docker.Docker,
+	id string,
+	hostBackupDir string,
+	containerBackupDir string,
+	meta run.CommonEnv,
+	containers containers.Templates,
+) *errors.E {
+	containerBackupDir = containerBackupDir + "/" + id
 	if _, err := os.Stat(containerBackupDir); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			return errors.Wrap(err, "error checking local backup: "+containerBackupDir)
@@ -84,7 +108,7 @@ func checkLocalBackup(ctx contexts.Context, docker docker.Docker, backupId strin
 	}
 
 	offsite := *containers.Offsite
-	offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, ctx.HostBackupDir+":/backup:rw")
+	offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, hostBackupDir+":/backup:rw")
 
 	if err := docker.Run(ctx, meta, offsite.OffsitePull); err != nil {
 		if errors.Is(err, run.MisconfiguredTemplate) {

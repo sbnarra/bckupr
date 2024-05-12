@@ -11,12 +11,14 @@ import (
 func InitTaskTrigger(cmd *cobra.Command, stopModes *keys.Key) {
 	initFilters(cmd)
 
+	flags.Register(keys.NoDryRun, cmd.PersistentFlags())
+
 	flags.Register(stopModes, cmd.Flags())
 	flags.Register(keys.LabelPrefix, cmd.Flags())
 	flags.Register(keys.BackupId, cmd.Flags())
 }
 
-func ReadTaskInput(cmd *cobra.Command, stopModesKey *keys.Key) (string, *spec.TaskInput, *errors.Error) {
+func ReadTaskInput(cmd *cobra.Command, stopModesKey *keys.Key) (string, *spec.TaskInput, *errors.E) {
 	stopModes := []spec.StopModes{}
 	if stopModesS, err := flags.StringSlice(stopModesKey, cmd.Flags()); err != nil {
 		return "", nil, err
@@ -28,12 +30,15 @@ func ReadTaskInput(cmd *cobra.Command, stopModesKey *keys.Key) (string, *spec.Ta
 
 	if filters, err := readFilters(cmd); err != nil {
 		return "", nil, err
+	} else if noDryRun, err := flags.Bool(keys.NoDryRun, cmd.Flags()); err != nil {
+		return "", nil, err
 	} else if labelPrefix, err := flags.String(keys.LabelPrefix, cmd.Flags()); err != nil {
 		return "", nil, err
 	} else if backupId, err := flags.String(keys.BackupId, cmd.Flags()); err != nil {
 		return "", nil, err
 	} else {
 		return backupId, &spec.TaskInput{
+			NoDryRun:    &noDryRun,
 			Filters:     *filters,
 			LabelPrefix: &labelPrefix,
 			StopModes:   &stopModes,

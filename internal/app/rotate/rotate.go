@@ -2,6 +2,7 @@ package rotate
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,20 +13,19 @@ import (
 	"github.com/sbnarra/bckupr/internal/meta/reader"
 	"github.com/sbnarra/bckupr/internal/tasks/tracker"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/xhit/go-str2duration/v2"
 )
 
-func Rotate(ctx contexts.Context, input spec.RotateInput) (*spec.Rotate, *concurrent.Concurrent, *errors.Error) {
+func Rotate(ctx context.Context, input spec.RotateInput, containerBackupDir string) (*spec.Rotate, *concurrent.Concurrent, *errors.E) {
 	rotate := &spec.Rotate{}
 	if completed, err := tracker.Add("rotate", "", rotate); err != nil {
 		return nil, nil, err
 	} else {
-		runner := concurrent.Single(ctx, "", func(ctx contexts.Context) *errors.Error {
-			err := run(ctx, input)
+		runner := concurrent.Single(ctx, "", func(ctx context.Context) *errors.E {
+			err := run(ctx, input, containerBackupDir)
 			completed(err)
 			return err
 		})
@@ -33,7 +33,7 @@ func Rotate(ctx contexts.Context, input spec.RotateInput) (*spec.Rotate, *concur
 	}
 }
 
-func run(ctx contexts.Context, input spec.RotateInput) *errors.Error {
+func run(ctx context.Context, input spec.RotateInput, containerBackupDir string) *errors.E {
 	policies := &RotatePolicies{}
 	if _, err := os.Stat(input.PoliciesPath); err == nil {
 		if handle, err := os.Open(input.PoliciesPath); err != nil {
@@ -43,13 +43,13 @@ func run(ctx contexts.Context, input spec.RotateInput) *errors.Error {
 		}
 	}
 
-	if reader, err := reader.Load(ctx); err != nil {
+	if reader, err := reader.Load(ctx, containerBackupDir); err != nil {
 		return err
 	} else if err := sortAndValidate(policies.Policies); err != nil {
 		return err
 	} else {
 		for _, policy := range policies.Policies {
-			if err := applyPolicy(ctx, input.Destroy, policy, reader); err != nil {
+			if err := applyPolicy(ctx, input.IsDryRun(), input.Destroy, policy, reader); err != nil {
 				logging.CheckError(ctx, err, "error applying rotation policy")
 			}
 		}
@@ -57,7 +57,7 @@ func run(ctx contexts.Context, input spec.RotateInput) *errors.Error {
 	}
 }
 
-func sortAndValidate(policies []RotatePolicy) *errors.Error {
+func sortAndValidate(policies []RotatePolicy) *errors.E {
 	sort.Slice(policies, func(i, j int) bool {
 		return policies[i].Period.From < policies[j].Period.From
 	})
@@ -82,7 +82,7 @@ func sortAndValidate(policies []RotatePolicy) *errors.Error {
 	return nil
 }
 
-func parsePeriod(period Period) (time.Time, time.Time, *errors.Error) {
+func parsePeriod(period Period) (time.Time, time.Time, *errors.E) {
 	policyStart := time.Now()
 	policyEnd := time.Now()
 	if fromDuration, err := str2duration.ParseDuration(period.From); err != nil {
@@ -96,7 +96,13 @@ func parsePeriod(period Period) (time.Time, time.Time, *errors.Error) {
 	}
 }
 
-func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy, reader *reader.Reader) *errors.Error {
+func applyPolicy(
+	ctx context.Context,
+	dryRun bool,
+	destroyBackups bool,
+	policy RotatePolicy,
+	reader *reader.Reader,
+) *errors.E {
 	if policyStart, policyEnd, err := parsePeriod(policy.Period); err != nil {
 		return err
 	} else {
@@ -121,14 +127,14 @@ func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy,
 		if policy.Keep > 0 {
 			if len(backups) > policy.Keep {
 				newest := len(backups) - policy.Keep
-				rotateBackups(ctx, destroyBackups, backups[:newest])
+				rotateBackups(ctx, dryRun, destroyBackups, backups[:newest], reader.ContainerBackupDir)
 			} else {
 				logging.Info(ctx, "no backups to rotate")
 			}
 		} else {
 			if len(backups) > (policy.Keep * -1) {
 				oldest := policy.Keep * -1
-				rotateBackups(ctx, destroyBackups, backups[oldest:])
+				rotateBackups(ctx, dryRun, destroyBackups, backups[oldest:], reader.ContainerBackupDir)
 			} else {
 				logging.Info(ctx, "no backups to rotate")
 			}
@@ -137,20 +143,32 @@ func applyPolicy(ctx contexts.Context, destroyBackups bool, policy RotatePolicy,
 	}
 }
 
-func rotateBackups(ctx contexts.Context, destroyBackups bool, backups []*spec.Backup) {
-	binPath := filepath.Join(ctx.HostBackupDir, "bin")
+func rotateBackups(
+	ctx context.Context,
+	dryRun bool,
+	destroyBackups bool,
+	backups []*spec.Backup,
+	containerBackupDir string,
+) {
+	binPath := filepath.Join(containerBackupDir, "bin")
 	for _, backup := range backups {
-		backupPath := filepath.Join(ctx.ContainerBackupDir, backup.Id)
-		if err := rotateBackup(ctx, destroyBackups, backupPath, filepath.Join(binPath, backup.Id)); err != nil {
+		backupPath := filepath.Join(containerBackupDir, backup.Id)
+		if err := rotateBackup(ctx, dryRun, destroyBackups, backupPath, filepath.Join(binPath, backup.Id)); err != nil {
 			logging.CheckError(ctx, err)
 		}
 	}
 }
 
-func rotateBackup(ctx contexts.Context, destroyBackups bool, backupPath string, binPath string) *errors.Error {
+func rotateBackup(
+	ctx context.Context,
+	dryRun bool,
+	destroyBackups bool,
+	backupPath string,
+	binPath string,
+) *errors.E {
 	if !destroyBackups {
 		logging.Info(ctx, "ln", backupPath, binPath)
-		if !ctx.DryRun {
+		if !dryRun {
 			if err := os.Link(backupPath, binPath); err != nil {
 				return errors.Wrap(err, "failed to link "+backupPath+" to "+binPath)
 			}
@@ -158,7 +176,7 @@ func rotateBackup(ctx contexts.Context, destroyBackups bool, backupPath string, 
 	}
 
 	logging.Info(ctx, "rm -rf", backupPath)
-	if !ctx.DryRun {
+	if !dryRun {
 		err := os.RemoveAll(backupPath)
 		return errors.Wrap(err, "failed to remove "+backupPath)
 	}

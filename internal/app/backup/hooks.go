@@ -1,27 +1,29 @@
 package backup
 
 import (
+	"context"
+
 	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/meta/writer"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
 type hooks struct {
-	contexts.Context
+	context.Context
 	*writer.Writer
-	OnComplete func(*errors.Error)
+	onComplete func(*errors.E)
 }
 
 func NewHooks(
-	ctx contexts.Context,
+	ctx context.Context,
+	dryRun bool,
 	backup *spec.Backup,
 	localTemplates containers.LocalTemplates,
-	OnComplete func(*errors.Error),
+	OnComplete func(*errors.E),
 ) hooks {
-	writer := writer.New(ctx, backup, localTemplates)
+	writer := writer.New(ctx, dryRun, backup, localTemplates)
 	return hooks{ctx, writer, OnComplete}
 }
 
@@ -33,11 +35,11 @@ func (h hooks) VolumeStarted(name string, volume string) {
 	h.Writer.TaskStarted(h.Context, name)
 }
 
-func (h hooks) VolumeFinished(name string, volume string, err *errors.Error) {
+func (h hooks) VolumeFinished(name string, volume string, err *errors.E) {
 	h.Writer.TaskCompleted(h.Context, name, err)
 }
 
-func (h hooks) JobFinished(err *errors.Error) {
+func (h hooks) JobFinished(err *errors.E) {
+	h.onComplete(err)
 	h.Writer.JobCompleted(h.Context, err)
-	h.OnComplete(err)
 }

@@ -1,10 +1,11 @@
 package concurrent
 
 import (
-	"strconv"
 	"sync"
 
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"context"
+
+	"github.com/sbnarra/bckupr/internal/config/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
@@ -12,24 +13,24 @@ import (
 type Concurrent struct {
 	name     string
 	counter  int
-	channels []chan *errors.Error
+	channels []chan *errors.E
 	wg       sync.WaitGroup
 	limit    int
 	limiter  chan struct{}
-	ctx      contexts.Context
+	ctx      context.Context
 }
 
-func Single(ctx contexts.Context, name string, exec func(ctx contexts.Context) *errors.Error) *Concurrent {
+func Single(ctx context.Context, name string, exec func(ctx context.Context) *errors.E) *Concurrent {
 	c := New(ctx, name, 1)
 	c.Run(exec)
 	return c
 }
 
-func Default(ctx contexts.Context, name string) *Concurrent {
-	return New(ctx, name, ctx.Concurrency)
+func Default(ctx context.Context, name string) *Concurrent {
+	return New(ctx, name, contexts.ThreadLimit(ctx))
 }
 
-func New(ctx contexts.Context, name string, limit int) *Concurrent {
+func New(ctx context.Context, name string, limit int) *Concurrent {
 	var limiter chan struct{}
 	if limit > 0 {
 		limiter = make(chan struct{}, limit)
@@ -37,9 +38,11 @@ func New(ctx contexts.Context, name string, limit int) *Concurrent {
 		limiter = nil
 	}
 
-	copy := contexts.Copy(ctx.Context, ctx)
+	var copy context.Context
 	if name != "" {
-		copy.Name = ctx.Name + "/" + name
+		copy = contexts.WithName(ctx, contexts.Name(ctx)+"/"+name)
+	} else {
+		copy = ctx
 	}
 
 	return &Concurrent{
@@ -50,12 +53,12 @@ func New(ctx contexts.Context, name string, limit int) *Concurrent {
 		limiter: limiter}
 }
 
-func (c *Concurrent) Run(exec func(ctx contexts.Context) *errors.Error) {
+func (c *Concurrent) Run(exec func(ctx context.Context) *errors.E) {
 	c.RunN("", exec)
 }
 
-func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) *errors.Error) {
-	errCh := make(chan *errors.Error)
+func (c *Concurrent) RunN(name string, exec func(ctx context.Context) *errors.E) {
+	errCh := make(chan *errors.E)
 	c.channels = append(c.channels, errCh)
 	c.wg.Add(1)
 	go func() {
@@ -64,17 +67,17 @@ func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) *errors.E
 		}
 		c.counter++
 
-		ctx := contexts.Copy(c.ctx.Context, c.ctx)
+		var ctx context.Context
 		if name != "" {
-			ctx.Name += "/" + name
-		}
-		if ctx.Debug {
-			ctx.Name += ":" + strconv.Itoa(c.counter)
+			ctx = contexts.WithName(c.ctx, contexts.Name(c.ctx)+"/"+name)
+		} else {
+			ctx = c.ctx
 		}
 
-		var err *errors.Error
-		if c.ctx.Cancelled() {
-			err = errors.Errorf("cancelled: skipping '%v'", ctx.Name)
+		var err *errors.E
+		if errors.Is(c.ctx.Err(), context.Canceled) {
+			name := contexts.Name(ctx)
+			err = errors.Errorf("cancelled: skipping '%v'", name)
 		} else {
 			err = exec(ctx)
 		}
@@ -89,10 +92,10 @@ func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) *errors.E
 	}()
 }
 
-func (c *Concurrent) Wait() *errors.Error {
+func (c *Concurrent) Wait() *errors.E {
 	c.wg.Wait()
 
-	var err *errors.Error
+	var err *errors.E
 	i := 0
 	for _, errCh := range c.channels {
 		i++
@@ -100,7 +103,6 @@ func (c *Concurrent) Wait() *errors.Error {
 			if err == nil {
 				err = chErr
 			} else {
-				logging.CheckError(c.ctx, chErr, "wait error")
 				err = errors.Join(err, chErr)
 			}
 		}
@@ -109,7 +111,8 @@ func (c *Concurrent) Wait() *errors.Error {
 	close(c.limiter)
 
 	if err != nil {
-		return errors.Wrap(err, c.ctx.Name)
+		name := contexts.Name(c.ctx)
+		return errors.Wrap(err, name)
 	}
 	return nil
 }

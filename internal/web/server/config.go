@@ -3,10 +3,10 @@ package server
 import "github.com/sbnarra/bckupr/internal/notifications"
 
 type Config struct {
-	HostBackupDir string
-	DockerHosts   []string
+	ContainerBackupDir string
+	HostBackupDir      string
+	DockerHosts        []string
 
-	// UnixSocket string
 	TcpAddr string
 
 	LocalContainersConfig   string

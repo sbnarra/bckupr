@@ -1,13 +1,13 @@
 package version
 
 import (
+	"context"
 	"os"
 
 	"github.com/sbnarra/bckupr/internal/api/spec"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 )
 
-func Version(ctx contexts.Context) spec.Version {
+func Version(ctx context.Context) spec.Version {
 	return spec.Version{
 		Created: os.Getenv("CREATED"),
 		Version: os.Getenv("VERSION"),

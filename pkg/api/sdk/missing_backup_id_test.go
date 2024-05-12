@@ -6,7 +6,6 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
-	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/tests/e2e"
 	"github.com/sbnarra/bckupr/internal/web/server"
 	"github.com/sbnarra/bckupr/pkg/api/sdk"
@@ -16,7 +15,7 @@ import (
 func TestRestoreMissingBackupId(t *testing.T) {
 	ctx := e2e.PrepareIntegrationTest(t)
 
-	s := server.New(ctx, e2e.NewServerConfig(), containers.Templates{}, &notifications.NotificationSettings{})
+	s := server.New(ctx, e2e.NewServerConfig(), containers.Templates{})
 	go func() {
 		s.Listen(ctx)
 	}()

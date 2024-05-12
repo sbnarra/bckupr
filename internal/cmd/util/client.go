@@ -1,15 +1,16 @@
 package util
 
 import (
+	"context"
+
 	"github.com/sbnarra/bckupr/internal/cmd/flags"
 	"github.com/sbnarra/bckupr/internal/config/keys"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/api/sdk"
 	"github.com/spf13/cobra"
 )
 
-func NewSdk(ctx contexts.Context, cmd *cobra.Command) (*sdk.Sdk, *errors.Error) {
+func NewSdk(ctx context.Context, cmd *cobra.Command) (*sdk.Sdk, *errors.E) {
 	if network, err := flags.String(keys.DaemonNet, cmd.Flags()); err != nil {
 		return nil, err
 	} else if protocol, err := flags.String(keys.DaemonProtocol, cmd.Flags()); err != nil {

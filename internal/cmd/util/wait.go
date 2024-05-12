@@ -1,9 +1,9 @@
 package util
 
 import (
+	"context"
 	"time"
 
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -11,11 +11,12 @@ import (
 )
 
 func WaitForCompletion[T any](
-	ctx contexts.Context,
-	get func() (T, *errors.Error),
+	ctx context.Context,
+	get func() (T, *errors.E),
 	status func(T) spec.Status,
 ) {
-	ctx, _ = ctx.WithDeadline(time.Now().Add(time.Minute * 1))
+	time.Sleep(time.Second)
+	ctx, _ = context.WithDeadline(ctx, time.Now().Add(time.Minute*1))
 	for ctx.Err() == nil {
 		TermClear()
 		if retrieved, err := get(); err != nil {
@@ -31,7 +32,7 @@ func WaitForCompletion[T any](
 		} else {
 			logging.Warn(ctx, "Status Unknown", status(retrieved), encodings.ToJsonIE(retrieved))
 		}
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 2)
 	}
 	logging.CheckError(ctx, errors.Wrap(ctx.Err(), "ctx error"))
 }

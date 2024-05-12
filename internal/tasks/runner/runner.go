@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"time"
 
 	"github.com/sbnarra/bckupr/internal/api/spec"
@@ -12,32 +13,32 @@ import (
 	"github.com/sbnarra/bckupr/internal/tasks/startup"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
 func RunOnEachDockerHost(
-	ctx contexts.Context,
+	ctx context.Context,
 	action string,
 	id string,
 	data any,
+	dockerHosts []string,
 	args spec.TaskInput,
 	hooks types.Hooks,
 	exec types.Exec,
 	notificationSettings *notifications.NotificationSettings,
-) (*concurrent.Concurrent, *errors.Error) {
+) (*concurrent.Concurrent, *errors.E) {
 	if notifier, err := notifications.New(action, notificationSettings); err != nil {
 		return nil, err
 	} else {
-		return docker.ExecPerHost(ctx, func(d docker.Docker) *errors.Error {
+		return docker.ExecPerHost(ctx, args.IsDryRun(), dockerHosts, func(d docker.Docker) *errors.E {
 			return run(ctx, d, action, id, args, hooks, exec, notifier)
 		}), nil
 	}
 }
 
 func run(
-	ctx contexts.Context,
+	ctx context.Context,
 	docker docker.Docker,
 	action string,
 	id string,
@@ -45,7 +46,7 @@ func run(
 	hooks types.Hooks,
 	exec types.Exec,
 	notifier *notifications.Notifier,
-) *errors.Error {
+) *errors.E {
 	if allContainers, err := docker.List(ctx, *args.LabelPrefix); err != nil {
 		return err
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args); err != nil {
@@ -60,14 +61,14 @@ func run(
 		taskCh := make(chan *types.Task)
 		listener := startup.RunListener(ctx, docker, taskCh)
 
-		actionTask := concurrent.Default(ctx, "")
+		runner := concurrent.Default(ctx, "")
 		for name, task := range tasks {
-			actionTask.Run(func(ctx contexts.Context) *errors.Error {
+			runner.Run(func(ctx context.Context) *errors.E {
 				startedT := time.Now()
 				notifier.TaskStarted(ctx, id, task.Volume)
 				hooks.VolumeStarted(name, task.Volume)
 
-				var runErr *errors.Error
+				var runErr *errors.E
 				if runErr = stopContainers(ctx, docker, task); runErr == nil {
 					runErr = exec(ctx, docker, id, name, task.Volume)
 					task.Completed = true
@@ -82,11 +83,16 @@ func run(
 			})
 		}
 
-		err := actionTask.Wait()
+		runnerErr := runner.Wait()
 		taskCh <- nil
-		notifier.JobCompleted(ctx, action, id, volumes, started, err)
+
 		hooks.JobFinished(err)
-		return listener.Wait()
+		notifier.JobCompleted(ctx, action, id, volumes, started, err)
+
+		if listenerErr := listener.Wait(); listenerErr != nil {
+			runnerErr = errors.Join(runnerErr, listenerErr)
+		}
+		return runnerErr
 	}
 }
 
@@ -99,10 +105,10 @@ func backupVolumes(tasks types.Tasks) []string {
 }
 
 func filterAndCreateTasks(
-	ctx contexts.Context,
+	ctx context.Context,
 	containerMap map[string]*dockerTypes.Container,
 	task spec.TaskInput,
-) (types.Tasks, *errors.Error) {
+) (types.Tasks, *errors.E) {
 	if len(containerMap) == 0 {
 		return nil, errors.Errorf("no containers found")
 	}
@@ -122,10 +128,10 @@ func filterAndCreateTasks(
 	}
 }
 
-func stopContainers(ctx contexts.Context, docker docker.Docker, task *types.Task) *errors.Error {
+func stopContainers(ctx context.Context, docker docker.Docker, task *types.Task) *errors.E {
 	stopper := concurrent.Default(ctx, "stop")
 	for _, container := range task.Containers {
-		stopper.RunN(container.Name, func(ctx contexts.Context) *errors.Error {
+		stopper.RunN(container.Name, func(ctx context.Context) *errors.E {
 			_, err := docker.Stop(ctx, container)
 			return err
 		})

@@ -49,7 +49,7 @@ func Required(key *keys.Key, cmd *cobra.Command) {
 	}
 }
 
-func String(key *keys.Key, flags *pflag.FlagSet) (string, *errors.Error) {
+func String(key *keys.Key, flags *pflag.FlagSet) (string, *errors.E) {
 	val, err := flags.GetString(key.CliId)
 	if err == nil && len(val) != 0 {
 		os.Setenv(key.EnvId(), val)
@@ -57,7 +57,7 @@ func String(key *keys.Key, flags *pflag.FlagSet) (string, *errors.Error) {
 	return val, errors.Wrap(err, "error reading string --"+key.CliId)
 }
 
-func Int(key *keys.Key, flags *pflag.FlagSet) (int, *errors.Error) {
+func Int(key *keys.Key, flags *pflag.FlagSet) (int, *errors.E) {
 	val, err := flags.GetInt(key.CliId)
 	if err == nil {
 		os.Setenv(key.EnvId(), strconv.Itoa(val))
@@ -65,7 +65,7 @@ func Int(key *keys.Key, flags *pflag.FlagSet) (int, *errors.Error) {
 	return val, errors.Wrap(err, "error reading int --"+key.CliId)
 }
 
-func StringSlice(key *keys.Key, flags *pflag.FlagSet) ([]string, *errors.Error) {
+func StringSlice(key *keys.Key, flags *pflag.FlagSet) ([]string, *errors.E) {
 	val, err := flags.GetStringSlice(key.CliId)
 	if err == nil && len(val) != 0 {
 		os.Setenv(key.EnvId(), strings.Join(val, ","))
@@ -73,7 +73,7 @@ func StringSlice(key *keys.Key, flags *pflag.FlagSet) ([]string, *errors.Error) 
 	return val, errors.Wrap(err, "error reading []string --"+key.CliId)
 }
 
-func Bool(key *keys.Key, flags *pflag.FlagSet) (bool, *errors.Error) {
+func Bool(key *keys.Key, flags *pflag.FlagSet) (bool, *errors.E) {
 	val, err := flags.GetBool(key.CliId)
 	if err == nil {
 		os.Setenv(key.EnvId(), strconv.FormatBool(val))

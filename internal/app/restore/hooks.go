@@ -11,10 +11,10 @@ import (
 type hooks struct {
 	restore    *spec.Restore
 	ext        string
-	onComplete func(*errors.Error)
+	onComplete func(*errors.E)
 }
 
-func NewHooks(restore *spec.Restore, onComplete func(*errors.Error)) hooks {
+func NewHooks(restore *spec.Restore, onComplete func(*errors.E)) hooks {
 	return hooks{
 		onComplete: onComplete,
 		restore:    restore,
@@ -33,7 +33,7 @@ func (h hooks) JobStarted(tasks types.Tasks) {
 	h.restore.Status = spec.StatusRunning
 }
 
-func (h hooks) JobFinished(err *errors.Error) {
+func (h hooks) JobFinished(err *errors.E) {
 	h.onComplete(err)
 	if err != nil {
 		h.restore.Status = spec.StatusError
@@ -49,7 +49,7 @@ func (h hooks) VolumeStarted(name string, volume string) {
 		volume.Status = spec.StatusRunning
 	})
 }
-func (h hooks) VolumeFinished(name string, volume string, err *errors.Error) {
+func (h hooks) VolumeFinished(name string, volume string, err *errors.E) {
 	h.updateVolume(name, func(volume *spec.Volume) {
 		if err != nil {
 			volume.Status = spec.StatusError

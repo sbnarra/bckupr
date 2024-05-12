@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Root = &cobra.Command{
+var Cmd = &cobra.Command{
 	Use:   "bckupr",
 	Short: "Docker volume/filesystem backup manager.",
 	Long: `Bckupr is a tool to manage backups  your docker volumes and filesystem.
@@ -21,14 +21,13 @@ This application automates creating new backups and restoring data.`,
 }
 
 func init() {
-	flags.Register(keys.DryRun, Root.PersistentFlags())
-	flags.Register(keys.Debug, Root.PersistentFlags())
-	flags.Register(keys.Concurrency, Root.PersistentFlags())
+	flags.Register(keys.Debug, Cmd.PersistentFlags())
+	flags.Register(keys.ThreadLimit, Cmd.PersistentFlags())
 
-	addGroup("daemon", "Server Commands:", Root,
+	addGroup("daemon", "Server Commands:", Cmd,
 		daemon.Cmd,
 	)
-	addGroup("backups", "Backup Commands:", Root,
+	addGroup("backups", "Backup Commands:", Cmd,
 		backup.Cmd,
 		restore.Cmd,
 		delete.Cmd,
@@ -37,7 +36,7 @@ func init() {
 		rotate.Cmd,
 	)
 
-	Root.AddCommand(version.Cmd)
+	Cmd.AddCommand(version.Cmd)
 }
 
 func addGroup(id string, title string, root *cobra.Command, subs ...*cobra.Command) {

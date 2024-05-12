@@ -26,7 +26,7 @@ var (
 	}
 )
 
-func (c *TaskInput) WithDefaults(stopModes []StopModes) *errors.Error {
+func (c *TaskInput) WithDefaults(stopModes []StopModes) *errors.E {
 	d := D{entity: "TaskInput"}
 
 	if c.LabelPrefix == nil || *c.LabelPrefix == "" {
@@ -41,14 +41,28 @@ func (c *TaskInput) WithDefaults(stopModes []StopModes) *errors.Error {
 	return nil
 }
 
-func (r *RotateInput) WithDefaults() *errors.Error {
+func (t *TaskInput) IsDryRun() bool {
+	if t == nil || t.NoDryRun == nil {
+		return false
+	}
+	return !*t.NoDryRun
+}
+
+func (r *RotateInput) IsDryRun() bool {
+	if r == nil || r.NoDryRun == nil {
+		return false
+	}
+	return !*r.NoDryRun
+}
+
+func (r *RotateInput) WithDefaults() *errors.E {
 	return nil
 }
 
 func (f *Filters) WithDefaults() {
 }
 
-func (v *Version) NewVersion() *errors.Error {
+func (v *Version) NewVersion() *errors.E {
 	d := D{entity: "Version"}
 	if v.Version == "" {
 		if version, err := d.aString("version"); err != nil {
@@ -60,7 +74,7 @@ func (v *Version) NewVersion() *errors.Error {
 	return nil
 }
 
-func convert[T any](entity string, field string, empty T, conversion func(i any) T) (*T, *errors.Error) {
+func convert[T any](entity string, field string, empty T, conversion func(i any) T) (*T, *errors.E) {
 	if entitySchema, found := spec.Components.Schemas[entity]; !found {
 		return nil, errors.Errorf("entity schema not found: entity=%v,field=%v", entity, field)
 	} else if properties, found := entitySchema.Value.Properties[field]; !found {
@@ -75,25 +89,25 @@ func convert[T any](entity string, field string, empty T, conversion func(i any)
 	}
 }
 
-func (d D) aString(field string) (*string, *errors.Error) {
+func (d D) aString(field string) (*string, *errors.E) {
 	return convert(d.entity, field, "", func(i any) string {
 		return i.(string)
 	})
 }
 
-func (d D) aBool(field string) (*bool, *errors.Error) {
+func (d D) aBool(field string) (*bool, *errors.E) {
 	return convert(d.entity, field, false, func(i any) bool {
 		return i.(bool)
 	})
 }
 
-func (d D) aInt(field string) (*int, *errors.Error) {
+func (d D) aInt(field string) (*int, *errors.E) {
 	return convert(d.entity, field, 0, func(i any) int {
 		return i.(int)
 	})
 }
 
-func (d D) aStringSlice(field string) (*[]string, *errors.Error) {
+func (d D) aStringSlice(field string) (*[]string, *errors.E) {
 	return convert(d.entity, field, []string{}, func(i any) []string {
 		return i.([]string)
 	})

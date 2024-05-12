@@ -4,18 +4,18 @@ import (
 	pkg "github.com/pkg/errors"
 )
 
-type stackTracer interface {
+type stacked interface {
 	StackTrace() pkg.StackTrace
 }
 
-type Error struct {
+type E struct {
 	error
 }
 
-func (e Error) Error() string {
+func (e E) Error() string {
 	return e.error.Error()
 }
 
-func (e Error) Origin() error {
+func (e E) GoError() error {
 	return e.error
 }

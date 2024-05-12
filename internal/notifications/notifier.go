@@ -1,13 +1,14 @@
 package notifications
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/containrrr/shoutrrr"
 	"github.com/containrrr/shoutrrr/pkg/router"
 	shoutrrrTypes "github.com/containrrr/shoutrrr/pkg/types"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
+
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
@@ -18,7 +19,7 @@ type Notifier struct {
 	settings *NotificationSettings
 }
 
-func New(action string, settings *NotificationSettings) (*Notifier, *errors.Error) {
+func New(action string, settings *NotificationSettings) (*Notifier, *errors.E) {
 	notifier := &Notifier{
 		action:   action,
 		settings: settings,
@@ -33,7 +34,7 @@ func New(action string, settings *NotificationSettings) (*Notifier, *errors.Erro
 	}
 }
 
-func (n *Notifier) Send(ctx contexts.Context, msg string) {
+func (n *Notifier) Send(ctx context.Context, msg string) {
 	if n.shoutrrr != nil {
 		for _, err := range n.shoutrrr.Send(msg, &shoutrrrTypes.Params{}) {
 			if err != nil {
@@ -43,7 +44,7 @@ func (n *Notifier) Send(ctx contexts.Context, msg string) {
 	}
 }
 
-func (n *Notifier) NextBackupSchedule(ctx contexts.Context, next time.Time) {
+func (n *Notifier) NextBackupSchedule(ctx context.Context, next time.Time) {
 	msg := fmt.Sprintf("next backup @ %v", next)
 	logging.Info(ctx, msg)
 	n.Send(ctx, msg)

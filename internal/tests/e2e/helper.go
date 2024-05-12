@@ -2,34 +2,32 @@ package e2e
 
 import (
 	"context"
-	"os"
-	"strconv"
 	"testing"
 
+	ctx "github.com/sbnarra/bckupr/internal/config/contexts"
 	"github.com/sbnarra/bckupr/internal/config/keys"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/web/server"
 )
 
-func createContext(t *testing.T) contexts.Context {
+var DockerHosts = []string{"unix:///var/run/docker.sock"}
+var BackupDir = "/tmp/backups"
+
+func createContext(t *testing.T) context.Context {
 	debug := true
-	dryRun := false
-	backupDir := "/tmp/backups"
-	dockerHosts := []string{"unix:///var/run/docker.sock"}
-
-	os.Setenv(keys.Debug.EnvId(), strconv.FormatBool(debug))
-	os.Setenv(keys.DryRun.EnvId(), strconv.FormatBool(dryRun))
-	os.Setenv(keys.HostBackupDir.EnvId(), backupDir)
-
-	return contexts.Create(context.Background(), t.Name(), 1, backupDir, backupDir, dockerHosts, contexts.Debug(debug), contexts.DryRun(dryRun))
+	return ctx.Using(context.Background(), t.Name(), debug, 1)
 }
 
 func NewServerConfig() server.Config {
 	return server.Config{
-		DockerHosts:             keys.DockerHosts.EnvStringSlice(),
-		HostBackupDir:           keys.HostBackupDir.EnvString(),
+		DockerHosts:        DockerHosts,
+		HostBackupDir:      BackupDir,
+		ContainerBackupDir: BackupDir,
+
 		LocalContainersConfig:   keys.LocalContainersConfig.EnvString(),
 		OffsiteContainersConfig: keys.OffsiteContainersConfig.EnvString(),
 		TcpAddr:                 keys.TcpAddr.EnvString(),
+
+		NotificationSettings: &notifications.NotificationSettings{},
 	}
 }

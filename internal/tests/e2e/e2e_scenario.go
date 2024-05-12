@@ -1,17 +1,17 @@
 package e2e
 
 import (
+	"context"
 	"os"
 	"testing"
 
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
 func RunE2E(t *testing.T,
-	backup func() *errors.Error,
-	restore func() *errors.Error,
-	delete func() *errors.Error,
+	backup func() *errors.E,
+	restore func() *errors.E,
+	delete func() *errors.E,
 ) {
 	ctx := PrepareIntegrationTest(t)
 
@@ -43,7 +43,7 @@ func RunE2E(t *testing.T,
 	}
 }
 
-func PrepareIntegrationTest(t *testing.T) contexts.Context {
+func PrepareIntegrationTest(t *testing.T) context.Context {
 	toProjectRoot(t)
 	return createContext(t)
 }

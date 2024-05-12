@@ -8,14 +8,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func FromYaml(reader io.Reader, data any) *errors.Error {
+func FromYaml(reader io.Reader, data any) *errors.E {
 	if err := yaml.NewDecoder(reader).Decode(data); err != nil {
 		return errors.Wrap(err, "error decoding from yaml")
 	}
 	return nil
 }
 
-func ToYaml(data any) (string, *errors.Error) {
+func ToYaml(data any) (string, *errors.E) {
 	buffer := bytes.NewBuffer([]byte{})
 	if err := yaml.NewEncoder(buffer).Encode(data); err != nil {
 		return "", errors.Wrap(err, "error encoding to yaml")

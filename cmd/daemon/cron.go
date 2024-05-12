@@ -1,6 +1,8 @@
 package daemon
 
 import (
+	"context"
+
 	"github.com/sbnarra/bckupr/cmd/backup"
 	"github.com/sbnarra/bckupr/cmd/rotate"
 	"github.com/sbnarra/bckupr/internal/api/spec"
@@ -8,9 +10,8 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/cron"
-	"github.com/sbnarra/bckupr/internal/notifications"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
+	"github.com/sbnarra/bckupr/internal/web/server"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +26,7 @@ func init() {
 	backup.Init(Cmd)
 }
 
-func buildCron(cmd *cobra.Command) *errors.Error {
+func buildCron(cmd *cobra.Command) *errors.E {
 	if timezone, err := flags.String(keys.TimeZone, cmd.Flags()); err != nil {
 		return err
 	} else if instance, err = cron.New(timezone); err != nil {
@@ -35,20 +36,25 @@ func buildCron(cmd *cobra.Command) *errors.Error {
 	}
 }
 
-func startCron(ctx contexts.Context, cmd *cobra.Command, containers containers.Templates, notificationSettings *notifications.NotificationSettings) *errors.Error {
+func startCron(
+	ctx context.Context,
+	cmd *cobra.Command,
+	config server.Config,
+	containers containers.Templates,
+) *errors.E {
 	if backupSchedule, err := flags.String(keys.BackupSchedule, cmd.Flags()); err != nil {
 		return err
-	} else if input, err := newRequest(ctx, cmd); err != nil {
+	} else if rotate, err := newRotateInput(ctx, cmd); err != nil {
 		return err
 	} else if rotateSchedule, err := flags.String(keys.RotateSchedule, cmd.Flags()); err != nil {
 		return err
-	} else if err := instance.Start(ctx, backupSchedule, rotateSchedule, input, containers, notificationSettings); err != nil {
+	} else if err := instance.Start(ctx, rotateSchedule, rotate, backupSchedule, config.DockerHosts, config.HostBackupDir, config.ContainerBackupDir, containers, config.NotificationSettings); err != nil {
 		return err
 	}
 	return nil
 }
 
-func newRequest(ctx contexts.Context, cmd *cobra.Command) (spec.RotateInput, *errors.Error) {
+func newRotateInput(ctx context.Context, cmd *cobra.Command) (spec.RotateInput, *errors.E) {
 
 	return spec.RotateInput{}, nil
 }

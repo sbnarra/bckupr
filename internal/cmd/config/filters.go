@@ -15,7 +15,7 @@ func initFilters(cmd *cobra.Command) {
 	flags.Register(keys.ExcludeVolumes, cmd.Flags())
 }
 
-func readFilters(cmd *cobra.Command) (*spec.Filters, *errors.Error) {
+func readFilters(cmd *cobra.Command) (*spec.Filters, *errors.E) {
 	if includeNames, err := flags.StringSlice(keys.IncludeNames, cmd.Flags()); err != nil {
 		return nil, err
 	} else if includeVolumes, err := flags.StringSlice(keys.IncludeVolumes, cmd.Flags()); err != nil {

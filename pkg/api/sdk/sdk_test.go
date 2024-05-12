@@ -6,7 +6,6 @@ import (
 
 	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
-	"github.com/sbnarra/bckupr/internal/notifications"
 	"github.com/sbnarra/bckupr/internal/tests/e2e"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -22,7 +21,7 @@ func TestSdkE2E(t *testing.T) {
 	if containers, err := containers.LoadTemplates(config.LocalContainersConfig, config.OffsiteContainersConfig); err != nil {
 		t.Fatalf("failed to load container templates: %v", err)
 	} else {
-		s := server.New(ctx, config, containers, &notifications.NotificationSettings{})
+		s := server.New(ctx, config, containers)
 		go func() {
 			if err := s.Listen(ctx); err != nil {
 				logging.CheckWarn(ctx, err)
@@ -37,15 +36,19 @@ func TestSdkE2E(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating client: %v", err)
 	}
-	id := time.Now().Format("20060102_1504") + "-sdk"
-	taskInput := spec.TaskInput{}
+	id := time.Now().Format("20060102150400") + "-sdk"
+	noDryRun := true
+	taskInput := spec.TaskInput{
+		NoDryRun: &noDryRun,
+	}
 
 	e2e.RunE2E(t,
-		func() *errors.Error {
+		func() *errors.E {
 			if _, err := sdk.StartBackupWithId(ctx, id, taskInput); err != nil {
 				return err
 			} else {
-				for backup, err := sdk.GetBackup(ctx, id); err == nil; {
+				backup, err := sdk.GetBackup(ctx, id)
+				for err == nil {
 					logging.Info(ctx, "backup:", backup.Status)
 					if backup.Status == spec.StatusCompleted {
 						return nil
@@ -58,11 +61,12 @@ func TestSdkE2E(t *testing.T) {
 				return err
 			}
 		},
-		func() *errors.Error {
+		func() *errors.E {
 			if _, err := sdk.StartRestore(ctx, id, taskInput); err != nil {
 				return err
 			} else {
-				for restore, err := sdk.GetRestore(ctx, id); err == nil; {
+				restore, err := sdk.GetRestore(ctx, id)
+				for err == nil {
 					logging.Info(ctx, "restore:", restore.Status)
 					if restore.Status == spec.StatusCompleted {
 						return nil
@@ -76,7 +80,7 @@ func TestSdkE2E(t *testing.T) {
 				return err
 			}
 		},
-		func() *errors.Error {
+		func() *errors.E {
 			return sdk.DeleteBackup(ctx, id)
 		})
 }

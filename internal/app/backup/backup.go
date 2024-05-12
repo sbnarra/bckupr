@@ -1,11 +1,13 @@
 package backup
 
 import (
+	"context"
 	"os"
 	"time"
 
 	"github.com/sbnarra/bckupr/internal/api/spec"
 	"github.com/sbnarra/bckupr/internal/config/containers"
+	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/docker"
 	"github.com/sbnarra/bckupr/internal/docker/run"
 	"github.com/sbnarra/bckupr/internal/metrics"
@@ -14,25 +16,30 @@ import (
 	"github.com/sbnarra/bckupr/internal/tasks/tracker"
 	"github.com/sbnarra/bckupr/internal/tasks/types"
 	"github.com/sbnarra/bckupr/internal/utils/concurrent"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
 func Start(
-	ctx contexts.Context,
+	ctx context.Context,
 	id string,
+	dockerHosts []string,
+	hostBackupDir string,
+	containerBackupDir string,
 	input spec.TaskInput,
 	containers containers.Templates,
 	notificationSettings *notifications.NotificationSettings,
-) (*spec.Backup, *concurrent.Concurrent, *errors.Error) {
+) (*spec.Backup, *concurrent.Concurrent, *errors.E) {
 	if id == "" {
 		id = time.Now().Format("20060102_1504")
 	}
 	logging.Info(ctx, "Using backup id", id)
 
-	containerBackupDir := ctx.ContainerBackupDir + "/" + id
-	if !ctx.DryRun {
+	if containerBackupDir == "" {
+		return nil, nil, errors.New("missing container backup directory, supply --" + keys.ContainerBackupDir.CliId)
+	}
+	containerBackupDir = containerBackupDir + "/" + id
+	if !input.IsDryRun() {
 		if err := os.MkdirAll(containerBackupDir, os.ModePerm); err != nil {
 			return nil, nil, errors.Errorf("failed to create backup dir: %v: %w", containerBackupDir, err)
 		}
@@ -42,30 +49,34 @@ func Start(
 	if completed, err := tracker.Add("backup", id, backup); err != nil {
 		return nil, nil, err
 	} else {
-		hooks := NewHooks(ctx, backup, containers.Local, completed)
-		backupTask := newBackupVolumeTask(containers)
-		runner, err := runner.RunOnEachDockerHost(ctx, "backup", id, backup, input, hooks, backupTask, notificationSettings)
+		hooks := NewHooks(ctx, input.IsDryRun(), backup, containers.Local, completed)
+		backupTask := newBackupVolumeTask(containers, hostBackupDir)
+		runner, err := runner.RunOnEachDockerHost(ctx, "backup", id, backup, dockerHosts, input, hooks, backupTask, notificationSettings)
 		return hooks.Writer.Backup, runner, err
 	}
 }
 
-func newBackupVolumeTask(containers containers.Templates) types.Exec {
-	return func(ctx contexts.Context, docker docker.Docker, id string, name string, volume string) *errors.Error {
+func newBackupVolumeTask(
+	containers containers.Templates,
+	hostBackupDir string,
+) types.Exec {
+	return func(ctx context.Context, docker docker.Docker, id string, name string, volume string) *errors.E {
 		m := metrics.Backup(id, name)
-		err := backupVolume(ctx, docker, id, name, volume, containers)
+		err := backupVolume(ctx, docker, id, name, volume, hostBackupDir, containers)
 		m.OnComplete(err)
 		return err
 	}
 }
 
 func backupVolume(
-	ctx contexts.Context,
+	ctx context.Context,
 	docker docker.Docker,
 	id string,
 	name string,
 	volume string,
+	hostBackupDir string,
 	containers containers.Templates,
-) *errors.Error {
+) *errors.E {
 	meta := run.CommonEnv{
 		BackupId:   id,
 		VolumeName: name,
@@ -74,7 +85,7 @@ func backupVolume(
 
 	containers.Local.Backup.Volumes = append(containers.Local.Backup.Volumes,
 		volume+":/data:ro",
-		ctx.HostBackupDir+":/backup:rw")
+		hostBackupDir+":/backup:rw")
 	if err := docker.Run(ctx, meta, containers.Local.Backup); err != nil {
 		return err
 	}
@@ -85,7 +96,7 @@ func backupVolume(
 
 	offsite := *containers.Offsite
 	offsite.OffsitePush.Volumes = append(offsite.OffsitePush.Volumes,
-		ctx.HostBackupDir+":/backup:ro")
+		hostBackupDir+":/backup:ro")
 
 	err := docker.Run(ctx, meta, offsite.OffsitePush)
 	if errors.Is(err, run.MisconfiguredTemplate) {

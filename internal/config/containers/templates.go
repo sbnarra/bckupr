@@ -10,7 +10,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func LoadTemplates(local string, offsite string) (Templates, *errors.Error) {
+func LoadTemplates(local string, offsite string) (Templates, *errors.E) {
 	if local, err := LocalContainerTemplates(local); err != nil {
 		return Templates{}, err
 	} else if offsite, err := OffsiteContainerTemplates(offsite); err != nil {
@@ -23,13 +23,13 @@ func LoadTemplates(local string, offsite string) (Templates, *errors.Error) {
 	}
 }
 
-func LocalContainerTemplates(location string) (LocalTemplates, *errors.Error) {
+func LocalContainerTemplates(location string) (LocalTemplates, *errors.E) {
 	config := LocalTemplates{}
 	err := loadContainerTemplates(location, "local", &config)
 	return config, err
 }
 
-func OffsiteContainerTemplates(location string) (*OffsiteTemplates, *errors.Error) {
+func OffsiteContainerTemplates(location string) (*OffsiteTemplates, *errors.E) {
 	if location == "" {
 		return nil, nil
 	}
@@ -38,7 +38,7 @@ func OffsiteContainerTemplates(location string) (*OffsiteTemplates, *errors.Erro
 	return config, err
 }
 
-func loadContainerTemplates[T any](location string, usage string, data T) *errors.Error {
+func loadContainerTemplates[T any](location string, usage string, data T) *errors.E {
 	if reader, err := getReader(location, usage); err != nil {
 		return err
 	} else {
@@ -46,7 +46,7 @@ func loadContainerTemplates[T any](location string, usage string, data T) *error
 	}
 }
 
-func getReader(location string, usage string) (io.Reader, *errors.Error) {
+func getReader(location string, usage string) (io.Reader, *errors.E) {
 	if parsed, err := url.Parse(location); err != nil {
 		return nil, errors.Wrap(err, "failed to parse: "+location)
 	} else {
@@ -61,7 +61,7 @@ func getReader(location string, usage string) (io.Reader, *errors.Error) {
 	}
 }
 
-func httpGet(location string) (io.Reader, *errors.Error) {
+func httpGet(location string) (io.Reader, *errors.E) {
 	if res, err := http.Get(location); err != nil {
 		return nil, errors.Wrap(err, "failed to GET: "+location)
 	} else {
@@ -69,7 +69,7 @@ func httpGet(location string) (io.Reader, *errors.Error) {
 	}
 }
 
-func fileRead(location string) (io.Reader, *errors.Error) {
+func fileRead(location string) (io.Reader, *errors.E) {
 	if reader, err := os.Open(location); err != nil {
 		return nil, errors.Wrap(err, "failed to read file: "+location)
 	} else {

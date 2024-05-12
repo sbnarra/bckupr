@@ -10,3 +10,5 @@ runs:
       run: go test -v ./...
     - shell: bash
       run: ./scripts/app-test-end2end.sh
+      env: 
+        DEBUG: 1

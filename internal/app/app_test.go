@@ -17,7 +17,7 @@ import (
 func TestAppE2E(t *testing.T) {
 
 	ctx := e2e.PrepareIntegrationTest(t)
-	id := time.Now().Format("20060102_1504") + "-app"
+	id := time.Now().Format("20060102_150400") + "-app"
 
 	config := e2e.NewServerConfig()
 	containers, err := containers.LoadTemplates(config.LocalContainersConfig, config.OffsiteContainersConfig)
@@ -27,31 +27,34 @@ func TestAppE2E(t *testing.T) {
 
 	notificationSettings := &notifications.NotificationSettings{}
 	e2e.RunE2E(t,
-		func() *errors.Error {
-			payload := spec.TaskInput{}
+		func() *errors.E {
+			t := true
+			payload := spec.TaskInput{
+				NoDryRun: &t,
+			}
 			if err := payload.WithDefaults(spec.BackupStopModes); err != nil {
 				return err
 			} else {
-				if _, runner, err := backup.Start(ctx, id, payload, containers, notificationSettings); err != nil {
+				if _, runner, err := backup.Start(ctx, id, e2e.DockerHosts, e2e.BackupDir, e2e.BackupDir, payload, containers, notificationSettings); err != nil {
 					return err
 				} else {
 					return runner.Wait()
 				}
 			}
 		},
-		func() *errors.Error {
+		func() *errors.E {
 			payload := spec.TaskInput{}
 			if err := payload.WithDefaults(spec.BackupStopModes); err != nil {
 				return err
 			} else {
-				if _, runner, err := restore.Start(ctx, id, payload, containers, notificationSettings); err != nil {
+				if _, runner, err := restore.Start(ctx, id, e2e.DockerHosts, e2e.BackupDir, e2e.BackupDir, payload, containers, notificationSettings); err != nil {
 					return err
 				} else {
 					return runner.Wait()
 				}
 			}
 		},
-		func() *errors.Error {
-			return delete.Delete(ctx, id)
+		func() *errors.E {
+			return delete.Delete(ctx, id, e2e.BackupDir)
 		})
 }

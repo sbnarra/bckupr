@@ -1,15 +1,15 @@
 package list
 
 import (
+	"context"
 	"slices"
 
 	"github.com/sbnarra/bckupr/internal/docker/client"
 	"github.com/sbnarra/bckupr/internal/docker/types"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func ListContainers(ctx contexts.Context, client client.DockerClient, labelPrefix string) (map[string]*types.Container, *errors.Error) {
+func ListContainers(ctx context.Context, client client.DockerClient, labelPrefix string) (map[string]*types.Container, *errors.E) {
 	allContainers, err := client.AllContainers(ctx)
 	if err != nil {
 		return nil, err

@@ -10,5 +10,5 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	interrupt.Handle("bckupr", cancel)
-	cmd.Root.ExecuteContext(ctx)
+	cmd.Cmd.ExecuteContext(ctx)
 }

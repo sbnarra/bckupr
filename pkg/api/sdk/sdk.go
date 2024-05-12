@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/config/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
 )
@@ -15,14 +15,13 @@ type Sdk struct {
 	client *spec.ClientWithResponses
 }
 
-func New(ctx contexts.Context, protocol string, server string) (*Sdk, *errors.Error) {
+func New(ctx context.Context, protocol string, server string) (*Sdk, *errors.E) {
 	url := protocol + "://" + server
 	if http, err := spec.NewClientWithResponses(url, func(c *spec.Client) error {
 		c.RequestEditors = []spec.RequestEditorFn{
 			func(ct context.Context, req *http.Request) error {
 				req.Header.Add("User-Agent", "bckupr-sdk/"+os.Getenv("VERSION"))
-				req.Header.Add("Dry-Run", strconv.FormatBool(ctx.DryRun))
-				req.Header.Add("Debug", strconv.FormatBool(ctx.Debug))
+				req.Header.Add("Debug", strconv.FormatBool(contexts.Debug(ctx)))
 				return nil
 			},
 		}
@@ -34,7 +33,7 @@ func New(ctx contexts.Context, protocol string, server string) (*Sdk, *errors.Er
 	}
 }
 
-func (s *Sdk) StartBackup(ctx contexts.Context, req spec.TaskInput) (*spec.Backup, *errors.Error) {
+func (s *Sdk) StartBackup(ctx context.Context, req spec.TaskInput) (*spec.Backup, *errors.E) {
 	res, err := s.client.StartBackupWithResponse(ctx, req)
 	if res == nil {
 		return nil, errors.NewWrap(err, "error starting backup")
@@ -46,7 +45,7 @@ func (s *Sdk) StartBackup(ctx contexts.Context, req spec.TaskInput) (*spec.Backu
 	}
 }
 
-func (s *Sdk) StartBackupWithId(ctx contexts.Context, id string, req spec.TaskInput) (*spec.Backup, *errors.Error) {
+func (s *Sdk) StartBackupWithId(ctx context.Context, id string, req spec.TaskInput) (*spec.Backup, *errors.E) {
 	res, err := s.client.StartBackupWithIdWithResponse(ctx, id, req)
 	if res == nil {
 		return nil, errors.NewWrap(err, "error starting backup")
@@ -58,7 +57,7 @@ func (s *Sdk) StartBackupWithId(ctx contexts.Context, id string, req spec.TaskIn
 	}
 }
 
-func (s *Sdk) GetBackup(ctx contexts.Context, id string) (*spec.Backup, *errors.Error) {
+func (s *Sdk) GetBackup(ctx context.Context, id string) (*spec.Backup, *errors.E) {
 	res, err := s.client.GetBackupWithResponse(ctx, id)
 	if res == nil {
 		return nil, errors.NewWrap(err, "error finding backup")
@@ -70,7 +69,7 @@ func (s *Sdk) GetBackup(ctx contexts.Context, id string) (*spec.Backup, *errors.
 	}
 }
 
-func (s *Sdk) DeleteBackup(ctx contexts.Context, id string) *errors.Error {
+func (s *Sdk) DeleteBackup(ctx context.Context, id string) *errors.E {
 	res, err := s.client.DeleteBackupWithResponse(ctx, id)
 	if res == nil {
 		return errors.NewWrap(err, "error starting backup")
@@ -80,7 +79,7 @@ func (s *Sdk) DeleteBackup(ctx contexts.Context, id string) *errors.Error {
 	return nil
 }
 
-func (s *Sdk) ListBackups(ctx contexts.Context) ([]spec.Backup, *errors.Error) {
+func (s *Sdk) ListBackups(ctx context.Context) ([]spec.Backup, *errors.E) {
 	res, err := s.client.ListBackupsWithResponse(ctx)
 	if res == nil {
 		return nil, errors.NewWrap(err, "error listing backups")
@@ -92,7 +91,7 @@ func (s *Sdk) ListBackups(ctx contexts.Context) ([]spec.Backup, *errors.Error) {
 	}
 }
 
-func (s *Sdk) StartRestore(ctx contexts.Context, backupId string, req spec.TaskInput) (*spec.Restore, *errors.Error) {
+func (s *Sdk) StartRestore(ctx context.Context, backupId string, req spec.TaskInput) (*spec.Restore, *errors.E) {
 	res, err := s.client.StartRestoreWithResponse(ctx, backupId, req)
 	if res == nil {
 		return nil, errors.NewWrap(err, "error starting restore")
@@ -104,7 +103,7 @@ func (s *Sdk) StartRestore(ctx contexts.Context, backupId string, req spec.TaskI
 	}
 }
 
-func (s *Sdk) GetRestore(ctx contexts.Context, id string) (*spec.Restore, *errors.Error) {
+func (s *Sdk) GetRestore(ctx context.Context, id string) (*spec.Restore, *errors.E) {
 	res, err := s.client.GetRestoreWithResponse(ctx, id)
 	if res == nil {
 		return nil, errors.NewWrap(err, "error finding restore")
@@ -116,7 +115,7 @@ func (s *Sdk) GetRestore(ctx contexts.Context, id string) (*spec.Restore, *error
 	}
 }
 
-func (s *Sdk) StartRotate(ctx contexts.Context, req spec.RotateInput) (*spec.Rotate, *errors.Error) {
+func (s *Sdk) StartRotate(ctx context.Context, req spec.RotateInput) (*spec.Rotate, *errors.E) {
 	res, err := s.client.StartRotateWithResponse(ctx, req)
 	if res == nil {
 		return nil, errors.NewWrap(err, "error starting rotate")
@@ -128,7 +127,7 @@ func (s *Sdk) StartRotate(ctx contexts.Context, req spec.RotateInput) (*spec.Rot
 	}
 }
 
-func (s *Sdk) GetRotate(ctx contexts.Context) (*spec.Rotate, *errors.Error) {
+func (s *Sdk) GetRotate(ctx context.Context) (*spec.Rotate, *errors.E) {
 	res, err := s.client.GetRotateWithResponse(ctx)
 	if res == nil {
 		return nil, errors.NewWrap(err, "error finding rotate")
@@ -140,7 +139,7 @@ func (s *Sdk) GetRotate(ctx contexts.Context) (*spec.Rotate, *errors.Error) {
 	}
 }
 
-func (s *Sdk) Version(ctx contexts.Context) (*spec.Version, *errors.Error) {
+func (s *Sdk) Version(ctx context.Context) (*spec.Version, *errors.E) {
 	res, err := s.client.GetVersionWithResponse(ctx)
 	if res == nil {
 		return nil, errors.NewWrap(err, "error getting version")

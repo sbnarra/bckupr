@@ -1,24 +1,26 @@
 package filters
 
 import (
+	"context"
 	"slices"
 	"strings"
 
 	"github.com/sbnarra/bckupr/internal/api/spec"
+	"github.com/sbnarra/bckupr/internal/config/contexts"
 	dockerTypes "github.com/sbnarra/bckupr/internal/docker/types"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func Apply(ctx contexts.Context, unfiltered map[string]*dockerTypes.Container, filters spec.Filters, stopModes *[]spec.StopModes) (map[string]*dockerTypes.Container, *errors.Error) {
+func Apply(ctx context.Context, unfiltered map[string]*dockerTypes.Container, filters spec.Filters, stopModes *[]spec.StopModes) (map[string]*dockerTypes.Container, *errors.E) {
+	name := contexts.Name(ctx)
 	filtered := applyIncludeFilters(unfiltered, filters)
 	if len(filtered) == 0 {
-		return nil, errors.New("nothing to " + ctx.Name + " after applying include filters: names=" + strings.Join(filters.IncludeNames, ",") + ",volumes=" + strings.Join(filters.IncludeVolumes, ","))
+		return nil, errors.New("nothing to " + name + " after applying include filters: names=" + strings.Join(filters.IncludeNames, ",") + ",volumes=" + strings.Join(filters.IncludeVolumes, ","))
 	}
 
 	filtered = applyExcludeFilters(filtered, filters)
 	if len(filtered) == 0 {
-		return nil, errors.New("nothing to " + ctx.Name + " after applying exclude filters: names=" + strings.Join(filters.ExcludeNames, ",") + ",volumes=" + strings.Join(filters.ExcludeVolumes, ","))
+		return nil, errors.New("nothing to " + name + " after applying exclude filters: names=" + strings.Join(filters.ExcludeNames, ",") + ",volumes=" + strings.Join(filters.ExcludeVolumes, ","))
 	}
 
 	if stopModes != nil {
@@ -29,7 +31,7 @@ func Apply(ctx contexts.Context, unfiltered map[string]*dockerTypes.Container, f
 		for _, stopMode := range stopModes {
 			stopModes = append(stopModes, string(stopMode))
 		}
-		return nil, errors.New("nothing to " + ctx.Name + " after applying stop modes: " + strings.Join(stopModes, ","))
+		return nil, errors.New("nothing to " + name + " after applying stop modes: " + strings.Join(stopModes, ","))
 	}
 
 	return filtered, nil

@@ -1,11 +1,12 @@
 package rotate
 
 import (
+	"context"
+
 	"github.com/sbnarra/bckupr/internal/cmd/config"
 	"github.com/sbnarra/bckupr/internal/cmd/flags"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/keys"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -44,7 +45,7 @@ func run(cmd *cobra.Command, args []string) error {
 		logging.Info(ctx, "Rotate Started", encodings.ToJsonIE(rotate))
 
 		util.WaitForCompletion(ctx,
-			func() (*spec.Rotate, *errors.Error) {
+			func() (*spec.Rotate, *errors.E) {
 				return sdk.GetRotate(ctx)
 			}, func(r *spec.Rotate) spec.Status {
 				return r.Status
@@ -53,7 +54,7 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newRequest(ctx contexts.Context, cmd *cobra.Command) (*spec.RotateInput, *errors.Error) {
+func newRequest(ctx context.Context, cmd *cobra.Command) (*spec.RotateInput, *errors.E) {
 	if destroyBackups, err := flags.Bool(keys.DestroyBackups, cmd.Flags()); err != nil {
 		return nil, err
 	} else if policyPath, err := flags.String(keys.PoliciesPath, cmd.Flags()); err != nil {
