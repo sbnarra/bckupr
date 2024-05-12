@@ -15,7 +15,7 @@ inputs:
     required: false
   publish_dockerhub_readme:
     type: boolean
-    description: 'Publish docs/dockerhub-readme.md to dockerhub'
+    description: 'Publish ./docs/dockerhub/README.md to dockerhub'
     required: false
 runs:
   using: "composite"
@@ -38,4 +38,4 @@ runs:
         password: ${{ inputs.dockerhub_token }}
         repository: sbnarra/bckupr
         short-description: Backup automation and management for docker volumes using labelled containers.
-        readme-filepath: ./docs/dockerhub-readme.md
+        readme-filepath: ./docs/dockerhub/README.md
