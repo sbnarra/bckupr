@@ -1,5 +1,5 @@
 ARG GO_VERSION
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION:-1.22}-alpine AS app
+FROM golang:${GO_VERSION:-1.22}-alpine AS app
 
 WORKDIR /
 COPY ./ .
@@ -8,7 +8,7 @@ RUN GO111MODULE=on CGO_ENABLED=0 \
     go build -o bckupr .
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
-FROM --platform=$BUILDPLATFORM alpine
+FROM alpine
 
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md
 LABEL org.opencontainers.image.ref.name "sbnarra/bckupr"
