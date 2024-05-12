@@ -7,6 +7,6 @@ runs:
       with:
         python-version: 3.x
     - shell: bash
-      run: pip install -r docs/requirements.txt
+      run: pip install -r docs/gh-pages/requirements.txt
     - shell: bash
-      run: mkdocs gh-deploy --config-file docs/mkdocs.yml --force
+      run: mkdocs gh-deploy --config-file docs/gh-pages/mkdocs.yml --force

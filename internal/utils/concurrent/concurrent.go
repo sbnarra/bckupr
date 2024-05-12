@@ -1,74 +1,87 @@
 package concurrent
 
 import (
-	"fmt"
 	"sync"
 
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"context"
+
+	"github.com/sbnarra/bckupr/internal/config/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
 type Concurrent struct {
-	channels []chan *errors.Error
+	name     string
+	counter  int
+	channels []chan *errors.E
 	wg       sync.WaitGroup
 	limit    int
 	limiter  chan struct{}
-	ctx      contexts.Context
+	ctx      context.Context
 }
 
-func Single(ctx contexts.Context, name string, exec func(ctx contexts.Context) *errors.Error) *Concurrent {
+func Single(ctx context.Context, name string, exec func(ctx context.Context) *errors.E) *Concurrent {
 	c := New(ctx, name, 1)
 	c.Run(exec)
 	return c
 }
 
-func Default(ctx contexts.Context, name string) *Concurrent {
-	return New(ctx, name, ctx.Concurrency)
+func Default(ctx context.Context, name string) *Concurrent {
+	return New(ctx, name, contexts.ThreadLimit(ctx))
 }
 
-func New(ctx contexts.Context, name string, limit int) *Concurrent {
+func New(ctx context.Context, name string, limit int) *Concurrent {
 	var limiter chan struct{}
 	if limit > 0 {
 		limiter = make(chan struct{}, limit)
 	} else {
 		limiter = nil
 	}
-	copy := ctx
-	copy.Name = name
+
+	var copy context.Context
+	if name != "" {
+		copy = contexts.WithName(ctx, contexts.Name(ctx)+"/"+name)
+	} else {
+		copy = ctx
+	}
+
 	return &Concurrent{
+		name:    name,
+		counter: 0,
 		ctx:     copy,
 		limit:   limit,
 		limiter: limiter}
 }
 
-func (c *Concurrent) Run(exec func(ctx contexts.Context) *errors.Error) {
-	c.RunN(c.ctx.Name, exec)
+func (c *Concurrent) Run(exec func(ctx context.Context) *errors.E) {
+	c.RunN("", exec)
 }
 
-func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) *errors.Error) {
-	errCh := make(chan *errors.Error)
+func (c *Concurrent) RunN(name string, exec func(ctx context.Context) *errors.E) {
+	errCh := make(chan *errors.E)
 	c.channels = append(c.channels, errCh)
 	c.wg.Add(1)
 	go func() {
 		if c.limit > 0 {
 			c.limiter <- struct{}{}
 		}
+		c.counter++
 
-		ctx := c.ctx
-		if name == "" {
-			ctx.Name = fmt.Sprintf("%v-%v", c.ctx.Name, len(c.limiter))
+		var ctx context.Context
+		if name != "" {
+			ctx = contexts.WithName(c.ctx, contexts.Name(c.ctx)+"/"+name)
 		} else {
-			ctx.Name = name
+			ctx = c.ctx
 		}
 
-		var err *errors.Error
-		if c.ctx.Cancelled() {
-			err = errors.Errorf("context cancelled: not running '%v'", ctx.Name)
+		var err *errors.E
+		if errors.Is(c.ctx.Err(), context.Canceled) {
+			name := contexts.Name(ctx)
+			err = errors.Errorf("cancelled: skipping '%v'", name)
 		} else {
 			err = exec(ctx)
-			logging.CheckError(ctx, err)
 		}
+		logging.CheckError(ctx, err)
 
 		if c.limit > 0 {
 			<-c.limiter
@@ -79,10 +92,10 @@ func (c *Concurrent) RunN(name string, exec func(ctx contexts.Context) *errors.E
 	}()
 }
 
-func (c *Concurrent) Wait() *errors.Error {
+func (c *Concurrent) Wait() *errors.E {
 	c.wg.Wait()
 
-	var err *errors.Error
+	var err *errors.E
 	i := 0
 	for _, errCh := range c.channels {
 		i++
@@ -96,5 +109,10 @@ func (c *Concurrent) Wait() *errors.Error {
 		close(errCh)
 	}
 	close(c.limiter)
-	return err
+
+	if err != nil {
+		name := contexts.Name(c.ctx)
+		return errors.Wrap(err, name)
+	}
+	return nil
 }

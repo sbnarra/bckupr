@@ -1,17 +1,20 @@
 package notifications
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-func (n *Notifier) JobStarted(ctx contexts.Context, action string, id string, volumes []string) {
-	ctx.RespondJson(eventBase(ctx, action, id, "starting", volumes))
-
+func (n *Notifier) JobStarted(
+	ctx context.Context,
+	action string,
+	id string,
+	volumes []string,
+) {
 	msg := fmt.Sprintf("Started Job '%v': id=%v, volumes=%v", n.action, id, volumes)
 	logging.Info(ctx, msg)
 	if n.settings.NotifyJobStarted {
@@ -19,7 +22,7 @@ func (n *Notifier) JobStarted(ctx contexts.Context, action string, id string, vo
 	}
 }
 
-func (n *Notifier) TaskStarted(ctx contexts.Context, id string, volume string) {
+func (n *Notifier) TaskStarted(ctx context.Context, id string, volume string) {
 	msg := fmt.Sprintf("Started Task '%v': id=%v, volumes=%v", n.action, id, volume)
 	logging.Info(ctx, msg)
 	if n.settings.NotifyTaskStarted {
@@ -27,16 +30,7 @@ func (n *Notifier) TaskStarted(ctx contexts.Context, id string, volume string) {
 	}
 }
 
-func (n *Notifier) TaskCompleted(ctx contexts.Context, action string, id string, volume string, started time.Time, err *errors.Error) {
-	event := eventBase(ctx, action, id, "successful", []string{volume})
-	if err != nil {
-		event["status"] = "error"
-		event["error"] = err.Error()
-	}
-	duration := time.Since(started)
-	event["duration"] = duration.String()
-	ctx.RespondJson(event)
-
+func (n *Notifier) TaskCompleted(ctx context.Context, action string, id string, volume string, started time.Time, err *errors.E) {
 	var msg string
 	if err != nil {
 		msg = fmt.Sprintf("Completed Task '%v': id=%v, volume=%v, err=%v", n.action, id, volume, err)
@@ -52,12 +46,7 @@ func (n *Notifier) TaskCompleted(ctx contexts.Context, action string, id string,
 	}
 }
 
-func (n *Notifier) JobCompleted(ctx contexts.Context, action string, id string, volumes []string, started time.Time, err *errors.Error) {
-	event := eventBase(ctx, action, id, "completed", volumes)
-	duration := time.Since(started)
-	event["duration"] = duration.String()
-	ctx.RespondJson(event)
-
+func (n *Notifier) JobCompleted(ctx context.Context, action string, id string, volumes []string, started time.Time, err *errors.E) {
 	var msg string
 	if err != nil {
 		msg = fmt.Sprintf("Completed Job %v: id=%v, volumes=%v, err=%v", n.action, id, volumes, err)

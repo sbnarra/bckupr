@@ -79,7 +79,7 @@ func Restore(id string, volume string) Metrics {
 	}
 }
 
-func (m Metrics) OnComplete(err *errors.Error) {
+func (m Metrics) OnComplete(err *errors.E) {
 	m.timer.ObserveDuration()
 	if err != nil {
 		m.errorTotal.WithLabelValues(m.jobLabels...).Inc()

@@ -8,10 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"context"
+
+	"github.com/sbnarra/bckupr/internal/config/contexts"
 )
 
-func handleLogMsgs(ctx contexts.Context, level string, msgs ...any) {
+func handleLogMsgs(ctx context.Context, level string, msgs ...any) {
 	prefix := logPrefix_(ctx, level)
 	parts := make([]any, 0)
 
@@ -50,14 +52,14 @@ func logPrint(prefix []any, msg ...any) {
 	fmt.Println(output...)
 }
 
-func logPrefix_(ctx contexts.Context, level string) []any {
+func logPrefix_(ctx context.Context, level string) []any {
 	logPrefix := []any{
 		time.Now().Format("2006/01/02 15:04:05"),
 		"[" + level + "]",
-		"[" + ctx.Name + "]",
+		"[" + contexts.Name(ctx) + "]",
 	}
 
-	if ctx.Debug {
+	if contexts.Debug(ctx) {
 		pc, _, line, _ := runtime.Caller(3)
 		logPrefix = append(logPrefix, filepath.Base(runtime.FuncForPC(pc).Name())+":"+strconv.Itoa(line)+":")
 	}

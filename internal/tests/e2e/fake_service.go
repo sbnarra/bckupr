@@ -1,17 +1,17 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/sbnarra/bckupr/internal/config/containers"
 	"github.com/sbnarra/bckupr/internal/config/keys"
 	"github.com/sbnarra/bckupr/internal/docker/client"
 	"github.com/sbnarra/bckupr/internal/docker/run"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
 )
 
 func volumes() []string {
@@ -21,8 +21,8 @@ func volumes() []string {
 	}
 }
 
-func startDummyService(t *testing.T, ctx contexts.Context, dClient client.DockerClient) string {
-	return startService(t, ctx, dClient, types.ContainerTemplate{
+func startDummyService(t *testing.T, ctx context.Context, dClient client.DockerClient) string {
+	return startService(t, ctx, dClient, containers.Template{
 		Image:   "busybox",
 		Cmd:     []string{"sleep", "120"},
 		Volumes: volumes(),
@@ -33,13 +33,13 @@ func startDummyService(t *testing.T, ctx contexts.Context, dClient client.Docker
 	}, false)
 }
 
-func writeAllData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, data string) {
+func writeAllData(t *testing.T, ctx context.Context, dClient client.DockerClient, data string) {
 	writeData(t, ctx, dClient, "/mnt/mount/data", data)
 	writeData(t, ctx, dClient, "/mnt/volume/data", data)
 }
 
-func writeData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, file string, data string) {
-	startService(t, ctx, dClient, types.ContainerTemplate{
+func writeData(t *testing.T, ctx context.Context, dClient client.DockerClient, file string, data string) {
+	startService(t, ctx, dClient, containers.Template{
 		Image: "busybox",
 		Cmd: []string{
 			"sh", "-c", "echo -n " + data + " | tee " + file,
@@ -48,7 +48,7 @@ func writeData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, 
 	}, true)
 }
 
-func assertAllData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, data string) {
+func assertAllData(t *testing.T, ctx context.Context, dClient client.DockerClient, data string) {
 
 	var file, output string
 
@@ -71,26 +71,24 @@ func assertAllData(t *testing.T, ctx contexts.Context, dClient client.DockerClie
 	}
 }
 
-func readData(t *testing.T, ctx contexts.Context, dClient client.DockerClient, file string) string {
-	id := startService(t, ctx, dClient, types.ContainerTemplate{
+func readData(t *testing.T, ctx context.Context, dClient client.DockerClient, file string) string {
+	id := startService(t, ctx, dClient, containers.Template{
 		Image:   "busybox",
 		Cmd:     []string{"cat", file},
 		Volumes: volumes(),
 	}, false)
 	defer dClient.RemoveContainer(ctx, id)
-
 	dClient.WaitForContainer(ctx, id)
 
 	if logs, err := dClient.ContainerLogs(ctx, id); err != nil {
 		t.Fatalf("failed to get logs for %v: %v", id, err)
 		return ""
 	} else {
-		logs = strings.ReplaceAll(logs, "\n", "")
-		return strings.TrimSpace(logs)
+		return strings.ReplaceAll(logs.Out, "\n", "")
 	}
 }
 
-func startService(t *testing.T, ctx contexts.Context, dClient client.DockerClient, template types.ContainerTemplate, waitLogCleanup bool) string {
+func startService(t *testing.T, ctx context.Context, dClient client.DockerClient, template containers.Template, waitLogCleanup bool) string {
 	if exampleContainerId, err := run.RunContainer(ctx, dClient, run.CommonEnv{}, template, waitLogCleanup); err != nil {
 		t.Fatalf("failed to start example service: %v", err)
 		return "" // unreachable
@@ -100,12 +98,12 @@ func startService(t *testing.T, ctx contexts.Context, dClient client.DockerClien
 	}
 }
 
-func dockerClient(t *testing.T, ctx contexts.Context) client.DockerClient {
-	var err *errors.Error
+func dockerClient(t *testing.T, ctx context.Context) client.DockerClient {
+	var err *errors.E
 	var dClient client.DockerClient
 
 	hosts := keys.DockerHosts.Default.([]string)
-	if dClient, err = client.Client(ctx, hosts[0]); err != nil {
+	if dClient, err = client.Client(ctx, false, hosts[0]); err != nil {
 		t.Fatalf("failed to connect to docker: %+v", err)
 	}
 	return dClient

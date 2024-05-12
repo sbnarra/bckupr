@@ -1,44 +1,45 @@
 package logging
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
+	"github.com/sbnarra/bckupr/internal/config/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 )
 
-func CheckError(ctx contexts.Context, err *errors.Error, msg ...any) bool {
+func CheckError(ctx context.Context, err *errors.E, msg ...any) bool {
 	if err == nil {
 		return false
 	}
-	origin := err.Origin()
+	origin := err.GoError()
 	handleLogMsgs(ctx, "WARN", append(msg, fmt.Sprintf("%T: %+v", origin, origin))...)
 	return true
 }
 
-func CheckWarn(ctx contexts.Context, err *errors.Error, msg ...any) bool {
+func CheckWarn(ctx context.Context, err *errors.E, msg ...any) bool {
 	if err == nil {
 		return false
 	}
-	origin := err.Origin()
+	origin := err.GoError()
 	handleLogMsgs(ctx, "WARN", append(msg, fmt.Sprintf("%T: %+v", origin, origin))...)
 	return true
 }
 
-func Error(ctx contexts.Context, msgs ...any) {
+func Error(ctx context.Context, msgs ...any) {
 	handleLogMsgs(ctx, "ERROR", msgs...)
 }
 
-func Warn(ctx contexts.Context, msgs ...any) {
+func Warn(ctx context.Context, msgs ...any) {
 	handleLogMsgs(ctx, "WARN", msgs...)
 }
 
-func Info(ctx contexts.Context, msgs ...any) {
+func Info(ctx context.Context, msgs ...any) {
 	handleLogMsgs(ctx, "INFO", msgs...)
 }
 
-func Debug(ctx contexts.Context, msgs ...any) {
-	if ctx.Debug {
+func Debug(ctx context.Context, msgs ...any) {
+	if contexts.Debug(ctx) {
 		handleLogMsgs(ctx, "DEBUG", msgs...)
 	}
 }

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 TEST_DIR="$(cd $(dirname $0)/..; pwd; cd - >/dev/null)/.test_filesystem"
 
 check_data_is() {
@@ -51,26 +53,20 @@ docker run --name data_writer -d \
 on_exit() {
     exit_code=$?
     set +e
-    if [ "$exit_code" != "0" ]; then
+    if [ "$exit_code" != "0" ] || [ "$DEBUG" == "1" ]; then
         docker logs bckupr
         docker logs data_writer
     fi
     cleanup_resources
-
-    if [ "$exit_code" != "0" ]; then
-        echo "Tests have failed!"
-    else
-        echo "Tests have passed!"
-    fi
+    echo "Tests have $([ "$exit_code" != "0" ] && echo failed || echo passed)!"
     exit $exit_code
 }
 trap 'on_exit' EXIT
-# exit 3
 
-BACKUP_ID="test-$(date +%Y-%m-%d_%H-%M)"
+BACKUP_ID="$(date +%Y%m%d%H%M)-cli"
 write_data pre-backup
-docker exec bckupr bckupr backup --dry-run=false --backup-id=$BACKUP_ID
+docker exec bckupr bckupr backup --no-dry-run --backup-id=$BACKUP_ID
 
 write_data post-backup
-docker exec bckupr bckupr restore --dry-run=false --include-names data_writer --backup-id $BACKUP_ID
+docker exec bckupr bckupr restore --no-dry-run --include-names data_writer --backup-id $BACKUP_ID
 check_data_is pre-backup

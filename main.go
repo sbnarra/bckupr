@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/sbnarra/bckupr/cmd"
-	"github.com/sbnarra/bckupr/internal/interrupt"
+	"github.com/sbnarra/bckupr/internal/utils/interrupt"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	interrupt.Handle("init", cancel)
-	cmd.Bckupr.ExecuteContext(ctx)
+	interrupt.Handle("bckupr", cancel)
+	cmd.Cmd.ExecuteContext(ctx)
 }

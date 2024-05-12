@@ -1,2 +1,5 @@
 .test_filesystem
 .env
+bckupr
+docs/gh-pages/site
+.openapi-generator
