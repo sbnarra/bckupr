@@ -1,1 +1,0 @@
-./scripts/mkdocs.sh serve
