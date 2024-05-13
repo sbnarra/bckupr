@@ -1,12 +1,12 @@
 ARG GO_VERSION
-FROM golang:${GO_VERSION:-1.22}-alpine AS app
+FROM --platform=$BUILDPLATFORM golang:${GO_VERSION:-1.22}-alpine AS app
 
 WORKDIR /
 COPY ./ .
 
-RUN GO111MODULE=on CGO_ENABLED=0 \
-    go build -o bckupr .
-### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+ARG TARGETOS
+ARG TARGETARCH
+RUN GO111MODULE=on CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o bckupr .
 
 FROM alpine
 
@@ -29,10 +29,18 @@ ARG BASE_IMAGE
 LABEL org.opencontainers.image.base.name ${BASE_IMAGE:-scratch}
 
 ARG S6_OVERLAY_VERSION=3.1.6.2
-RUN wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz -O /tmp/s6-overlay-noarch.tar.xz && \
+# https://github.com/just-containers/s6-overlay/tree/master?tab=readme-ov-file#which-architecture-to-use-depending-on-your-targetarch
+ARG TARGETARCH
+RUN ARCH=$TARGETARCH && \
+    ARCH=$([ $TARGETARCH == "amd64" ] && echo x86_64 || echo $ARCH) && \
+    ARCH=$([ $TARGETARCH == "arm64" ] && echo aarch64 || echo $ARCH) && \
+    ARCH=$([ $TARGETARCH == "386" ] && echo i686 || echo $ARCH) && \
+    ARCH=$([ $TARGETARCH == "ppc64le" ] && echo powerpc64le || echo $ARCH) && \
+    echo TARGETARCH=${TARGETARCH} ARCH=${ARCH} && \
+    wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz -O /tmp/s6-overlay-noarch.tar.xz && \
         tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && \
-    wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-$(uname -m).tar.xz -O /tmp/s6-overlay-$(uname -m).tar.xz && \
-        tar -C / -Jxpf /tmp/s6-overlay-$(uname -m).tar.xz && \
+    wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${ARCH}.tar.xz -O /tmp/s6-overlay-${ARCH}.tar.xz && \
+        tar -C / -Jxpf /tmp/s6-overlay-${ARCH}.tar.xz && \
     rm -rf /tmp/*.tar.xz
 
 COPY configs/s6-rc.d /etc/s6-overlay/s6-rc.d/bckupr
