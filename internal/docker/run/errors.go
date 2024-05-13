@@ -1,17 +1,7 @@
 package run
 
 import (
-	"fmt"
+	"errors"
 )
 
-type MisconfiguredTemplate struct {
-	Message string
-}
-
-func (mt *MisconfiguredTemplate) Error() string {
-	return mt.Message
-}
-
-func (mt *MisconfiguredTemplate) Is(target error) bool {
-	return fmt.Sprintf("%T", target) == fmt.Sprintf("%T", mt)
-}
+var MisconfiguredTemplate = errors.New("Template Misconfigured")

@@ -6,13 +6,13 @@ import (
 )
 
 func TestEnvExists(t *testing.T) {
-	os.Unsetenv(DryRun.EnvId())
-	if DryRun.EnvExists() {
+	os.Unsetenv(Debug.EnvId())
+	if Debug.EnvExists() {
 		t.Fatalf("expected dry run to not exist")
 	}
 
-	os.Setenv(DryRun.EnvId(), "")
-	if !DryRun.EnvExists() {
+	os.Setenv(Debug.EnvId(), "")
+	if !Debug.EnvExists() {
 		t.Fatalf("expected dry run to exist")
 	}
 }

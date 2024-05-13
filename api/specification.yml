@@ -1,0 +1,350 @@
+openapi: 3.0.0
+servers:
+  - url: 'http://localhost:8000'
+info:
+  description: Bckupr API
+  version: latest
+  title: Bckupr
+tags:
+  - name: backup
+  - name: system
+paths:
+  /api/backups:
+    post:
+      operationId: startBackup
+      summary: Creates new backup
+      tags:
+        - backup
+      requestBody:
+        description: Backup to be created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/Backup'
+    get:
+      operationId: listBackups
+      tags:
+        - backup
+      responses:
+        '200':
+          $ref: '#/components/responses/Backups'
+  /api/backups/{id}:
+    parameters:
+        - name: id
+          in: path
+          description: backup id
+          required: true
+          schema:
+            type: string
+    get:
+      operationId: getBackup
+      summary: Gets backup by id
+      tags:
+        - backup
+      responses:
+        '200':
+          $ref: '#/components/responses/Backup'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: startBackupWithId
+      tags:
+        - backup
+      requestBody:
+        description: Backup to be created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/Backup'
+    delete:
+      operationId: deleteBackup
+      summary: Deletes backup
+      tags:
+        - backup
+      responses:
+        '200':
+          description: found backup
+  /api/backups/{id}/restore:
+    parameters:
+        - name: id
+          in: path
+          description: backup id
+          required: true
+          schema:
+            type: string
+    post:
+      operationId: startRestore
+      tags:
+        - backup
+      requestBody:
+        description: Backup to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/Restore'
+    get:
+      operationId: getRestore
+      tags:
+        - backup
+      responses:
+        '200':
+          $ref: '#/components/responses/Restore'
+  /api/rotate:
+    get:
+      operationId: getRotate
+      tags:
+        - backup
+      responses:
+        '200':
+          $ref: '#/components/responses/Rotate'
+    post:
+      operationId: startRotate
+      summary: Retrieves application version
+      tags:
+        - backup
+      requestBody:
+        description: Backup to be created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RotateInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/Rotate'
+  /api/version:
+    get:
+      operationId: getVersion
+      summary: Retrieves application version
+      tags:
+        - system
+      responses:
+        '200':
+          $ref: '#/components/responses/Version'
+components:
+  responses:
+    Backup:
+      description: Backup
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Backup'
+    Backups:
+      description: Backups
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Backup'
+    Restore:
+      description: Restore
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Restore'
+    Rotate:
+      description: Rotate
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Rotate'
+    Version:
+      description: Version
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Version'
+    NotFound:
+      description: Entity not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    TaskInput:
+      type: object
+      required:
+        - filters
+      properties:
+        no_dry_run:
+          type: boolean
+          default: false
+        label_prefix:
+          type: string
+          default: bckupr
+        stop_modes:
+          type: array
+          items:
+            $ref: '#/components/schemas/StopModes'
+        filters:
+          $ref: '#/components/schemas/Filters'
+    Status:
+      type: string
+      default: pending
+      enum:
+        - pending
+        - running
+        - completed
+        - error
+    Backup:
+      type: object
+      required:
+        - id
+        - created
+        - type
+        - status
+        - volumes
+      properties:
+        id:
+          type: string
+        created:
+          type: string
+          format: date-time
+        type:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        error:
+          type: string
+        volumes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume'
+    Restore:
+      type: object
+      required:
+        - id
+        - started
+        - status
+        - volumes
+      properties:
+        id:
+          type: string
+        started:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/Status'
+        volumes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume'
+        error:
+          type: string
+    Volume:
+      type: object
+      required:
+        - name
+        - ext
+        - status
+        - mount
+        - created
+      properties:
+        name:
+          type: string
+        ext:
+          type: string
+        mount:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        created:
+          type: string
+          format: date-time
+        size:
+          type: integer
+          format: int64
+        error:
+          type: string
+    RotateInput:
+      type: object
+      required:
+        - policies_path
+        - destroy
+      properties:
+        no_dry_run:
+          type: boolean
+          default: false
+        policies_path:
+          type: string
+        destroy:
+          type: boolean
+    Rotate:
+      type: object
+      required:
+        - started
+        - status
+      properties:
+        started:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/Status'
+        error:
+          type: string
+    StopModes:
+      type: string
+      enum:
+        - all
+        - labelled
+        - writers
+        - attached
+        - linked
+    Filters:
+      type: object
+      required:
+        - include_names
+        - include_volumes
+        - exclude_names
+        - exclude_volumes
+      properties:
+        include_names:
+          type: array
+          items:
+            type: string
+          default: []
+        include_volumes:
+          type: array
+          items:
+            type: string
+          default: []
+        exclude_names:
+          type: array
+          items:
+            type: string
+          default: []
+        exclude_volumes:
+          type: array
+          items:
+            type: string
+          default: []
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+    Version:
+      type: object
+      required:
+        - version
+        - created
+      properties:
+        version:
+          type: string
+          default: 0.0.0
+        created:
+          type: string
+         

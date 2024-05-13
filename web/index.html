@@ -1,10 +1,33 @@
-{{template "page-start" .}}
-<div class="m-3">
-    <h3 style="display: inline-block">Backups</h3>
-    {{if ne .Error nil}}
-        <p><b><pre>Error: {{.Error}}</pre></b></p>
-    {{end}}
-    {{template "backup-model" .BackupInput}}
-</div>
-{{template "backups-table" .Backups}}
-{{template "page-end" .}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bckupr</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- <script type="module" src="api/index.js"></script> -->
+  <!-- <script type="module" src="/api/model"></script> -->
+  <!-- <script type="module" src="/api/spec"></script> -->
+  <script type="module" src="/static/api.js"></script>
+</head>
+<body>
+  <header>
+    <h1>bckupr</h1>
+    <nav>
+      <a href="#">Docs</a>
+      <a href="#">Source</a>
+      <a href="#">Settings</a>
+    </nav>
+  </header>
+  <main>
+    <section id="backup-controls">
+      <button id="start-backup">Start Backup</button>
+    </section>
+    <section id="backups">
+      <h2>Backups</h2>
+      <div id="backup-list"></div>
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

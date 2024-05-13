@@ -1,22 +1,22 @@
 package run
 
 import (
-	"errors"
+	"context"
 
+	"github.com/sbnarra/bckupr/internal/config/containers"
+	"github.com/sbnarra/bckupr/internal/config/contexts"
 	"github.com/sbnarra/bckupr/internal/docker/client"
-	"github.com/sbnarra/bckupr/internal/utils/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
+	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
-	"github.com/sbnarra/bckupr/pkg/types"
 )
 
-func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonEnv, template types.ContainerTemplate, waitLogCleanup bool) (string, error) {
+func RunContainer(ctx context.Context, client client.DockerClient, meta CommonEnv, template containers.Template, waitLogCleanup bool) (string, *errors.E) {
 	if len(template.Image) == 0 || len(template.Cmd) == 0 {
-		return "", &MisconfiguredTemplate{Message: "Misconfigured template: " + encodings.ToJsonIE(template)}
+		return "", errors.Wrap(MisconfiguredTemplate, encodings.ToJsonIE(template))
 	}
 
 	copy := template
-
 	copy.Env = append(copy.Env,
 		"VOLUME_NAME="+meta.VolumeName,
 		"BACKUP_ID="+meta.BackupId,
@@ -24,34 +24,41 @@ func RunContainer(ctx contexts.Context, client client.DockerClient, meta CommonE
 		"BACKUP_DIR=/backup",
 		"DATA_DIR=/data",
 	)
+
+	if copy.Labels == nil {
+		copy.Labels = map[string]string{}
+	}
+	copy.Labels["managedby"] = "bckupr"
+	copy.Labels["bckupr.backupid"] = meta.BackupId
+	copy.Labels["bckupr.volume"] = meta.VolumeName
+
 	return runContainer(ctx, client, copy, waitLogCleanup)
 }
 
-func runContainer(ctx contexts.Context, client client.DockerClient, template types.ContainerTemplate, waitLogCleanup bool) (string, error) {
-	if ctx.DryRun {
-		logging.Info(ctx, "Dry Run!", encodings.ToJsonIE(template))
-		return "", nil
-	}
-	logging.Debug(ctx, "Executing:", encodings.ToJsonIE(template))
-
-	id, err := client.RunContainer(template.Image, template.Cmd, template.Env, template.Volumes, template.Labels)
-
+func runContainer(ctx context.Context, client client.DockerClient, template containers.Template, waitLogCleanup bool) (string, *errors.E) {
+	id, runErr := client.RunContainer(ctx, template.Image, template.Cmd, template.Env, template.Volumes, template.Labels)
 	if !waitLogCleanup {
-		return id, err
-	} else if err == nil {
-		err = WaitThenLog(ctx, client, id)
+		return id, runErr
 	}
 
-	removalErr := client.RemoveContainer(id)
-	return id, errors.Join(err, removalErr)
+	ctx = context.WithoutCancel(ctx)
+	waitLogErr := WaitThenLog(ctx, client, id)
+	removalErr := client.RemoveContainer(ctx, id)
+	return id, errors.Join(runErr, waitLogErr, removalErr)
 }
 
-func WaitThenLog(ctx contexts.Context, client client.DockerClient, id string) error {
+func WaitThenLog(ctx context.Context, client client.DockerClient, id string) *errors.E {
 	waitErr := client.WaitForContainer(ctx, id)
-	logs, logErr := client.ContainerLogs(id)
+	logs, logErr := client.ContainerLogs(ctx, id)
 
-	logCtx := ctx
-	logCtx.Name = id
-	logging.Debug(logCtx, logs)
-	return errors.Join(waitErr, logErr)
+	name := contexts.Name(ctx)
+	logCtx := contexts.WithName(ctx, name+"/"+id[:7]+":OUT")
+	logging.Debug(logCtx, logs.Out)
+	logCtx = contexts.WithName(ctx, name+"/"+id[:7]+":ERR")
+	logging.Debug(logCtx, logs.Err)
+
+	if waitErr != nil {
+		return errors.Wrap(waitErr, logs.Err)
+	}
+	return logErr
 }

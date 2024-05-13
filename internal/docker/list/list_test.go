@@ -1,17 +1,18 @@
 package list
 
 import (
+	"context"
 	"testing"
 
 	"github.com/docker/docker/api/types"
-	tests_test "github.com/sbnarra/bckupr/internal/tests"
+	"github.com/sbnarra/bckupr/internal/tests"
 )
 
 func TestList(t *testing.T) {
 
-	docker := tests_test.Docker(types.Container{})
+	docker := tests.Docker(types.Container{})
 
-	containers, err := ListContainers(docker, "bckupr")
+	containers, err := ListContainers(context.Background(), docker, "bckupr")
 	if err != nil {
 		t.Fatalf("error listing containers: %v", err)
 	}
