@@ -36,13 +36,7 @@ mkdir -p $TEST_DIR/backups
 set -e ### starting test ###
 
 docker volume create test_volume_backup
-
-VERSION=test ./scripts/app-build-image.sh
-docker run --name bckupr -d -e DRY_RUN=true -e DEBUG=true \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v $TEST_DIR/backups:/backups \
-    sbnarra/bckupr:test
-
+make run CMD="" ARGS="-d -e DRY_RUN=true -e DEBUG=true" BACKUP_DIR=$TEST_DIR/backups VERSION=test
 docker run --name data_writer -d \
     -l bckupr.volumes=test_volume_backup \
     -l bckupr.volumes.test_mount_backup=$TEST_DIR/example-mount \
@@ -54,8 +48,8 @@ on_exit() {
     exit_code=$?
     set +e
     if [ "$exit_code" != "0" ] || [ "$DEBUG" == "1" ]; then
-        docker logs bckupr
-        docker logs data_writer
+        echo bckupr logs && docker logs bckupr
+        echo data_writer logs && docker logs data_writer
     fi
     cleanup_resources
     echo "Tests have $([ "$exit_code" != "0" ] && echo failed || echo passed)!"
@@ -64,7 +58,9 @@ on_exit() {
 trap 'on_exit' EXIT
 
 BACKUP_ID="$(date +%Y%m%d%H%M)-cli"
+echo writing
 write_data pre-backup
+echo wrote
 docker exec bckupr bckupr backup --no-dry-run --backup-id=$BACKUP_ID
 
 write_data post-backup

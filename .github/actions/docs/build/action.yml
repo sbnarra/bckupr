@@ -7,7 +7,5 @@ runs:
       with:
         python-version: 3.x
     - shell: bash
-      run: pip install -r docs/gh-pages/requirements.txt
-    - shell: bash
-      run: mkdocs build --config-file docs/gh-pages/mkdocs.yml
+      run: make docs
 

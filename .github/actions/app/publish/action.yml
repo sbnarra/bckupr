@@ -27,10 +27,13 @@ runs:
         username: ${{ inputs.dockerhub_username }}
         password: ${{ inputs.dockerhub_token }}
     - shell: bash
-      run: ./scripts/app-build-image.sh --push ${{ inputs.buildx_args }}
+      run: make package
       env:
         VERSION: ${{ inputs.publish_version }}
-        DOCKER_ARGS: --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le,linux/s390x
+        BUILD_ARGS: >-
+          ${{ inputs.buildx_args }}
+          --push
+          --platform linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
     - uses: peter-evans/dockerhub-description@v4
       if: ${{ inputs.publish_dockerhub_readme }}
       with:
