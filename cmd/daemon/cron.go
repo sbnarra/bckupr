@@ -44,17 +44,25 @@ func startCron(
 ) *errors.E {
 	if backupSchedule, err := flags.String(keys.BackupSchedule, cmd.Flags()); err != nil {
 		return err
-	} else if rotate, err := newRotateInput(ctx, cmd); err != nil {
+	} else if rotate, err := rotateInput(ctx, cmd); err != nil {
 		return err
 	} else if rotateSchedule, err := flags.String(keys.RotateSchedule, cmd.Flags()); err != nil {
 		return err
-	} else if err := instance.Start(ctx, rotateSchedule, rotate, backupSchedule, config.DockerHosts, config.HostBackupDir, config.ContainerBackupDir, containers, config.NotificationSettings); err != nil {
+	} else if err := instance.Start(ctx, rotateSchedule, *rotate, backupSchedule, config.DockerHosts, config.HostBackupDir, config.ContainerBackupDir, containers, config.NotificationSettings); err != nil {
 		return err
 	}
 	return nil
 }
 
-func newRotateInput(ctx context.Context, cmd *cobra.Command) (spec.RotateInput, *errors.E) {
-
-	return spec.RotateInput{}, nil
+func rotateInput(ctx context.Context, cmd *cobra.Command) (*spec.RotateInput, *errors.E) {
+	if destroyBackups, err := flags.Bool(keys.DestroyBackups, cmd.Flags()); err != nil {
+		return nil, err
+	} else if policyPath, err := flags.String(keys.PoliciesPath, cmd.Flags()); err != nil {
+		return nil, err
+	} else {
+		return &spec.RotateInput{
+			Destroy:      destroyBackups,
+			PoliciesPath: policyPath,
+		}, nil
+	}
 }
