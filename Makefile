@@ -7,7 +7,7 @@ ARGS?=--rm -it
 CMD?=sh
 BACKUP_DIR?=/tmp/backups-${VERSION}
 
-DOCS_PATH=docs/gh-site
+DOCS_PATH=docs/gh-pages
 
 clean:
 	go clean ./...
@@ -20,6 +20,7 @@ test: generate
 	./scripts/app-test-end2end.sh
 build: test
 	go build
+	make generate-docs
 
 package: generate
 	docker buildx build ${BUILD_ARGS} \
@@ -33,14 +34,14 @@ run:
     	-v ${BACKUP_DIR}:/backups \
     	sbnarra/bckupr:${VERSION} ${CMD}
 
-docs:
+generate-docs:
 	docker run --rm \
-		-v ./:/bckupr -w /bckupr/${DOCS_PATH} \
+		-v ${PWD}:/bckupr:rw -w /bckupr/${DOCS_PATH} \
 		python:3.9-slim \
 		sh -c "pip install -r requirements.txt && mkdocs build --config-file mkdocs.yml"
-docs-run:
-	docker run --rm \
-		-v ./:/bckupr -w /bckupr/${DOCS_PATH} \
+run-docs:
+	docker run --rm -it \
+		-v ${PWD}:/bckupr:ro -w /bckupr/${DOCS_PATH} \
 		-p 8000:8000 \
 		python:3.9-slim \
 		sh -c "pip install -r requirements.txt && mkdocs serve --config-file mkdocs.yml"
