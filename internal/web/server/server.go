@@ -13,6 +13,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/config/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/interrupt"
+	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
 type Server struct {
@@ -54,6 +55,8 @@ func (s Server) Listen(ctx context.Context) *errors.E {
 		interrupt.Handle(contexts.Name(ctx), func() {
 			s.Server.Shutdown(ctx)
 		})
+
+		logging.Info(ctx, "listening on", network, addr)
 		err := s.Server.Serve(ln)
 		return errors.Wrap(err, "error on "+network+"/"+addr)
 	}

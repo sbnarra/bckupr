@@ -33,15 +33,23 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if sdk, err := util.NewSdk(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if backup, err := sdk.StartBackupWithId(ctx, id, *input); err != nil {
-		logging.CheckError(ctx, err)
 	} else {
-		util.WaitForCompletion(ctx,
-			func() (*spec.Backup, *errors.E) {
-				return sdk.GetBackup(ctx, backup.Id)
-			}, func(r *spec.Backup) spec.Status {
-				return r.Status
-			})
+		var backup *spec.Backup
+		if id == "" {
+			backup, err = sdk.StartBackup(ctx, *input)
+		} else {
+			backup, err = sdk.StartBackupWithId(ctx, id, *input)
+		}
+		if err != nil {
+			logging.CheckError(ctx, err)
+		} else {
+			util.WaitForCompletion(ctx,
+				func() (*spec.Backup, *errors.E) {
+					return sdk.GetBackup(ctx, backup.Id)
+				}, func(r *spec.Backup) spec.Status {
+					return r.Status
+				})
+		}
 	}
 	return nil
 }
