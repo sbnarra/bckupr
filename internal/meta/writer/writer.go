@@ -93,7 +93,7 @@ func (w *Writer) updateVolume(name string, updateFn func(*spec.Volume)) *errors.
 			return nil
 		}
 	}
-	return errors.New("no volume found for: " + name)
+	return errors.Errorf("no volume found for: %v", name)
 }
 
 func (w *Writer) write(ctx context.Context) *errors.E {

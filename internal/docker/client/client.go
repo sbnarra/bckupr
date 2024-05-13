@@ -153,7 +153,7 @@ func (d Docker) WaitForContainer(ctx context.Context, id string) *errors.E {
 		}
 	case status := <-statusCh:
 		if status.StatusCode != 0 {
-			return errors.New(fmt.Sprintf("%v; container failure: %v", id, status.StatusCode))
+			return errors.Errorf("%v; container failure: %v", id, status.StatusCode)
 		}
 	}
 	return nil

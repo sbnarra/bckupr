@@ -148,7 +148,7 @@ func (h handler) GetBackupFromDisk(ctx context.Context, id string) (*spec.Backup
 	if reader, err := reader.Load(ctx, h.containerBackupDir); err != nil {
 		return nil, err
 	} else if backup := reader.Get(id); backup == nil {
-		return nil, errors.New(id + " not found")
+		return nil, errors.Errorf("%v not found", id)
 	} else {
 		return backup, nil
 	}

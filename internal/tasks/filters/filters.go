@@ -15,12 +15,12 @@ func Apply(ctx context.Context, unfiltered map[string]*dockerTypes.Container, fi
 	name := contexts.Name(ctx)
 	filtered := applyIncludeFilters(unfiltered, filters)
 	if len(filtered) == 0 {
-		return nil, errors.New("nothing to " + name + " after applying include filters: names=" + strings.Join(filters.IncludeNames, ",") + ",volumes=" + strings.Join(filters.IncludeVolumes, ","))
+		return nil, errors.Errorf("nothing to %v after applying include filters: names=%v,volumes=%v", name, strings.Join(filters.IncludeNames, ","), strings.Join(filters.IncludeVolumes, ","))
 	}
 
 	filtered = applyExcludeFilters(filtered, filters)
 	if len(filtered) == 0 {
-		return nil, errors.New("nothing to " + name + " after applying exclude filters: names=" + strings.Join(filters.ExcludeNames, ",") + ",volumes=" + strings.Join(filters.ExcludeVolumes, ","))
+		return nil, errors.Errorf("nothing to %v after applying exclude filters: names=%v,volumes=%v", name, strings.Join(filters.ExcludeNames, ","), strings.Join(filters.ExcludeVolumes, ","))
 	}
 
 	if stopModes != nil {
@@ -31,7 +31,7 @@ func Apply(ctx context.Context, unfiltered map[string]*dockerTypes.Container, fi
 		for _, stopMode := range stopModes {
 			stopModes = append(stopModes, string(stopMode))
 		}
-		return nil, errors.New("nothing to " + name + " after applying stop modes: " + strings.Join(stopModes, ","))
+		return nil, errors.Errorf("nothing to %v after applying stop modes: %v", name, strings.Join(stopModes, ","))
 	}
 
 	return filtered, nil

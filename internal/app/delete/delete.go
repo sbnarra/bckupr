@@ -10,7 +10,7 @@ import (
 
 func Delete(ctx context.Context, id string, containerBackupDir string) *errors.E {
 	if id == "" {
-		return errors.New("missing backup id")
+		return errors.Errorf("missing backup id")
 	}
 	path := containerBackupDir + "/" + id
 	if _, err := os.Stat(path); err != nil {

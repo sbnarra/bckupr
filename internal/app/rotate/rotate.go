@@ -65,7 +65,7 @@ func sortAndValidate(policies []RotatePolicy) *errors.E {
 	var lastPolicy *RotatePolicy
 	for _, policy := range policies {
 		if policy.Keep == 0 {
-			return errors.New("invalid policy, keeps 0 backups")
+			return errors.Errorf("invalid policy, keeps 0 backups")
 		}
 
 		if lastPolicy != nil {
