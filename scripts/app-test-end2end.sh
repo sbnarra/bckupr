@@ -58,9 +58,7 @@ on_exit() {
 trap 'on_exit' EXIT
 
 BACKUP_ID="$(date +%Y%m%d%H%M)-cli"
-echo writing
 write_data pre-backup
-echo wrote
 docker exec bckupr bckupr backup --no-dry-run --backup-id=$BACKUP_ID
 
 write_data post-backup
