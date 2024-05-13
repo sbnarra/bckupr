@@ -29,7 +29,7 @@ func Start(
 	notificationSettings *notifications.NotificationSettings,
 ) (*spec.Restore, *concurrent.Concurrent, *errors.E) {
 	if id == "" {
-		return nil, nil, errors.New("missing backup id")
+		return nil, nil, errors.Errorf("missing backup id")
 	}
 
 	restore := &spec.Restore{

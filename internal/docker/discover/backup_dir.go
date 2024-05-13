@@ -15,7 +15,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 )
 
-var UnableToDetect = errors.New("Unable to Detect Host Backup Dir")
+var UnableToDetect = errors.Errorf("Unable to Detect Host Backup Dir")
 
 func MountedBackupDir(ctx context.Context, dockerHosts []string, containerBackupDir string) (string, *errors.E) {
 	var fErr *errors.E

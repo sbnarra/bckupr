@@ -87,7 +87,7 @@ func createConfig(ctx context.Context, cmd *cobra.Command) (context.Context, *se
 		} else if backupDir != "" {
 			config.HostBackupDir = backupDir
 		} else {
-			return ctx, config, errors.New("unable to detect backup dir, supply --" + keys.HostBackupDir.CliId)
+			return ctx, config, errors.Errorf("unable to detect backup dir, supply --%v", keys.HostBackupDir.CliId)
 		}
 	}
 	return ctx, config, err

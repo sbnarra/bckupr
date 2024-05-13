@@ -58,7 +58,7 @@ func TestSdkE2E(t *testing.T) {
 					if backup.Status == spec.StatusCompleted {
 						return nil
 					} else if backup.Status == spec.StatusError {
-						return errors.New(*backup.Error)
+						return errors.Errorf(*backup.Error)
 					}
 					time.Sleep(time.Second * 2)
 					backup, err = sdk.GetBackup(ctx, id)
@@ -76,7 +76,7 @@ func TestSdkE2E(t *testing.T) {
 					if restore.Status == spec.StatusCompleted {
 						return nil
 					} else if restore.Status == spec.StatusError {
-						return errors.New(*restore.Error)
+						return errors.Errorf(*restore.Error)
 					}
 
 					time.Sleep(time.Second * 2)

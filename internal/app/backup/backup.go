@@ -36,7 +36,7 @@ func Start(
 	logging.Info(ctx, "Using backup id", id)
 
 	if containerBackupDir == "" {
-		return nil, nil, errors.New("missing container backup directory, supply --" + keys.ContainerBackupDir.CliId)
+		return nil, nil, errors.Errorf("missing container backup directory, supply --%v", keys.ContainerBackupDir.CliId)
 	}
 	containerBackupDir = containerBackupDir + "/" + id
 	if !input.IsDryRun() {

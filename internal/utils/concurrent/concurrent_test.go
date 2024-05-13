@@ -53,7 +53,7 @@ func TestMultipleRunExecutes(t *testing.T) {
 func TestRunError(t *testing.T) {
 	c := New(context.Background(), "", 1)
 	c.Run(func(ctx context.Context) *errors.E {
-		return errors.New("testing")
+		return errors.Errorf("testing")
 	})
 
 	if err := c.Wait(); err == nil {
