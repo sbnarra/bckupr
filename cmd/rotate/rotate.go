@@ -34,7 +34,7 @@ func Init(cmd *cobra.Command) {
 func run(cmd *cobra.Command, args []string) error {
 	if ctx, err := util.NewContext(cmd); err != nil {
 		return err
-	} else if input, err := newRequest(ctx, cmd); err != nil {
+	} else if input, err := rotateInput(ctx, cmd); err != nil {
 		return err
 	} else if sdk, err := util.NewSdk(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
@@ -54,7 +54,7 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newRequest(ctx context.Context, cmd *cobra.Command) (*spec.RotateInput, *errors.E) {
+func rotateInput(ctx context.Context, cmd *cobra.Command) (*spec.RotateInput, *errors.E) {
 	if destroyBackups, err := flags.Bool(keys.DestroyBackups, cmd.Flags()); err != nil {
 		return nil, err
 	} else if policyPath, err := flags.String(keys.PoliciesPath, cmd.Flags()); err != nil {
