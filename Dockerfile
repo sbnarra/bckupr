@@ -1,22 +1,22 @@
-ARG GO_VERSION
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION:-1.22}-alpine AS app
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION:-20}-alpine AS node
+WORKDIR /web
+COPY ./web/ .
+RUN npm install && npm run build
 
+FROM --platform=$BUILDPLATFORM golang:${GO_VERSION:-1.22.3}-alpine AS go
 WORKDIR /
 COPY ./ .
-
 ARG TARGETOS
 ARG TARGETARCH
 RUN GO111MODULE=on CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o bckupr .
 
 FROM alpine
-
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md
 LABEL org.opencontainers.image.ref.name "sbnarra/bckupr"
 LABEL org.opencontainers.image.title "bckupr"
 LABEL org.opencontainers.image.description "docker volumes backup/restore manager"
 LABEL org.opencontainers.image.source "https://github.com/sbnarra/bckupr"
 LABEL org.opencontainers.image.documentation "https://sbnarra.github.io/bckupr"
-
 ARG CREATED
 ENV CREATED ${CREATED:-unset}
 LABEL org.opencontainers.image.created ${CREATED:-unset}
@@ -57,15 +57,16 @@ EXPOSE 8000
 VOLUME /var/run/docker.sock
 VOLUME /backups
 
-COPY web/ /web
 COPY configs/local/ /local
 COPY configs/offsite/ /offsite
 COPY configs/rotation /rotation
 
-ENV UI_BASE_PATH /
 ENV LOCAL_CONTAINERS_CONFIG=/local/tar.yml
 ENV ROTATION_POLICIES_CONFIG=/rotation/policies.yaml
+
+ENV UI_BUNDLE /web
 ENV BCKUPR_IN_CONTAINER 1
 ENV GIN_MODE release
 
-COPY --from=app /bckupr /bin/bckupr
+COPY --from=node /web/out /web
+COPY --from=go /bckupr /bin/bckupr

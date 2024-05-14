@@ -15,12 +15,17 @@ clean:
 
 generate:
 	go generate ./...
-test: generate
+	make ui-build
+
+test:
 	go test -p 1 -v ./...
 	./scripts/app-test-end2end.sh
+
 build: test
 	go build
-	make generate-docs
+
+run:
+	go run . daemon --host-backup-dir ${BACKUP_DIR} --container-backup-dir ${BACKUP_DIR}
 
 package: generate
 	docker buildx build ${BUILD_ARGS} \
@@ -28,7 +33,9 @@ package: generate
     	--build-arg REVISION=$(shell git rev-parse HEAD) \
     	--build-arg VERSION=${VERSION} \
     	-t sbnarra/bckupr:${VERSION} .
-run:
+
+package-run: package
+	mkdir -p ${BACKUP_DIR} # want to maintain user permissions so pre-creating
 	docker run --name bckupr ${ARGS} \
     	-v /var/run/docker.sock:/var/run/docker.sock \
     	-v ${BACKUP_DIR}:/backups \
@@ -39,9 +46,27 @@ generate-docs:
 		-v ${PWD}:/bckupr:rw -w /bckupr/${DOCS_PATH} \
 		python:3.9-slim \
 		sh -c "pip install -r requirements.txt && mkdocs build --config-file mkdocs.yml"
+
 run-docs:
 	docker run --rm -it \
 		-v ${PWD}:/bckupr:ro -w /bckupr/${DOCS_PATH} \
 		-p 8000:8000 \
 		python:3.9-slim \
 		sh -c "pip install -r requirements.txt && mkdocs serve --config-file mkdocs.yml"
+
+ui-build:
+	docker run --rm -it \
+		-v ${PWD}:/bckupr:rw -w /bckupr/web/ \
+		node:20-alpine \
+		sh -c "npm install && npm run build"
+
+ui-watch:
+	docker run --rm -it \
+		-v ${PWD}:/bckupr:rw -w /bckupr/web/ \
+		node:20-alpine \
+		sh -c "apk add inotify-tools >/dev/null && npm install && \
+			while true; do \
+				npm run build; \
+				inotifywait -e modify,create,delete **/* 2>/dev/null; \
+				sleep 1; \
+			done"

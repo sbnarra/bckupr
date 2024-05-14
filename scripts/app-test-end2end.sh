@@ -36,7 +36,7 @@ mkdir -p $TEST_DIR/backups
 set -e ### starting test ###
 
 docker volume create test_volume_backup
-make package run CMD="" ARGS="-d -e DRY_RUN=true -e DEBUG=true" BACKUP_DIR=$TEST_DIR/backups VERSION=test
+make package-run CMD="" ARGS="-d -e DRY_RUN=true -e DEBUG=true" BACKUP_DIR=$TEST_DIR/backups VERSION=test
 docker run --name data_writer -d \
     -l bckupr.volumes=test_volume_backup \
     -l bckupr.volumes.test_mount_backup=$TEST_DIR/example-mount \
