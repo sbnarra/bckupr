@@ -20,6 +20,15 @@ import (
 func New(ctx context.Context, config Config, containers containers.Templates) *server {
 	gin.New()
 	router := gin.Default()
+
+	router.Use(func() gin.HandlerFunc {
+		return func(c *gin.Context) {
+			c.Next()
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+	}(),
+	)
+
 	handler := handler.New(
 		ctx,
 		config.DockerHosts,
@@ -28,6 +37,7 @@ func New(ctx context.Context, config Config, containers containers.Templates) *s
 		containers,
 		config.NotificationSettings,
 	)
+
 	spec.RegisterHandlers(router, handler)
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 

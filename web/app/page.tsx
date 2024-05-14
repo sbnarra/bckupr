@@ -1,13 +1,31 @@
+'use client';
+
 import Image from "next/image";
-import * as spec from "./spec"
+import * as spec from "./spec";
+
+function buildClient(): spec.ApiClient {
+    var url = window.location.protocol + "//" + window.location.hostname
+    if (window.location.port) {
+      url +=  ":" + window.location.port
+    }
+    var client = new spec.ApiClient(url)
+    client.defaultHeaders = [] // remove user-agent, causing browser error
+    return client
+}
 
 export default function Home() {
-  // var backupApi = new spec.BackupApi()
-  // backupApi.listBackups(function(error: any, data: any, response: any) {
-  //   console.log(error)
-  //   console.log(data)
-  //   console.log(response)
-  // })
+  const callAPI = function() {
+    try {
+      var client = buildClient()
+      var r = new spec.BackupApi(client).listBackups(function(error: spec.Error, data: [spec.Backup]) {
+        console.log("error: " + error)
+        console.log("data: " + JSON.stringify(data))
+      })
+      console.log(r);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -43,10 +61,13 @@ export default function Home() {
           alt="Next.js Logo"
           width={180}
           height={37}
+          onClick={callAPI}
           priority
         />
+        
       </div>
 
+      <button onClick={callAPI}>Call API</button>
       <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
         <a
           href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
