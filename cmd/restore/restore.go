@@ -5,6 +5,7 @@ import (
 	"github.com/sbnarra/bckupr/internal/cmd/flags"
 	"github.com/sbnarra/bckupr/internal/cmd/util"
 	"github.com/sbnarra/bckupr/internal/config/keys"
+	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 	"github.com/sbnarra/bckupr/pkg/api/spec"
@@ -35,9 +36,10 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	} else if sdk, err := util.NewSdk(ctx, cmd); err != nil {
 		logging.CheckError(ctx, err)
-	} else if _, err := sdk.StartRestore(ctx, id, *input); err != nil {
+	} else if restore, err := sdk.StartRestore(ctx, id, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
+		logging.Info(ctx, "Restore Started", encodings.ToJsonIE(restore))
 		util.WaitForCompletion(ctx,
 			func() (*spec.Restore, *errors.E) {
 				return sdk.GetRestore(ctx, id)

@@ -18,12 +18,13 @@ type hooks struct {
 
 func NewHooks(
 	ctx context.Context,
-	dryRun bool,
 	backup *spec.Backup,
+	dryRun bool,
+	containerBackupDir string,
 	localTemplates containers.LocalTemplates,
 	OnComplete func(*errors.E),
 ) hooks {
-	writer := writer.New(ctx, dryRun, backup, localTemplates)
+	writer := writer.New(backup, dryRun, containerBackupDir, localTemplates)
 	return hooks{ctx, writer, OnComplete}
 }
 

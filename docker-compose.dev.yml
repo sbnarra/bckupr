@@ -1,0 +1,45 @@
+services:
+  go:
+    build:
+      dockerfile_inline: |
+        FROM golang:1.22.3-alpine
+        RUN go install github.com/cosmtrek/air@latest
+    command: [air, -c, .air.toml]
+    working_dir: /bckupr
+    volumes:
+      - ./:/bckupr
+      - ./.test_filesystem/backups:/backups
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      BCKUPR_IN_CONTAINER: 1 # required for container/hostBackupDir detection
+      VERSION: dev # required for container/hostBackupDir detection
+    labels:
+      - org.opencontainers.image.ref.name=sbnarra/bckupr # required for container/hostBackupDir detection
+      - org.opencontainers.image.version=dev # required for container/hostBackupDir detection
+      - traefik.http.services.go.loadbalancer.server.port=8000
+      - traefik.http.routers.go.rule=PathPrefix(`/api`)
+      - traefik.http.routers.go.entrypoints=web
+
+  node:
+    image: node:20-alpine
+    command: [sh, -c, npm install && npm run dev]
+    working_dir: /bckupr/web
+    volumes: [./:/bckupr]
+    labels:
+      - traefik.http.services.node.loadbalancer.server.port=8000
+      - traefik.http.routers.node.rule=PathPrefix(`/ui`)
+      - traefik.http.routers.node.entrypoints=web
+
+  traefik:
+    image: traefik:v3.0
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --entryPoints.web.address=:8000
+    labels:
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
+      - traefik.http.routers.traefik.rule=PathPrefix(`/traefik`)
+      - traefik.http.routers.traefik.entrypoints=web
+    ports: [8000:8000]
+    volumes: [/var/run/docker.sock:/var/run/docker.sock:ro]
+      

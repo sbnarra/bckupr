@@ -12,6 +12,7 @@ DOCS_PATH=docs/gh-pages
 clean:
 	go clean ./...
 	sudo rm -rf bckupr ${DOCS_PATH}/site
+	docker compose -f docker-compose.dev.yml down || true
 
 generate:
 	go generate ./...
@@ -60,13 +61,5 @@ ui-build:
 		node:20-alpine \
 		sh -c "npm install && npm run build"
 
-ui-watch:
-	docker run --rm -it \
-		-v ${PWD}:/bckupr:rw -w /bckupr/web/ \
-		node:20-alpine \
-		sh -c "apk add inotify-tools >/dev/null && npm install && \
-			while true; do \
-				npm run build; \
-				inotifywait -e modify,create,delete **/* 2>/dev/null; \
-				sleep 1; \
-			done"
+dev:
+	docker compose -f docker-compose.dev.yml up

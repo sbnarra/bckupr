@@ -21,16 +21,17 @@ type Writer struct {
 	containerBackupDir string
 }
 
-func New(ctx context.Context, dryRun bool, backup *spec.Backup, c containers.LocalTemplates) *Writer {
+func New(backup *spec.Backup, dryRun bool, containerBackupDir string, c containers.LocalTemplates) *Writer {
 	backup.Status = spec.StatusPending
 	backup.Created = time.Now()
 	backup.Type = "full"
 	w := &Writer{
-		Backup: backup,
-		ext:    c.FileExt,
-		dryRun: dryRun,
+		Backup:             backup,
+		ext:                c.FileExt,
+		dryRun:             dryRun,
+		containerBackupDir: containerBackupDir,
 	}
-	w.write(ctx)
+	w.write()
 	return w
 }
 
@@ -45,7 +46,7 @@ func (w *Writer) JobInit(ctx context.Context, tasks types.Tasks) *errors.E {
 	}
 
 	w.Backup.Status = spec.StatusRunning
-	return w.write(ctx)
+	return w.write()
 }
 
 func (w *Writer) JobCompleted(ctx context.Context, err *errors.E) *errors.E {
@@ -54,7 +55,7 @@ func (w *Writer) JobCompleted(ctx context.Context, err *errors.E) *errors.E {
 	} else {
 		w.Backup.Status = spec.StatusError
 	}
-	return w.write(ctx)
+	return w.write()
 }
 
 func (w *Writer) TaskStarted(ctx context.Context, name string) *errors.E {
@@ -64,7 +65,7 @@ func (w *Writer) TaskStarted(ctx context.Context, name string) *errors.E {
 	}); err != nil {
 		return err
 	}
-	return w.write(ctx)
+	return w.write()
 }
 
 func (w *Writer) TaskCompleted(ctx context.Context, name string, err *errors.E) *errors.E {
@@ -82,7 +83,7 @@ func (w *Writer) TaskCompleted(ctx context.Context, name string, err *errors.E) 
 	}); err != nil {
 		return err
 	}
-	return w.write(ctx)
+	return w.write()
 }
 
 func (w *Writer) updateVolume(name string, updateFn func(*spec.Volume)) *errors.E {
@@ -96,7 +97,7 @@ func (w *Writer) updateVolume(name string, updateFn func(*spec.Volume)) *errors.
 	return errors.Errorf("no volume found for: %v", name)
 }
 
-func (w *Writer) write(ctx context.Context) *errors.E {
+func (w *Writer) write() *errors.E {
 	if w.dryRun {
 		return nil
 	} else if yaml, err := encodings.ToYaml(w.Backup); err != nil {

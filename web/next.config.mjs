@@ -2,6 +2,7 @@
 const nextConfig = {
     output: 'export',
     basePath: '/ui',
+    trailingSlash: true,
 };
 
 export default nextConfig;
