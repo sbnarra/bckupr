@@ -36,10 +36,5 @@ services:
       - --api.insecure=true
       - --providers.docker=true
       - --entryPoints.web.address=:8000
-    labels:
-      - traefik.http.services.traefik.loadbalancer.server.port=8080
-      - traefik.http.routers.traefik.rule=PathPrefix(`/traefik`)
-      - traefik.http.routers.traefik.entrypoints=web
     ports: [8000:8000]
     volumes: [/var/run/docker.sock:/var/run/docker.sock:ro]
-      

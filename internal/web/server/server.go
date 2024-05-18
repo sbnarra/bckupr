@@ -45,6 +45,7 @@ func New(ctx context.Context, config Config, containers containers.Templates) *s
 	if uiBundle == "" {
 		uiBundle = "web/out"
 	}
+	
 	router.Static("/ui", uiBundle)
 	router.StaticFile("/favicon.ico", uiBundle+"/img/gopher_this-is-fine.png")
 	router.GET("/", func(ctx *gin.Context) {

@@ -1,20 +1,22 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import {Button, Link} from '@nextui-org/react';
 import {Backup, Error} from "../../components/spec";
 import {NewBackupApi} from "../../components/api";
-import {BackupCard} from "./_components";
+import {BackupCard, CreateBackup} from "./_components";
 
 export default function Backups() {
   var [backups, setBackups] = useState([] as Backup[])
   var [error, setError] = useState<Error>()
 
   useEffect(() => {
-    NewBackupApi().listBackups(function(err: Error, data: [Backup], res: any) {
+    const api = NewBackupApi()
+    api.listBackups(function(err: Error, data: [Backup], res: any) {
       console.log(res)
         if (error != null) {
-            console.log("err:"+error)
-            setError(err)
+          console.log("err:"+error)
+          setError(err)
         } else {
           console.log("data:"+JSON.stringify(data))
           setBackups(data)
@@ -25,7 +27,10 @@ export default function Backups() {
   return (
     <div>
       <p>{!error && error}</p>
+      <CreateBackup/>
+      <div className="grid grid-cols-2">
         {backups?.map(backup => <BackupCard key={backup.id} backup={backup}/>)}
+      </div>
     </div>
   )
 }

@@ -143,7 +143,6 @@ class ApiClient {
     * @returns {String} The encoded path with parameter values substituted.
     */
     buildUrl(path, pathParams, apiBasePath) {
-
         if (!path.match(/^\//)) {
             path = '/' + path;
         }

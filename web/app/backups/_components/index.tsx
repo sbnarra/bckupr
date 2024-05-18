@@ -1,2 +1,2 @@
 export { BackupCard } from "./cards/backup";
-export { BackupModel } from "./models/backup";
+export { CreateBackup } from "./modals/backup";
