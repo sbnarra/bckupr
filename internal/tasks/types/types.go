@@ -24,7 +24,7 @@ type Task struct {
 type Tasks map[string]*Task
 
 type Hooks interface {
-	JobStarted(Tasks)
+	StartingTasks(Tasks)
 	VolumeStarted(name string, volume string)
 	VolumeFinished(name string, volume string, err *errors.E)
 	JobFinished(*errors.E)

@@ -2,8 +2,10 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/sbnarra/bckupr/internal/config/contexts"
 	"github.com/sbnarra/bckupr/internal/utils/encodings"
 	"github.com/sbnarra/bckupr/internal/utils/errors"
 	"github.com/sbnarra/bckupr/internal/utils/logging"
@@ -15,23 +17,27 @@ func WaitForCompletion[T any](
 	get func() (T, *errors.E),
 	status func(T) spec.Status,
 ) {
+	if !contexts.Debug(ctx) {
+		fmt.Print("\r")
+		fmt.Print("\033[K")
+	}
+
 	ctx, _ = context.WithDeadline(ctx, time.Now().Add(time.Minute*1))
 	for ctx.Err() == nil {
-		if retrieved, err := get(); err != nil {
+		retrieved, err := get()
+		if err != nil {
 			logging.CheckError(ctx, err)
-		} else if status(retrieved) == spec.StatusCompleted {
-			logging.Info(ctx, "Success", encodings.ToJsonIE(retrieved))
-			break
-		} else if status(retrieved) == spec.StatusError {
-			logging.Error(ctx, "Error", encodings.ToJsonIE(retrieved))
-			break
-		} else if status(retrieved) == spec.StatusRunning {
-			logging.Info(ctx, "Running", encodings.ToJsonIE(retrieved))
-		} else {
-			logging.Warn(ctx, "Status Unknown", status(retrieved), encodings.ToJsonIE(retrieved))
 		}
+		status := status(retrieved)
+		logging.Warn(ctx, string(status), encodings.ToJsonIE(retrieved))
+		if status == spec.StatusCompleted || status == spec.StatusError {
+			break
+		}
+
 		time.Sleep(time.Second * 2)
-		TermClear()
+		if !contexts.Debug(ctx) {
+			fmt.Print("\033[H\033[2J")
+		}
 	}
 	logging.CheckError(ctx, errors.Wrap(ctx.Err(), "ctx error"))
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -16,18 +17,17 @@ import (
 	"github.com/sbnarra/bckupr/internal/utils/logging"
 )
 
-type Server struct {
-	*http.Server
-	context.Context
-	Config
-}
-
-func New(ctx context.Context, config Config, containers containers.Templates) *Server {
+func New(ctx context.Context, config Config, containers containers.Templates) *server {
 	gin.New()
 	router := gin.Default()
 
-	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	router.Static("/ui", "./web")
+	router.Use(func() gin.HandlerFunc {
+		return func(c *gin.Context) {
+			c.Next()
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+	}(),
+	)
 
 	handler := handler.New(
 		ctx,
@@ -39,13 +39,26 @@ func New(ctx context.Context, config Config, containers containers.Templates) *S
 	)
 
 	spec.RegisterHandlers(router, handler)
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	uiBundle := os.Getenv("UI_BUNDLE")
+	if uiBundle == "" {
+		uiBundle = "web/out"
+	}
+	
+	router.Static("/ui", uiBundle)
+	router.StaticFile("/favicon.ico", uiBundle+"/img/gopher_this-is-fine.png")
+	router.GET("/", func(ctx *gin.Context) {
+		ctx.Redirect(http.StatusPermanentRedirect, "/ui")
+	})
+
 	httpServer := &http.Server{
 		Handler: router,
 	}
-	return &Server{httpServer, ctx, config}
+	return &server{httpServer, ctx, config}
 }
 
-func (s Server) Listen(ctx context.Context) *errors.E {
+func (s server) Listen(ctx context.Context) *errors.E {
 	network := "tcp"
 	addr := s.Config.TcpAddr
 

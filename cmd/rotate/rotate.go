@@ -41,9 +41,7 @@ func run(cmd *cobra.Command, args []string) error {
 	} else if rotate, err := sdk.StartRotate(ctx, *input); err != nil {
 		logging.CheckError(ctx, err)
 	} else {
-		util.TermClear()
 		logging.Info(ctx, "Rotate Started", encodings.ToJsonIE(rotate))
-
 		util.WaitForCompletion(ctx,
 			func() (*spec.Rotate, *errors.E) {
 				return sdk.GetRotate(ctx)

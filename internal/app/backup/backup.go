@@ -23,10 +23,10 @@ import (
 func Start(
 	ctx context.Context,
 	id string,
+	input spec.TaskInput,
 	dockerHosts []string,
 	hostBackupDir string,
 	containerBackupDir string,
-	input spec.TaskInput,
 	containers containers.Templates,
 	notificationSettings *notifications.NotificationSettings,
 ) (*spec.Backup, *concurrent.Concurrent, *errors.E) {
@@ -38,10 +38,11 @@ func Start(
 	if containerBackupDir == "" {
 		return nil, nil, errors.Errorf("missing container backup directory, supply --%v", keys.ContainerBackupDir.CliId)
 	}
-	containerBackupDir = containerBackupDir + "/" + id
+
 	if !input.IsDryRun() {
-		if err := os.MkdirAll(containerBackupDir, os.ModePerm); err != nil {
-			return nil, nil, errors.Errorf("failed to create backup dir: %v: %w", containerBackupDir, err)
+		backupDir := containerBackupDir + "/" + id
+		if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
+			return nil, nil, errors.Errorf("failed to create backup dir: %v: %w", backupDir, err)
 		}
 	}
 
@@ -49,7 +50,7 @@ func Start(
 	if completed, err := tracker.Add("backup", id, backup); err != nil {
 		return nil, nil, err
 	} else {
-		hooks := NewHooks(ctx, input.IsDryRun(), backup, containers.Local, completed)
+		hooks := NewHooks(ctx, backup, input.IsDryRun(), containerBackupDir, containers.Local, completed)
 		backupTask := newBackupVolumeTask(containers, hostBackupDir)
 		runner, err := runner.RunOnEachDockerHost(ctx, "backup", id, backup, dockerHosts, input, hooks, backupTask, notificationSettings)
 		return hooks.Writer.Backup, runner, err
@@ -99,7 +100,7 @@ func backupVolume(
 		hostBackupDir+":/backup:ro")
 
 	err := docker.Run(ctx, meta, offsite.OffsitePush)
-	if errors.Is(err, run.MisconfiguredTemplate) {
+	if errors.Is(err, run.ErrMisconfiguredTemplate) {
 		logging.CheckError(ctx, err)
 		return nil
 	}

@@ -43,16 +43,18 @@ func (c *TaskInput) WithDefaults(stopModes []StopModes) *errors.E {
 
 func (t *TaskInput) IsDryRun() bool {
 	if t == nil || t.NoDryRun == nil {
-		return false
+		return true
 	}
-	return !*t.NoDryRun
+	noDryRun := *t.NoDryRun
+	return !noDryRun
 }
 
 func (r *RotateInput) IsDryRun() bool {
 	if r == nil || r.NoDryRun == nil {
-		return false
+		return true
 	}
-	return !*r.NoDryRun
+	noDryRun := *r.NoDryRun
+	return !noDryRun
 }
 
 func (r *RotateInput) WithDefaults() *errors.E {
