@@ -13,7 +13,7 @@ import (
 
 func RunContainer(ctx context.Context, client client.DockerClient, meta CommonEnv, template containers.Template, waitLogCleanup bool) (string, *errors.E) {
 	if len(template.Image) == 0 || len(template.Cmd) == 0 {
-		return "", errors.Wrap(MisconfiguredTemplate, encodings.ToJsonIE(template))
+		return "", errors.Wrap(ErrMisconfiguredTemplate, encodings.ToJsonIE(template))
 	}
 
 	copy := template

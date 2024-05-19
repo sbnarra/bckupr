@@ -111,7 +111,7 @@ func checkLocalBackup(
 	offsite.OffsitePull.Volumes = append(offsite.OffsitePull.Volumes, hostBackupDir+":/backup:rw")
 
 	if err := docker.Run(ctx, meta, offsite.OffsitePull); err != nil {
-		if errors.Is(err, run.MisconfiguredTemplate) {
+		if errors.Is(err, run.ErrMisconfiguredTemplate) {
 			return errors.Errorf("offsite containers misconfigured: %v", containerBackupDir)
 		}
 		return err

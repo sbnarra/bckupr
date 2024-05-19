@@ -4,4 +4,4 @@ import (
 	"errors"
 )
 
-var MisconfiguredTemplate = errors.New("Template Misconfigured")
+var ErrMisconfiguredTemplate = errors.New("template misconfigured")
