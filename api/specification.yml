@@ -189,10 +189,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StopModes'
-            StopModes:
-              default: ['all']
         filters:
           $ref: '#/components/schemas/Filters'
+    StopModes:
+      type: string
+      enum:
+        - all
+        - labelled
+        - writers
+        - attached
+        - linked
     Status:
       type: string
       default: pending
@@ -297,14 +303,6 @@ components:
           $ref: '#/components/schemas/Status'
         error:
           type: string
-    StopModes:
-      type: string
-      enum:
-        - all
-        - labelled
-        - writers
-        - attached
-        - linked
     Filters:
       type: object
       required:
