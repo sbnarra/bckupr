@@ -35,7 +35,7 @@ export default function DeleteBackup(props: {
                   Danger! Danger! Danger!
                 </p>
                 <p> 
-                  This can't be undone...
+                  This can&apos;t be undone...
                 </p>
               </ModalBody>
               <ModalFooter>

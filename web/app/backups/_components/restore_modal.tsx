@@ -105,7 +105,7 @@ function RestoreWaitModal(props: {
       })
     }, 1000)
     return () => clearInterval(id)
-  }, [])
+  }, [props.backup.id])
 
   return (<Modal 
       isOpen={true} 

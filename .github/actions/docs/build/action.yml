@@ -7,5 +7,5 @@ runs:
       with:
         python-version: 3.x
     - shell: bash
-      run: make generate-docs
+      run: make build-docs
 

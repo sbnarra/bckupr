@@ -22,7 +22,7 @@ export default function Backups() {
           setBackups(data)
         }
     })
-  }, [])
+  }, [error])
 
   return (
     <div>

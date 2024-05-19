@@ -189,7 +189,7 @@ function BackupWaitModal(props: {
       })
     }, 1000)
     return () => clearInterval(id)
-  }, [])
+  }, [props.id])
 
   return (<Modal 
       isOpen={true} 
@@ -210,7 +210,7 @@ function BackupWaitModal(props: {
               {backup.error && <p>Error: {backup.error}</p>}
               {backup.volumes && <p>Volumes:
                 <ul>
-                  {backup.volumes.map((volume: Volume) => <li>{JSON.stringify(volume)}</li>)}
+                  {backup.volumes.map((volume: Volume) => <li key={volume.name}>{JSON.stringify(volume)}</li>)}
                 </ul>
               </p>}
               </>}

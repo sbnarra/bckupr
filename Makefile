@@ -16,7 +16,7 @@ clean:
 
 generate:
 	go generate ./...
-	make ui-build
+	make build-ui
 
 test:
 	go test -p 1 -v ./...
@@ -42,7 +42,7 @@ package-run: package
     	-v ${BACKUP_DIR}:/backups \
     	sbnarra/bckupr:${VERSION} ${CMD}
 
-generate-docs:
+build-docs:
 	docker run --rm \
 		-v ${PWD}:/bckupr:rw -w /bckupr/${DOCS_PATH} \
 		python:3.9-slim \
@@ -55,8 +55,8 @@ run-docs:
 		python:3.9-slim \
 		sh -c "pip install -r requirements.txt && mkdocs serve --config-file mkdocs.yml"
 
-ui-build:
-	docker run --rm -it \
+build-ui:
+	docker run -u "$(id -u):$(id -g)" --rm -it \
 		-v ${PWD}:/bckupr:rw -w /bckupr/web/ \
 		node:20-alpine \
 		sh -c "npm install && npm run build"
