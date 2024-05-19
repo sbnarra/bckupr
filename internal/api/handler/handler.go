@@ -73,7 +73,7 @@ func (h handler) StartBackupWithId(c *gin.Context, id string) {
 		onError(ctx, c, http.StatusBadRequest, errors.Wrap(err, "error parsing request:"))
 	} else if err := payload.WithDefaults(spec.BackupStopModes); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, errors.Wrap(err, "failed to load defaults:"))
-	} else if backup, runner, err := backup.Start(ctx, id, h.DockerHosts, h.hostBackupDir, h.containerBackupDir, payload, h.Templates, h.NotificationSettings); err != nil {
+	} else if backup, runner, err := backup.Start(ctx, id, payload, h.DockerHosts, h.hostBackupDir, h.containerBackupDir, h.Templates, h.NotificationSettings); err != nil {
 		onError(ctx, c, http.StatusInternalServerError, err)
 	} else {
 		go func() {

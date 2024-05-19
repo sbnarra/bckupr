@@ -37,14 +37,16 @@ func RunContainer(ctx context.Context, client client.DockerClient, meta CommonEn
 
 func runContainer(ctx context.Context, client client.DockerClient, template containers.Template, waitLogCleanup bool) (string, *errors.E) {
 	id, runErr := client.RunContainer(ctx, template.Image, template.Cmd, template.Env, template.Volumes, template.Labels)
-	if !waitLogCleanup {
+	if runErr != nil || !waitLogCleanup {
 		return id, runErr
+	} else if id == "dry_run" {
+		return id, nil
 	}
 
 	ctx = context.WithoutCancel(ctx)
 	waitLogErr := WaitThenLog(ctx, client, id)
 	removalErr := client.RemoveContainer(ctx, id)
-	return id, errors.Join(runErr, waitLogErr, removalErr)
+	return id, errors.Join(waitLogErr, removalErr)
 }
 
 func WaitThenLog(ctx context.Context, client client.DockerClient, id string) *errors.E {

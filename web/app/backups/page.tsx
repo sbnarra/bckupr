@@ -10,7 +10,7 @@ export default function Backups() {
   var [backups, setBackups] = useState([] as Backup[])
   var [error, setError] = useState<Error>()
 
-  useEffect(() => {
+  const loadBackups = () => {
     const api = NewBackupApi()
     api.listBackups(function(err: Error, data: [Backup], res: any) {
       console.log(res)
@@ -18,18 +18,27 @@ export default function Backups() {
           console.log("err:"+error)
           setError(err)
         } else {
+          data.sort((a, b) => b.created - a.created)
           console.log("data:"+JSON.stringify(data))
           setBackups(data)
         }
     })
-  }, [error])
+  }
+
+  useEffect(() => {
+    loadBackups()
+  }, [])
 
   return (
     <div>
       <p>{!error && error}</p>
-      <CreateBackup/>
-      <div className="grid grid-cols-2">
-        {backups?.map(backup => <BackupCard key={backup.id} backup={backup}/>)}
+      <CreateBackup refresh={loadBackups}/>
+      <div className="flex flex-wrap gap-1 justify-center">
+        {backups?.map(backup => <BackupCard 
+          key={backup.id}
+          backup={backup}
+          onDelete={loadBackups}
+        />)}
       </div>
     </div>
   )

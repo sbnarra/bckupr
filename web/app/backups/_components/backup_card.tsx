@@ -1,10 +1,11 @@
 import * as spec from '../../../components/spec'
-import {Card, CardBody, Divider, Button} from "@nextui-org/react";
-import RestoreBackup from './restore_modal';
+import {Card, CardBody, Divider} from "@nextui-org/react";
+import { RestoreBackup } from './restore_modal';
 import DeleteBackup from './delete_modal';
 
 export function BackupCard(props: {
     backup: spec.Backup
+    onDelete: () => void
 }) {
     var backup = props.backup
 
@@ -19,8 +20,10 @@ export function BackupCard(props: {
         </CardBody>
         <Divider/>
         <CardBody>
-            <RestoreBackup backup={backup}/>
-            <DeleteBackup backup={backup}/>
+            <div className="flex gap-1 justify-center">
+                <RestoreBackup backup={backup}/>
+                <DeleteBackup backup={backup} onDelete={props.onDelete} />
+            </div>
         </CardBody>
     </Card>)
 }

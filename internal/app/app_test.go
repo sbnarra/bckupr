@@ -35,7 +35,7 @@ func TestAppE2E(t *testing.T) {
 			if err := payload.WithDefaults(spec.BackupStopModes); err != nil {
 				return err
 			} else {
-				if _, runner, err := backup.Start(ctx, id, e2e.DockerHosts, e2e.BackupDir, e2e.BackupDir, payload, containers, notificationSettings); err != nil {
+				if _, runner, err := backup.Start(ctx, id, payload, e2e.DockerHosts, e2e.BackupDir, e2e.BackupDir, containers, notificationSettings); err != nil {
 					return err
 				} else {
 					return runner.Wait()

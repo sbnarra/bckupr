@@ -23,10 +23,10 @@ import (
 func Start(
 	ctx context.Context,
 	id string,
+	input spec.TaskInput,
 	dockerHosts []string,
 	hostBackupDir string,
 	containerBackupDir string,
-	input spec.TaskInput,
 	containers containers.Templates,
 	notificationSettings *notifications.NotificationSettings,
 ) (*spec.Backup, *concurrent.Concurrent, *errors.E) {
@@ -38,6 +38,7 @@ func Start(
 	if containerBackupDir == "" {
 		return nil, nil, errors.Errorf("missing container backup directory, supply --%v", keys.ContainerBackupDir.CliId)
 	}
+	logging.Info(ctx, "NoDryRun::", input.NoDryRun, input.IsDryRun())
 	if !input.IsDryRun() {
 		backupDir := containerBackupDir + "/" + id
 		if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {

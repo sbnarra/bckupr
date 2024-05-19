@@ -5,13 +5,14 @@ import {Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDis
 
 export default function DeleteBackup(props: {
   backup: Backup
+  onDelete: () => void
 }) {
   const {isOpen, onOpen, onOpenChange} = useDisclosure();
-
-  function deleteBackup() {
+  const deleteBackup = () => {
     NewBackupApi().deleteBackup(props.backup.id, function(err: Error) {
       if (err === null) {
         alert("Deleted " + props.backup.id)
+        props.onDelete()
       } else {
         alert("Error: " + err.error)
       }
@@ -19,8 +20,9 @@ export default function DeleteBackup(props: {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <Button onPress={onOpen}>Delete</Button>
+      <Button onPress={onOpen}>
+        Delete
+        
       <Modal 
         isOpen={isOpen} 
         placement="auto"
@@ -39,18 +41,18 @@ export default function DeleteBackup(props: {
                 </p>
               </ModalBody>
               <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
+                <Button color="primary" onPress={onClose}>
                   Cancel
                 </Button>
-                <Button color="primary"  onPress={function() {
+                <Button color="danger" variant="light" onPress={function() {
                   deleteBackup()
                   onClose()
-                }}></Button>
+                }}>Delete</Button>
               </ModalFooter>
             </>
           )}
         </ModalContent>
       </Modal>
-    </div>
-  );
+      </Button>
+    );
 }
