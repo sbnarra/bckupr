@@ -21,7 +21,7 @@ func NewHooks(restore *spec.Restore, onComplete func(*errors.E)) hooks {
 	}
 }
 
-func (h hooks) JobStarted(tasks types.Tasks) {
+func (h hooks) StartingTasks(tasks types.Tasks) {
 	for name, task := range tasks {
 		h.restore.Volumes = append(h.restore.Volumes, spec.Volume{
 			Name:   name,

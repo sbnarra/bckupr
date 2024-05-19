@@ -31,7 +31,7 @@ func New(backup *spec.Backup, dryRun bool, containerBackupDir string, c containe
 		dryRun:             dryRun,
 		containerBackupDir: containerBackupDir,
 	}
-	w.write()
+	// w.write()
 	return w
 }
 
@@ -54,6 +54,8 @@ func (w *Writer) JobCompleted(ctx context.Context, err *errors.E) *errors.E {
 		w.Backup.Status = spec.StatusCompleted
 	} else {
 		w.Backup.Status = spec.StatusError
+		errMsg := err.Error()
+		w.Backup.Error = &errMsg
 	}
 	return w.write()
 }

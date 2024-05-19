@@ -13,6 +13,7 @@ services:
     environment:
       BCKUPR_IN_CONTAINER: 1 # required for container/hostBackupDir detection
       VERSION: dev # required for container/hostBackupDir detection
+      DEBUG: 1
     labels:
       - org.opencontainers.image.ref.name=sbnarra/bckupr # required for container/hostBackupDir detection
       - org.opencontainers.image.version=dev # required for container/hostBackupDir detection

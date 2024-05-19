@@ -48,11 +48,13 @@ func run(
 	notifier *notifications.Notifier,
 ) *errors.E {
 	if allContainers, err := docker.List(ctx, *args.LabelPrefix); err != nil {
+		hooks.JobFinished(err)
 		return err
 	} else if tasks, err := filterAndCreateTasks(ctx, allContainers, args); err != nil {
+		hooks.JobFinished(err)
 		return err
 	} else {
-		hooks.JobStarted(tasks)
+		hooks.StartingTasks(tasks)
 
 		volumes := backupVolumes(tasks)
 		notifier.JobStarted(ctx, action, id, volumes)
@@ -86,8 +88,8 @@ func run(
 		runnerErr := runner.Wait()
 		taskCh <- nil
 
-		hooks.JobFinished(err)
-		notifier.JobCompleted(ctx, action, id, volumes, started, err)
+		hooks.JobFinished(runnerErr)
+		notifier.JobCompleted(ctx, action, id, volumes, started, runnerErr)
 
 		if listenerErr := listener.Wait(); listenerErr != nil {
 			runnerErr = errors.Join(runnerErr, listenerErr)

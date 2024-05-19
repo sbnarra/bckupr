@@ -28,7 +28,7 @@ func NewHooks(
 	return hooks{ctx, writer, OnComplete}
 }
 
-func (h hooks) JobStarted(tasks types.Tasks) {
+func (h hooks) StartingTasks(tasks types.Tasks) {
 	h.Writer.JobInit(h.Context, tasks)
 }
 
