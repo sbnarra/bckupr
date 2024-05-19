@@ -38,7 +38,7 @@ func Start(
 	if containerBackupDir == "" {
 		return nil, nil, errors.Errorf("missing container backup directory, supply --%v", keys.ContainerBackupDir.CliId)
 	}
-	logging.Info(ctx, "NoDryRun::", input.NoDryRun, input.IsDryRun())
+
 	if !input.IsDryRun() {
 		backupDir := containerBackupDir + "/" + id
 		if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {

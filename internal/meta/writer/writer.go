@@ -31,7 +31,6 @@ func New(backup *spec.Backup, dryRun bool, containerBackupDir string, c containe
 		dryRun:             dryRun,
 		containerBackupDir: containerBackupDir,
 	}
-	// w.write()
 	return w
 }
 
