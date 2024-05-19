@@ -1,7 +1,7 @@
-import * as spec from '../../../../components/spec'
+import * as spec from '../../../components/spec'
 import {Card, CardBody, Divider, Button} from "@nextui-org/react";
-import RestoreBackup from '../modals/restore';
-import DeleteBackup from '../modals/delete';
+import RestoreBackup from './restore_modal';
+import DeleteBackup from './delete_modal';
 
 export function BackupCard(props: {
     backup: spec.Backup

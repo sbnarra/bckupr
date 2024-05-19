@@ -44,10 +44,11 @@ function BackupOptionsModal(props: {
   setId: (id: string) => void
 }) {
   
-  var filters = new Filters(["jkdss"], [], [], [])
+  var filters = new Filters([], [], [], [])
   var taskInput = new TaskInput(filters)
 
-  function startBackup(onClose: () => void) {
+  const startBackup = (onClose: () => void) => {
+    console.log(JSON.stringify(taskInput))
     var api = NewBackupApi()
     api.startBackup(taskInput, (err: any, backup: Backup) => {
       if (err === null) {
@@ -62,8 +63,6 @@ function BackupOptionsModal(props: {
 
   const [selectedKeys, setSelectedKeys] = useState(new Set(["labelled", "writers", "linked"]));
 
-  const [includeName, setIncludeName] = useState("")
-
   return (<Modal 
       isOpen={true} 
       placement="auto"
@@ -77,11 +76,12 @@ function BackupOptionsModal(props: {
               <Checkbox radius="full" onChange={(e) => taskInput.no_dry_run = e.target.checked}>
                 No Dry Run
               </Checkbox>
-              <Input
-                label="Label Prefix"
-                defaultValue="bckupr"
-                onChange={(e) => taskInput.label_prefix = e.target.value}
-              />
+              
+              <ListInput label="Include Names" updated={(s) => filters.include_names = s}/>
+              <ListInput label="Include Volumes" updated={(s) => filters.include_volumes = s}/>
+              <ListInput label="Exclude Names" updated={(s) => filters.exclude_names = s}/>
+              <ListInput label="Exclude Volumes" updated={(s) => filters.exclude_volumes = s}/>
+
               <Listbox 
                 aria-label="Stop Modes"
                 disallowEmptySelection
@@ -100,28 +100,12 @@ function BackupOptionsModal(props: {
                   <ListboxItem key="linked">Linked</ListboxItem>
                 </ListboxSection>
               </Listbox>
-              
-              <div className="flex">
-                <Input
-                  label="Include Names"
-                  placeholder="..."
-                  onChange={(e) => setIncludeName(e.target.value)}
-                />
-                <div className="content-around">
-                  <Button className="h-full min-w" onClick={() => {
-                    filters.include_names += includeName
-                  }}>+</Button>
-                </div>
-              </div>
-              {filters.include_names.map((name: string) => 
-                <div className="flex">
-                  <Input defaultValue={name} isReadOnly/>
-                  <div className="content-around">
-                    <Button className="h-full min-w" onClick={() => {
-                      filters.include_names += includeName
-                    }}>-</Button>
-                  </div>
-                </div>)}
+
+              <Input
+                label="Label Prefix"
+                defaultValue="bckupr"
+                onChange={(e) => taskInput.label_prefix = e.target.value}
+              />
             </ModalBody>
             <ModalFooter>
               <Button color="danger" variant="light" onPress={onClose}>
@@ -136,6 +120,46 @@ function BackupOptionsModal(props: {
         )}
       </ModalContent>
     </Modal>)
+}
+
+function ListInput(props: {
+  label: string
+  updated: (items: string[]) => void
+}) {
+  const [inputted, setInputted] = useState("")
+  const [inputs, setInputs] = useState(new Set<string>())
+
+  return (<>
+    <div className="flex">
+      <Input isClearable
+        label={props.label}
+        placeholder="..."
+        value={inputted}
+        onClear={() => setInputted("")}
+        onChange={(e) => setInputted(e.target.value)}
+      />
+      <div className="content-around">
+        <Button className="h-full min-w" onClick={() => {
+          inputs.add(inputted)
+          setInputted("")
+          const updated = new Set(inputs)
+          setInputs(updated)
+          props.updated(Array.from(updated))
+        }}>+</Button>
+      </div>
+    </div>
+    {Array.from(inputs).map((name: string) => <div key={name} className="flex">
+      <Input defaultValue={name} isReadOnly/>
+      <div className="content-around">
+        <Button className="h-full min-w" onClick={() => {
+          inputs.delete(name)
+          const updated = new Set(inputs)
+          setInputs(updated)
+          props.updated(Array.from(updated))
+        }}>-</Button>
+      </div>
+    </div>)}
+  </>)
 }
 
 function BackupWaitModal(props: {

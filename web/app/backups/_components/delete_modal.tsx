@@ -1,5 +1,5 @@
-import {Backup, Error} from '../../../../components/spec'
-import {NewBackupApi} from '../../../../components/api'
+import {Backup, Error} from '../../../components/spec'
+import {NewBackupApi} from '../../../components/api'
 import React from "react";
 import {Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure} from "@nextui-org/react";
 
