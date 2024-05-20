@@ -25,6 +25,7 @@ services:
     image: node:20-alpine
     command: [sh, -c, npm install && npm run dev]
     working_dir: /bckupr/web
+    user: ${USER:-0:0}
     volumes: [./:/bckupr]
     labels:
       - traefik.http.services.node.loadbalancer.server.port=8000

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import {Button, Link} from '@nextui-org/react';
 import {Backup, Error} from "../../components/spec";
 import {NewBackupApi} from "../../components/api";
 import {BackupCard, CreateBackup} from "./_components";
@@ -12,14 +11,11 @@ export default function Backups() {
 
   const loadBackups = () => {
     const api = NewBackupApi()
-    api.listBackups(function(err: Error, data: [Backup], res: any) {
-      console.log(res)
+    api.listBackups(function(err: Error, data: [Backup]) {
         if (error != null) {
-          console.log("err:"+error)
           setError(err)
         } else {
           data.sort((a, b) => b.created - a.created)
-          console.log("data:"+JSON.stringify(data))
           setBackups(data)
         }
     })

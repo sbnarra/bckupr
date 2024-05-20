@@ -43,26 +43,26 @@ package-run: package
     	sbnarra/bckupr:${VERSION} ${CMD}
 
 build-docs:
-	docker run --rm \
+	docker run --rm -u $(shell id -u):$(shell id -g) \
 		-v ${PWD}:/bckupr:rw -w /bckupr/${DOCS_PATH} \
 		python:3.9-slim \
 		sh -c "pip install -r requirements.txt && mkdocs build --config-file mkdocs.yml"
 
 run-docs:
-	docker run --rm -it \
+	docker run --rm -it -u $(shell id -u):$(shell id -g) \
 		-v ${PWD}:/bckupr:ro -w /bckupr/${DOCS_PATH} \
 		-p 8000:8000 \
 		python:3.9-slim \
 		sh -c "pip install -r requirements.txt && mkdocs serve --config-file mkdocs.yml"
 
 build-ui:
-	docker run --rm \
+	docker run -u $(shell id -u):$(shell id -g) --rm \
 		-v ${PWD}:/bckupr:rw -w /bckupr/web/ \
 		node:20-alpine \
 		sh -c "npm install && npm run build"
 
 dev:
-	docker compose -f docker-compose.dev.yml up --build
+	USER="$(shell id -u):$(shell id -g)" docker compose -f docker-compose.dev.yml up --build
 
 dev-down:
 	docker compose -f docker-compose.dev.yml down
