@@ -1,10 +1,10 @@
-name: Publish Nightly (Image Only)
+name: Publish Edge (Image Only)
 on:
   push:
     branches:
       - development
 jobs:
-  publish-nightly-image:
+  publish-edge-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,5 +12,5 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          publish_version: nightly
+          publish_version: edge
           publish_dockerhub_readme: true
