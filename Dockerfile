@@ -52,21 +52,25 @@ RUN echo 'while [ "0" != $(ps | grep -v grep | grep "s6-supervise bckupr" | wc -
 RUN chmod +x /cmdless
 CMD ["/cmdless"]
 
-WORKDIR /
-EXPOSE 8000
-VOLUME /var/run/docker.sock
-VOLUME /backups
+COPY configs/local/ /opt/bckupr/config/local
 
-COPY configs/local/ /local
-COPY configs/offsite/ /offsite
-COPY configs/rotation /rotation
+COPY configs/offsite/ /opt/bckupr/config/offsite
+RUN ln -s /opt/bckupr/config/offsite /offsite
 
-ENV LOCAL_CONTAINERS_CONFIG=/local/tar.yml
-ENV ROTATION_POLICIES_CONFIG=/rotation/policies.yaml
+COPY configs/rotation /opt/bckupr/config/rotation
+RUN ln -s /opt/bckupr/config/rotation /rotation
 
-ENV UI_BUNDLE /web
+ENV LOCAL_CONTAINERS_CONFIG=/opt/bckupr/config/local/tar.yml
+ENV ROTATION_POLICIES_CONFIG=/opt/bckupr/config/rotation/policies.yaml
+
+ENV UI_BUNDLE /opt/bckupr/web
 ENV BCKUPR_IN_CONTAINER 1
 ENV GIN_MODE release
 
-COPY --from=node /web/out /web
-COPY --from=go /bckupr /bin/bckupr
+COPY --from=node /web/out /opt/bckupr/web
+COPY --from=go /bckupr /opt/bckupr/bckupr
+RUN ln -s /opt/bckupr/bckupr /bin/bckupr
+
+EXPOSE 8000
+VOLUME /var/run/docker.sock
+VOLUME /backups
