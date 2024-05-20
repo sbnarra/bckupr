@@ -1,16 +1,16 @@
-FROM --platform=$BUILDPLATFORM node:${NODE_VERSION:-20}-alpine AS node
+FROM --platform=$BUILDPLATFORM node:20.13.1-alpine3.19 AS node
 WORKDIR /web
 COPY ./web/ .
 RUN npm install && npm run build
 
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION:-1.22.3}-alpine AS go
+FROM --platform=$BUILDPLATFORM golang:1.22.3-alpine3.19 AS go
 WORKDIR /
 COPY ./ .
 ARG TARGETOS
 ARG TARGETARCH
 RUN GO111MODULE=on CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o bckupr .
 
-FROM alpine
+FROM alpine:3.19
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md
 LABEL org.opencontainers.image.ref.name "sbnarra/bckupr"
 LABEL org.opencontainers.image.title "bckupr"
