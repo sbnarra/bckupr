@@ -1,6 +1,6 @@
 services:
   bckupr:
-    image: sbnarra/bckupr:nightly
+    image: sbnarra/bckupr:edge
     env_file:
       - path: ./.env
         required: false

@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/app/test
-  publish-nightly-image:
+  publish-edge-image:
     needs: test-app
     runs-on: ubuntu-latest
     steps:
@@ -20,9 +20,9 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          publish_version: nightly
+          publish_version: edge
   auto-merge:
-    needs: publish-nightly-image
+    needs: publish-edge-image
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
