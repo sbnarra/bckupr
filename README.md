@@ -2,7 +2,7 @@
 
 ![Build Workflow](https://github.com/sbnarra/bckupr/actions/workflows/build.yml/badge.svg)
 ![Dependabot Workflow](https://github.com/sbnarra/bckupr/actions/workflows/dependabot.yml/badge.svg?event=pull_request)
-![Nightly Workflow](https://github.com/sbnarra/bckupr/actions/workflows/nightly.yml/badge.svg?branch=development)
+![Edge Workflow](https://github.com/sbnarra/bckupr/actions/workflows/edge.yml/badge.svg?branch=development)
 ![Latest Workflow](https://github.com/sbnarra/bckupr/actions/workflows/latest.yml/badge.svg?branch=main)
 
 [![DockerHub Pulls](https://img.shields.io/docker/pulls/sbnarra/bckupr.svg)](https://hub.docker.com/r/sbnarra/bckupr)

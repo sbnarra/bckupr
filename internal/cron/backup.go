@@ -26,7 +26,7 @@ func (c *Cron) scheduleBackup(
 		req := spec.TaskInput{}
 		if err := req.WithDefaults(spec.BackupStopModes); err != nil {
 			logging.CheckError(ctx, err, "failed to build input")
-		} else if backup, runner, err := backup.Start(ctx, "", dockerHosts, hostBackupDir, containerBackupDir, req, containers, notificationSettings); err != nil {
+		} else if backup, runner, err := backup.Start(ctx, "", req, dockerHosts, hostBackupDir, containerBackupDir, containers, notificationSettings); err != nil {
 			logging.CheckError(ctx, err, "failed to start backup", backup.Id)
 		} else if err := runner.Wait(); err != nil {
 			logging.CheckError(ctx, err, "failure running backup", backup.Id)

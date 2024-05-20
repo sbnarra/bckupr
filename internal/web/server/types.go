@@ -1,6 +1,17 @@
 package server
 
-import "github.com/sbnarra/bckupr/internal/notifications"
+import (
+	"context"
+	"net/http"
+
+	"github.com/sbnarra/bckupr/internal/notifications"
+)
+
+type server struct {
+	*http.Server
+	context.Context
+	Config
+}
 
 type Config struct {
 	ContainerBackupDir string

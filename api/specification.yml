@@ -100,6 +100,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/Restore'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/rotate:
     get:
       operationId: getRotate
@@ -189,6 +191,14 @@ components:
             $ref: '#/components/schemas/StopModes'
         filters:
           $ref: '#/components/schemas/Filters'
+    StopModes:
+      type: string
+      enum:
+        - all
+        - labelled
+        - writers
+        - attached
+        - linked
     Status:
       type: string
       default: pending
@@ -293,14 +303,6 @@ components:
           $ref: '#/components/schemas/Status'
         error:
           type: string
-    StopModes:
-      type: string
-      enum:
-        - all
-        - labelled
-        - writers
-        - attached
-        - linked
     Filters:
       type: object
       required:

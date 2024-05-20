@@ -1,22 +1,22 @@
-ARG GO_VERSION
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION:-1.22}-alpine AS app
+FROM --platform=$BUILDPLATFORM node:20.13.1-alpine3.19 AS node
+WORKDIR /web
+COPY ./web/ .
+RUN npm install && npm run build
 
+FROM --platform=$BUILDPLATFORM golang:1.22.3-alpine3.19 AS go
 WORKDIR /
 COPY ./ .
-
 ARG TARGETOS
 ARG TARGETARCH
 RUN GO111MODULE=on CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o bckupr .
 
-FROM alpine
-
+FROM alpine:3.19
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md
 LABEL org.opencontainers.image.ref.name "sbnarra/bckupr"
 LABEL org.opencontainers.image.title "bckupr"
 LABEL org.opencontainers.image.description "docker volumes backup/restore manager"
 LABEL org.opencontainers.image.source "https://github.com/sbnarra/bckupr"
 LABEL org.opencontainers.image.documentation "https://sbnarra.github.io/bckupr"
-
 ARG CREATED
 ENV CREATED ${CREATED:-unset}
 LABEL org.opencontainers.image.created ${CREATED:-unset}
@@ -52,20 +52,25 @@ RUN echo 'while [ "0" != $(ps | grep -v grep | grep "s6-supervise bckupr" | wc -
 RUN chmod +x /cmdless
 CMD ["/cmdless"]
 
-WORKDIR /
-EXPOSE 8000
-VOLUME /var/run/docker.sock
-VOLUME /backups
+COPY configs/local/ /opt/bckupr/config/local
 
-COPY web/ /web
-COPY configs/local/ /local
-COPY configs/offsite/ /offsite
-COPY configs/rotation /rotation
+COPY configs/offsite/ /opt/bckupr/config/offsite
+RUN ln -s /opt/bckupr/config/offsite /offsite
 
-ENV UI_BASE_PATH /
-ENV LOCAL_CONTAINERS_CONFIG=/local/tar.yml
-ENV ROTATION_POLICIES_CONFIG=/rotation/policies.yaml
+COPY configs/rotation /opt/bckupr/config/rotation
+RUN ln -s /opt/bckupr/config/rotation /rotation
+
+ENV LOCAL_CONTAINERS_CONFIG=/opt/bckupr/config/local/tar.yml
+ENV ROTATION_POLICIES_CONFIG=/opt/bckupr/config/rotation/policies.yaml
+
+ENV UI_BUNDLE /opt/bckupr/web
 ENV BCKUPR_IN_CONTAINER 1
 ENV GIN_MODE release
 
-COPY --from=app /bckupr /bin/bckupr
+COPY --from=node /web/out /opt/bckupr/web
+COPY --from=go /bckupr /opt/bckupr/bckupr
+RUN ln -s /opt/bckupr/bckupr /bin/bckupr
+
+EXPOSE 8000
+VOLUME /var/run/docker.sock
+VOLUME /backups
