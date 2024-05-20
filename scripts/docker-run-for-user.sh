@@ -1,2 +1,3 @@
 #!/usr/bin/sh
-docker run -u "$(id -u):$(id -g)" --rm $@
+echo docker run -u "$(id -u):$(id -g)" --rm $@
+docker run --rm $@
