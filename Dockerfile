@@ -10,7 +10,7 @@ ARG TARGETOS
 ARG TARGETARCH
 RUN GO111MODULE=on CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o bckupr .
 
-FROM alpine:3.19
+FROM alpine:3.20
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md
 LABEL org.opencontainers.image.ref.name "sbnarra/bckupr"
 LABEL org.opencontainers.image.title "bckupr"
