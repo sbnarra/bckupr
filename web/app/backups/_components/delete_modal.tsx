@@ -1,4 +1,4 @@
-import {Backup, Error} from '../../../components/spec'
+import {Backup, ModelError as Error, DeleteBackupRequest} from '../../../components/spec'
 import {NewBackupApi} from '../../../components/api'
 import React from "react";
 import {Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure} from "@nextui-org/react";
@@ -9,13 +9,13 @@ export default function DeleteBackup(props: {
 }) {
   const {isOpen, onOpen, onOpenChange} = useDisclosure();
   const deleteBackup = () => {
-    NewBackupApi().deleteBackup(props.backup.id, function(err: Error) {
-      if (err === null) {
-        alert("Deleted " + props.backup.id)
-        props.onDelete()
-      } else {
-        alert("Error: " + err.error)
-      }
+    NewBackupApi().deleteBackup({
+      id: props.backup.id
+    }).then(() => {
+      alert("Deleted " + props.backup.id)
+      props.onDelete()
+    }).catch((err) => {
+      alert("Error: " + err.error)
     })
   }
 

@@ -43,13 +43,13 @@ package-run: package
     	sbnarra/bckupr:${VERSION} ${CMD}
 
 build-docs:
-	docker run --rm -u $(shell id -u):$(shell id -g) \
+	docker run --rm \
 		-v ${PWD}:/bckupr:rw -w /bckupr/${DOCS_PATH} \
 		python:3.9-slim \
 		sh -c "pip install -r requirements.txt && mkdocs build --config-file mkdocs.yml"
 
 run-docs:
-	docker run --rm -it -u $(shell id -u):$(shell id -g) \
+	docker run --rm -it \
 		-v ${PWD}:/bckupr:ro -w /bckupr/${DOCS_PATH} \
 		-p 8000:8000 \
 		python:3.9-slim \

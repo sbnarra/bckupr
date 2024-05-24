@@ -14,7 +14,7 @@ import {
   Input
 } from "@nextui-org/react";
 import { NewBackupApi } from '@/components/api';
-import { Backup, TaskInput, Filters } from '@/components/spec';
+import { Backup, TaskInput, Filters, StopModes } from '@/components/spec';
 
 export function TaskInputModal(props: {
   progressOnOpen: () => void
@@ -22,8 +22,8 @@ export function TaskInputModal(props: {
   callApi: (taskInput: TaskInput, onClose: () => void) => void
 }) {
   
-  var filters = new Filters([], [], [], [])
-  var taskInput = new TaskInput(filters)
+  var filters = {} as Filters
+  var taskInput = { filters: filters } as TaskInput
 
   const [selectedKeys, setSelectedKeys] = useState(new Set(["labelled", "writers", "linked"]));
 
@@ -37,14 +37,14 @@ export function TaskInputModal(props: {
           <>
             <ModalHeader className="flex flex-col gap-1">Create Backup</ModalHeader>
             <ModalBody>
-              <Checkbox radius="full" onChange={(e) => taskInput.no_dry_run = e.target.checked}>
+              <Checkbox radius="full" onChange={(e) => taskInput.noDryRun = e.target.checked}>
                 No Dry Run
               </Checkbox>
               
-              <ListInput label="Include Names" updated={(s) => filters.include_names = s}/>
-              <ListInput label="Include Volumes" updated={(s) => filters.include_volumes = s}/>
-              <ListInput label="Exclude Names" updated={(s) => filters.exclude_names = s}/>
-              <ListInput label="Exclude Volumes" updated={(s) => filters.exclude_volumes = s}/>
+              <ListInput label="Include Names" updated={(s) => filters.includeNames = s}/>
+              <ListInput label="Include Volumes" updated={(s) => filters.includeVolumes = s}/>
+              <ListInput label="Exclude Names" updated={(s) => filters.excludeNames = s}/>
+              <ListInput label="Exclude Volumes" updated={(s) => filters.excludeVolumes = s}/>
 
               <Listbox 
                 aria-label="Stop Modes"
@@ -52,8 +52,19 @@ export function TaskInputModal(props: {
                 selectionMode="multiple"
                 selectedKeys={selectedKeys}
                 onSelectionChange={(keys: Selection) => {
-                  setSelectedKeys(keys as Set<string>)
-                  taskInput.stop_modes = keys
+                  var setKeys = keys as Set<string> 
+                  setSelectedKeys(setKeys)
+                  
+                  setKeys.forEach(stopMode => {
+                    var ssm = stopMode as StopModes
+                  })
+                  
+
+
+                  // taskInput.stopModes = setKeys
+                  // const mappedSetKeys = new Set([...setKeys].map(stopMode => stopMode as StopModes))
+                  // taskInput.stopModes = mappedSetKeys
+
                 }}
               >
                 <ListboxSection title="Stop Modes"> 
@@ -68,7 +79,7 @@ export function TaskInputModal(props: {
               <Input
                 label="Label Prefix"
                 defaultValue="bckupr"
-                onChange={(e) => taskInput.label_prefix = e.target.value}
+                onChange={(e) => taskInput.labelPrefix = e.target.value}
               />
             </ModalBody>
             <ModalFooter>
