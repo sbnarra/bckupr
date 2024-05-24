@@ -10,11 +10,9 @@
   },
   "dependencies": {
     "@nextui-org/react": "^2.3.6",
-    "framer-motion": "^11.2.3",
     "next": "14.2.3",
     "react": "^18",
-    "react-dom": "^18",
-    "superagent": "^6"
+    "react-dom": "^18"
   },
   "devDependencies": {
     "@types/node": "^20",
