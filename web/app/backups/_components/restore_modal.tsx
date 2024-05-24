@@ -7,13 +7,10 @@ import {
   ModalFooter, 
   Button, 
   useDisclosure, 
-  Input
 } from "@nextui-org/react";
 import { NewBackupApi } from '@/components/api';
 import { Backup, Restore, Status, Volume, TaskInput } from '@/components/spec';
 import { TaskInputModal } from './task_input_modal'
-
-const s = new Status()
 
 export function RestoreBackup(props: {
   backup: Backup
@@ -21,7 +18,7 @@ export function RestoreBackup(props: {
   const {isOpen: optionsIsOpen, onOpen: optionsOnOpen, onOpenChange: optionsOnOpenChange} = useDisclosure();
   const {isOpen: progressIsOpen, onOpen: progressOnOpen, onOpenChange: progressOnOpenChange} = useDisclosure();
 
-  return (<Button onPress={optionsOnOpen} isDisabled={props.backup.status === s.error}>
+  return (<Button onPress={optionsOnOpen} isDisabled={props.backup.status === Status.Error}>
     Restore
     {optionsIsOpen && <TaskInputModal
       progressOnOpen={progressOnOpen}
@@ -29,13 +26,14 @@ export function RestoreBackup(props: {
       callApi={(taskInput: TaskInput, onClose: () => void) => {
         console.log(JSON.stringify(taskInput))
         var api = NewBackupApi()
-        api.startRestore(props.backup.id, taskInput, (err: any) => {
-          if (err === null) {
-            onClose()
-            progressOnOpen()
-          } else {
-            alert("Error: " + err.error)
-          }
+        api.startRestore({
+          id: props.backup.id,
+          taskInput: {} as TaskInput,
+        }).then(data => {
+          onClose()
+          progressOnOpen()
+        }).catch(err => {
+          alert("Error: " + err.error)
         })
       }}
     />}
@@ -58,17 +56,17 @@ function RestoreWaitModal(props: {
     const api = NewBackupApi()
 
     const id = setInterval(() => {
-      api.getRestore(props.id, (err: any, restore: Restore) => {
-        if (err != null) {
-          setError(err.response.text)
-        } else {
-          setRestore(restore)
-          setError(undefined)
+      api.getRestore({
+        id: props.id
+      }).then(data => {
+        setRestore(restore)
+        setError(undefined)
 
-          if (restore.status == s.error || restore.status == s.completed) {
-            clearInterval(id)
-          }
+        if (data.status == Status.Error || data.status == Status.Completed) {
+          clearInterval(id)
         }
+      }).catch(err => {
+        setError(err.response.text)
       })
     }, 1000)
     return () => clearInterval(id)
