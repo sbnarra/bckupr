@@ -22,7 +22,7 @@ services:
       - traefik.http.routers.go.entrypoints=web
 
   node:
-    image: node:20-alpine
+    image: node:22-alpine
     command: [sh, -c, npm install && npm run dev]
     working_dir: /bckupr/web
     user: ${USER:-0:0}
