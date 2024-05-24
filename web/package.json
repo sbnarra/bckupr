@@ -9,12 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@nextui-org/react": "^0.0.0-canary-20240513132504",
-    "framer-motion": "^11.2.3",
+    "@nextui-org/react": "^2.3.6",
     "next": "14.2.3",
     "react": "^18",
-    "react-dom": "^18",
-    "superagent": "^5.3.0"
+    "react-dom": "^18"
   },
   "devDependencies": {
     "@types/node": "^20",

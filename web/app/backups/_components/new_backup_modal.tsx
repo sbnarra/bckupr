@@ -28,15 +28,16 @@ export function CreateBackup(props: {
         callApi={(taskInput: TaskInput, onClose: () => void) => {
           console.log(JSON.stringify(taskInput))
           var api = NewBackupApi()
-          api.startBackup(taskInput, (err: any, backup: Backup) => {
-            if (err === null) {
-              setId(backup.id)
-              onClose()
-              progressOnOpen()
-            } else {
-              alert("Error: " + err.error)
-            }
-          })}}
+          api.startBackup({
+            taskInput: taskInput
+          }).then(data => {
+            setId(data.id)
+            onClose()
+            progressOnOpen()
+          }).catch(err => {
+            alert("Error: " + err.error)
+          })
+        }}
       />}
       <p>{optionsIsOpen}</p>
       <p>{progressIsOpen}</p>
@@ -61,18 +62,14 @@ function BackupWaitModal(props: {
     const api = NewBackupApi()
 
     const id = setInterval(() => {
-      api.getBackup(props.id, (err: any, backup: Backup) => {
-        if (err != null) {
-          setError(err.response.text)
-        } else {
-          setBackup(backup)
-          setError(undefined)
-
-          const s = new Status()
-          if (backup.status == s.error || backup.status == s.completed) {
-            clearInterval(id)
-          }
+      api.getBackup({
+        id: props.id
+      }).then(data => {
+        if (data.status == Status.Error || data.status == Status.Completed) {
+          clearInterval(id)
         }
+      }).catch(err => {
+        setError(err.response.text)
       })
     }, 1000)
     return () => clearInterval(id)
