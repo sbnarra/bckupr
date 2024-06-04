@@ -3,7 +3,7 @@ WORKDIR /web
 COPY ./web/ .
 RUN npm install && npm run build
 
-FROM --platform=$BUILDPLATFORM golang:1.22.3-alpine3.19 AS go
+FROM --platform=$BUILDPLATFORM golang:1.22.4-alpine3.19 AS go
 WORKDIR /
 COPY ./ .
 ARG TARGETOS
