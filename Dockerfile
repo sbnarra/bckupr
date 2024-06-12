@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM node:22.2.0-alpine3.19 AS node
+FROM --platform=$BUILDPLATFORM node:22.3.0-alpine3.19 AS node
 WORKDIR /web
 COPY ./web/ .
 RUN npm install && npm run build
